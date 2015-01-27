@@ -35,3 +35,10 @@
 * VCF files are emerging as key source of NGS genotype data
 * Should establish some standards for compression, naming,sample identity etc as these are the BASE for genetics
 * Excellent toolsets for filtering and extracting genotypes, also writing to SQLLite (https://github.com/ekg/vcflib)
+
+Action
+-------
+
+1. Consider how we might want to query the Kaka
+2. document marker scoring meta-data possibilities
+3. visit Slipstream
