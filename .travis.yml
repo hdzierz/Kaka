@@ -13,14 +13,5 @@ before_install:
 
 script:
   - docker-compose up -d
+  - docker-compose ps
 
-
-notifications:
-  email: false
-  hipchat:
-    rooms:
-      secure: C4Y4ZPATPESbHX34KCtpzfaVKTeUdSmGAk6qQuzDNtoiqqF8UeIXVOV30MKaLXLdWRBNNv57AnKAjX/uwSlNzcrjGkOsmC8SrSU9qTvxZz2VCkLdldQPOrrxumOKzOOCMb7mCa6OvsvYa1nKGoARDoqPGNd+1PK+N9W/+cYQaMw=
-    template:
-    - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}
-      (<a href="%{build_url}">Details</a> | <a href="%{compare_url}">Change view</a>)'
-    format: html
