@@ -24,7 +24,7 @@ web:
   links:
     - db
 shinyr:
-  image: cfphxd/shiny 
+  image: cfphxd/shiny
   volumes:
     - /home/cfphxd/ShinyApps/pinf/seafood:/srv/shiny-server/12_seafood/
     - /srv/shinylog/:/var/log/

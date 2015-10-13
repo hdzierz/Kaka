@@ -21,7 +21,7 @@ cassandra-driver==2.5.1
 certifi==2015.04.28
 cqlengine==0.20.0
 crispy-forms-foundation==0.3.5
-django-ajax==2.2.12
+django-ajax
 django-cassandra-engine==0.3.3
 django-countries==2.1.2
 django-crispy-forms==1.4.0
@@ -53,8 +53,6 @@ fig==1.0.1
 freeseer==3.0.1
 functools32==3.2.3-1
 futures==3.0.3
-google==1.05
-hadoopy==0.6.0
 happybase==0.8
 ipython==3.1.0
 jdcal==1.0
