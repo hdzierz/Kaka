@@ -1,0 +1,31 @@
+{% load staticfiles %}
+{% load inplace_edit %}
+
+<html>
+    <head>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+        <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+      
+         {% inplace_toolbar %} {% comment %} or inplace_static {% endcomment %}
+    </head>
+    <body>
+        <div id="head">
+            {% block head %}
+
+            <!--<img src="{% static 'web/pfr-logo-mission.png' %}" />-->
+
+            {% endblock head%}
+        </div>          
+ 
+        <div id="content">
+            {% block content %}
+ 
+               
+            {% endblock content %}
+        </div>
+           
+    </body>
+</html>
+
+

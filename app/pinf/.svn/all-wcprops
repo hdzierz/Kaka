@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/NGSUserGroup/!svn/ver/1243/trunk/python/pinf/pinf
+END
+wsgi.py
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/NGSUserGroup/!svn/ver/1243/trunk/python/pinf/pinf/wsgi.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/NGSUserGroup/!svn/ver/1243/trunk/python/pinf/pinf/__init__.py
+END
+settings.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/repos/NGSUserGroup/!svn/ver/1244/trunk/python/pinf/pinf/settings.py
+END
+urls.py
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/repos/NGSUserGroup/!svn/ver/1243/trunk/python/pinf/pinf/urls.py
+END
