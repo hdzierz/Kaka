@@ -1,0 +1,26 @@
+sudo: required
+services:
+  - docker
+
+env:
+  COMPOSE_VERSION: 1.4.1
+
+before_install:
+ - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+ - chmod +x docker-compose
+ - sudo mv docker-compose /usr/local/bin
+ - docker build -t="cfphxd/shiny" -f Dockerfile_shinyr .
+
+script:
+  - docker-compose up -d
+
+
+notifications:
+  email: false
+  hipchat:
+    rooms:
+      secure: C4Y4ZPATPESbHX34KCtpzfaVKTeUdSmGAk6qQuzDNtoiqqF8UeIXVOV30MKaLXLdWRBNNv57AnKAjX/uwSlNzcrjGkOsmC8SrSU9qTvxZz2VCkLdldQPOrrxumOKzOOCMb7mCa6OvsvYa1nKGoARDoqPGNd+1PK+N9W/+cYQaMw=
+    template:
+    - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}
+      (<a href="%{build_url}">Details</a> | <a href="%{compare_url}">Change view</a>)'
+    format: html
