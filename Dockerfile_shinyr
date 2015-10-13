@@ -1,5 +1,7 @@
 FROM rocker/shiny
 
+MAINTAINER helge.dzierzon@plantandfood.co.nz
+
 ADD install.R install.R
 
 RUN apt-get update -y; \
