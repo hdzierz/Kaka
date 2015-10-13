@@ -3,7 +3,7 @@ FROM rocker/shiny
 MAINTAINER helge.dzierzon@plantandfood.co.nz
 
 ADD install.R install.R
-ADD ShinyApp/kaka/seafood /srv/shiny-server/
+ADD shiny_apps/kaka/seafood /srv/shiny-server/
 
 RUN apt-get update -y; \
 	apt-get upgrade -y;
