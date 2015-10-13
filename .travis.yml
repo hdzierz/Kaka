@@ -8,6 +8,10 @@ env:
 before_install:
  - curl -sSL https://get.docker.com/ | sudo sh
  - sudo pip install docker-compose
+ - grep -vi proxy docker-compose.yml > docker-compose.yml
+ - grep -vi environment docker-compose.yml > docker-compose.yml
+ - grep -vi proxy docker-compose.yml > Dockerfile
+ - grep -vi proxy docker-compose.yml > Dockerfile_shinyr
  - docker build -t="cfphxd/shiny" -f Dockerfile_shinyr .
 
 script:
