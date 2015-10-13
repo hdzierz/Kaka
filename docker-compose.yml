@@ -4,11 +4,6 @@ db:
     - .:/dat
   ports:
     - "5434:5432"
-  environment:
-    http_proxy : http://proxy.pfr.co.nz:8080
-    https_proxy : http://proxy.pfr.co.nz:8080
-    ftp_proxy : http://proxy.pfr.co.nz:8080
-    no_proxy : localhost,::1,127.0.0.1,*.pfr.co.nz
 web:
   build: .
   command: python manage.py runserver 0.0.0.0:8000
@@ -16,11 +11,6 @@ web:
     - .:/code
   ports:
     - "8000:8000"
-  environment:
-    http_proxy : http://proxy.pfr.co.nz:8080
-    https_proxy : http://proxy.pfr.co.nz:8080
-    ftp_proxy : http://proxy.pfr.co.nz:8080
-    no_proxy : localhost,::1,127.0.0.1,*.pfr.co.nz,web
   links:
     - db
 shinyr:
@@ -30,31 +20,11 @@ shinyr:
     - /srv/shinylog/:/var/log/
   ports:
     - "3839:3838"
-  environment:
-    http_proxy : http://proxy.pfr.co.nz:8080
-    https_proxy : http://proxy.pfr.co.nz:8080
-    ftp_proxy : http://proxy.pfr.co.nz:8080
-    no_proxy : localhost,::1,127.0.0.1,*.pfr.co.nz
 pyrat:
   image: cfljam/pyrat
   ports:
     - "8889:8888"
-  environment:
-    http_proxy : http://proxy.pfr.co.nz:8080
-    https_proxy : http://proxy.pfr.co.nz:8080
-    ftp_proxy : http://proxy.pfr.co.nz:8080
-    no_proxy : localhost,::1,127.0.0.1,*.pfr.co.nz
 mongo:
   image: mongo
-  environment:
-    http_proxy : http://proxy.pfr.co.nz:8080
-    https_proxy : http://proxy.pfr.co.nz:8080
-    ftp_proxy : http://proxy.pfr.co.nz:8080
-    no_proxy : localhost,::1,127.0.0.1,*.pfr.co.nz
 cassandra:
   image: cassandra
-  environment:
-    http_proxy : http://proxy.pfr.co.nz:8080
-    https_proxy : http://proxy.pfr.co.nz:8080
-    ftp_proxy : http://proxy.pfr.co.nz:8080
-    no_proxy : localhost,::1,127.0.0.1,*.pfr.co.nz
