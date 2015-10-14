@@ -14,3 +14,11 @@ script:
   - docker-compose up -d
   - docker-compose ps
 
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.org#inasafe"
+    use_notice: true
+
+  email:
+    - helge.dzierzon@plantandfood.co.nz
