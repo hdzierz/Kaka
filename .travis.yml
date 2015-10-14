@@ -19,6 +19,14 @@ script:
   - docker-compose up -d
   - docker-compose ps
 
+deploy:
+  provider: releases
+  api_key: "GITHUB OAUTH TOKEN"
+  file: "FILE TO UPLOAD"
+  skip_cleanup: true
+  on:
+    tags: true
+
 notifications:
   irc:
     channels:
