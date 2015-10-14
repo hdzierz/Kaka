@@ -12,7 +12,8 @@ ADD shiny_apps/kaka/seafood /srv/shiny-server/
 RUN apt-get update -y; \
 	apt-get upgrade -y;
 
-RUN Rscript install.R
+RUN Rscript install.R; \
+	ls /srv/shiny-server/
 
 
 
