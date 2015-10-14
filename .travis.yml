@@ -14,7 +14,6 @@ before_install:
  - grep -vi proxy docker-compose_tmpl.yml > docker-compose.yml
  - grep -vi proxy Dockerfile_tmpl > Dockerfile
  - grep -vi proxy Dockerfile_shinyr_tmpl > Dockerfile_shinyr
- - docker build -t="cfphxd/shiny" -f Dockerfile_shinyr .
 
 script:
   - docker-compose up -d
