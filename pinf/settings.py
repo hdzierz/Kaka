@@ -54,7 +54,6 @@ INSTALLED_APPS = (
     'api',
     'seafood',
     'genotype',
-    'datais',
     'gene_expression',
     #'nosql',
     'cassy',

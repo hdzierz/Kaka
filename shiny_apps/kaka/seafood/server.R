@@ -21,7 +21,7 @@ sanitise_header <-function(lst){
 
 get_seafood_headers <- function(selected){
 	selected <- sanitise_header(selected)
-    gs <- read.csv(paste('http://10.1.8.154:8000/report/tree/csv/', sep=''), header=TRUE)
+    gs <- read.csv(paste('http://web:8000/report/tree/csv/', sep=''), header=TRUE)
     gs <- unique(gs$group)
     gs <- sanitise_header(gs)
     selected <- selected[! selected %in% gs]
@@ -58,7 +58,7 @@ shinyServer(function(input, output, session) {
 	# Render teh data source tree
 
 	output$datasource <- renderTree({
-		dat <- read.csv(paste('http://10.1.8.154:8000/report/fish_datasource/csv/?ds_group=Seafood', sep=''), header=TRUE)
+		dat <- read.csv(paste('http://web:8000/report/fish_datasource/csv/?ds_group=Seafood', sep=''), header=TRUE)
 		suppliers <- levels(unique(dat[,"supplier"]))
 		tr <- list()
 		for(i in seq(length(suppliers))){
@@ -73,7 +73,7 @@ shinyServer(function(input, output, session) {
 	})
 
 	output$tree <- renderTree({
-		dat <- read.csv(paste('http://10.1.8.154:8000/report/tree/csv/', sep=''), header=TRUE)
+		dat <- read.csv(paste('http://web:8000/report/tree/csv/', sep=''), header=TRUE)
 
 		dat <- dat[order(dat$Level.1,dat$Level.2,dat$Level.3,dat$Level.4,dat$Level.5),]
 
@@ -123,17 +123,17 @@ shinyServer(function(input, output, session) {
   	})
  
     datasetInput <- reactive({
-        read.csv(paste('http://10.1.8.154:8000/report/fish_by_datasource/csv/', sep=''), header=TRUE)
+        read.csv(paste('http://web:8000/report/fish_by_datasource/csv/', sep=''), header=TRUE)
     }) 
 
 
 	termInput <- reactive({
-        read.csv(paste('http://10.1.8.154:8000/report/fish_term/csv/', sep=''), header=TRUE)
+        read.csv(paste('http://web:8000/report/fish_term/csv/', sep=''), header=TRUE)
     })
 
 
 	demoInput <- reactive({
-        dat <- read.csv('http://10.1.8.154:8000/report/lengthfrequencyob/?fmt=csv/', header=TRUE)
+        dat <- read.csv('http://web:8000/report/lengthfrequencyob/?fmt=csv/', header=TRUE)
 		flt <- input$group
 		if(flt == 'None'){
 			dat <- data.frame(dat[c("length..mm.")])
@@ -150,7 +150,7 @@ shinyServer(function(input, output, session) {
 
     observe({
         x <- input$show_vars
-        cb_options <- names(read.csv(paste('http://10.1.8.154:8000/report/tree/csv/', sep=''), header=TRUE))
+        cb_options <- names(read.csv(paste('http://web:8000/report/tree/csv/', sep=''), header=TRUE))
 
         selected <- x
     })
