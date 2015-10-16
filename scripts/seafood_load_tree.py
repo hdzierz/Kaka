@@ -13,7 +13,6 @@ class ImportTree(ImportOp):
     @staticmethod
     def ImportTreeOp(line, succ):
         term = Term()
-        term.datasource = ImportTree.ds_term
         term.name = "/".join([line["Level 1"], line["Level 2"], line["Level 3"], line["Level 4"], line["Level 5"]])
         term.definition = line["Definition"]
         term.group = "Seafood"
@@ -59,7 +58,6 @@ def init():
 
     st, created = Study.objects.get_or_create(
         name='Seafood',
-	datasource=ds_tree,
     )
 
     ImportTree.study = st

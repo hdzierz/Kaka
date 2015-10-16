@@ -44,7 +44,6 @@ class DataSource(models.Model):
     name = models.CharField(max_length=1024)
     typ = models.CharField(null=True, max_length=256, default="None")
     source = models.TextField()
-    ontology = models.ForeignKey(Ontology)
     supplier = models.CharField(null=True, max_length=2048, default="None")
     supplieddate = models.DateField(auto_now_add=True)
     comment = models.TextField(null=True, default="none")
@@ -67,7 +66,7 @@ class Term(models.Model):
     name = models.CharField(max_length=2048)
     definition = models.CharField(max_length=2048, null=True, default='')
     group = models.CharField(max_length=255, null=True, blank=True, default='None')
-    datasource = models.ForeignKey(DataSource)
+    #datasource = models.ForeignKey(DataSource)
     values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
 
     def __unicode__(self):

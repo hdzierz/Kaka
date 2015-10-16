@@ -40,7 +40,8 @@ def init():
     )
 
     st = Study.objects.get_or_create(
-        name='Seafood'
+        name='Seafood',
+	datasource=ds_tree,
     )
 
     Import.study = st

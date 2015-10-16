@@ -44,13 +44,13 @@ class ImportFish(ImportOp):
 
     @staticmethod
     def LoadFishDataOp(line, succ):
-        sp, created = Species.objects.get_or_create(name=line['Species'])
+        sp, created = Species.objects.get_or_create(datasource=ImportFish.ds, name=line['Species'])
 
         trip_name = 'Trip_%d' % line['Trip']
-        trip, created = Trip.objects.get_or_create(name=trip_name)
+        trip, created = Trip.objects.get_or_create(datasource=ImportFish.ds,name=trip_name)
         
         tow_name = 'Tow_%d' % convert_int(line['Tow Number'])
-        tow, created = Tow.objects.get_or_create(name=tow_name, trip=trip)
+        tow, created = Tow.objects.get_or_create(name=tow_name, trip=trip, datasource=ImportFish.ds)
 
         fish_name = 'Fish_%d' % line['Fish Number']
 
@@ -93,7 +93,8 @@ def init(fn, sheet):
     )
 
     st, created = Study.objects.get_or_create(
-        name='Tow Gear'
+        name='Tow Gear',
+	datasource=ds,
     )
 
     ImportFish.study = st
