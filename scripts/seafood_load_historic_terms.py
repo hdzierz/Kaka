@@ -19,7 +19,8 @@ class Import(ImportOp):
 
     @staticmethod
     def CleanOp():
-        Term.objects.filter(datasource=Import.ds).delete()
+	pass
+        #Term.objects.filter(datasource=Import.ds).delete()
 
 
 def load_terms(fn, sheet):
@@ -32,11 +33,9 @@ def load_terms(fn, sheet):
 
 
 def init(fn):
-    onto = Ontology.objects.get(name="Term")
     dt = datetime.datetime.now()
     ds, created = DataSource.objects.get_or_create(
         name='Seafood Import Historical Terms / ' + fn,
-        ontology=onto,
         supplier='Seafood',
     )
 

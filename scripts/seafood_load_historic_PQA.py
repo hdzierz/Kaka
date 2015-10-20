@@ -81,12 +81,10 @@ def load_PQA(fn, sheet):
 
 
 def init(fn, sheet):
-    onto = Ontology.objects.get(name="Fish")
     dt = datetime.datetime.now()
     path = os.path.dirname(fn)
     ds, created = DataSource.objects.get_or_create(
         name='Historical Fish Data',
-        ontology=onto,
         typ='XLSX',
         source=path,
         supplier='Seafood',

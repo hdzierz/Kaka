@@ -3,6 +3,25 @@ from api.models import Feature
 
 from django.core.urlresolvers import reverse
 
+class Chromosome(Feature):
+	no = models.CharField(max_length=10)
+
+	def __unicode__(self):
+		return self.GetName()
+	def GetName(self):
+		return self.no
+
+
+class Genotype(Feature):
+    ebrida_id = models.CharField(max_length=255)
+    kea_id = models.CharField(max_length=255)
+
+    def __unicode__(self):
+        return self.GetName()
+
+    def GetName(self):
+        return self.kea_id + '/' + self.ebrida_id
+
 
 class Marker(Feature):
     ebrida_id = models.CharField(max_length=255)

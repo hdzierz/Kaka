@@ -28,7 +28,6 @@ class DataError(Exception):
 class Ontology(models.Model):
     ontology = 'unkown'
     name = models.CharField(max_length=2048)
-    displayurl = models.CharField(max_length=2048, default="", null=True)
     tablename = models.CharField(max_length=128)
     owner = models.CharField(max_length=128, null=True, default='core')
     description = models.CharField(max_length=2048, null=True, default='')

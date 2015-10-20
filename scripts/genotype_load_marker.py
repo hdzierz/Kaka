@@ -41,12 +41,10 @@ def load_markerobs():
 
 
 def init():
-    onto = Ontology.objects.get(name="Marker")
     dt = datetime.datetime.now()
     ds, created = DataSource.objects.get_or_create(
         name='Initial Import Kiwifruit PSA Markers',
         supplieddate=dt,
-        ontology=onto
     )
 
     st = Study.objects.get_or_create(

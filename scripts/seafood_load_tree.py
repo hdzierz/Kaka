@@ -40,11 +40,9 @@ def load_tree():
 
 
 def init():
-    onto = Ontology.objects.get(name="Tree")
     dt = datetime.datetime.now()
     ds_tree, created = DataSource.objects.get_or_create(
         name='Seafood Import Term Tree',
-        ontology=onto,
         supplier="Seafood",
     )
 
@@ -52,7 +50,6 @@ def init():
     dt = datetime.datetime.now()
     ds_term, created = DataSource.objects.get_or_create(
         name='Seafood Import Term Tree',
-        ontology=onto,
         supplier="Seafood",
     )
 

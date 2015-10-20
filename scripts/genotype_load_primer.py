@@ -84,20 +84,15 @@ def load_primerobs():
 
 
 def init():
-    onto_primer   = Ontology.objects.get(name="Primer")
-    onto_primerob = Ontology.objects.get(name="PrimerOb")
-
     dt = datetime.datetime.now()
     ds_primer, created = DataSource.objects.get_or_create(
         name='Initial Import Kiwifruit Primer',
-        ontology=onto_primer,
         supplieddate=dt,
         supplier='genotype',
     )
 
     ds_primerob, created = DataSource.objects.get_or_create(
         name='Initial Import Kiwifruit Primer',
-        ontology=onto_primerob,
         supplieddate=dt,
         supplier='genotype',
     )
