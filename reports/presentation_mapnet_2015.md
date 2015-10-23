@@ -29,27 +29,36 @@
 
 Kaka: Towards a Distrubuted Genotype Information System
 ========================================================
-author: Helge Dzierzon Samantha Baldwin
+author: Helge Dzierzon and Samantha Baldwin
 date: October 28 2015
 
 
 TOC
 ========================================================
 
-* Why?
+* Why
 * How?
 * Status
 * Conclusions
 
+Genotype Data in PFR
+========================================================
+
+* Many species
+  + e.g. Kiwifruit, Apple, Pear, Potato, Grape, ...
+* Genotype data we are concentrating on 
+  + GBS
+  + QTL
+* Others?
+  + Expression data?
+
 Issues by PFR distribution of Wetware
 ========================================================
 
-* PFR distributed
-* Genotype information created
-* Nobody knows what others do
-* Genotype infomration is produced on a lot of these sites
-* Analysts usually somewhere else and needs access to the data
-* Data currently spread on K-Drives
+* 15 PFR sites
+* Communication across sites difficult
+* Access to the data via shared drives
+* Data currently stored in Excel sheets
 
 ***
 
@@ -59,26 +68,31 @@ Existing Databases Initiatives in PFR
 ========================================================
 
 * EBrida (provenance)
-* KEA (sample tracking)
-* Ensembl
+* Kea (sample tracking)
+* Ensembl (Genome Browsing)
 
-DBs in development
+DBs in development @PFR
 ========================================================
 
-* Kaka (Genotypes)
+* Kaka (Genotypes concentrates on samples)
 * Kakapo (Location)
 
-
-Kaka Techniques
+Kaka
 ========================================================
 
+* Supplmenet to Kea
 * Python Django
-* PGSQL and JSON
-* Docker and continuous integration
+* PGSQL and JSON (NoSQL)
+* Docker Farms
+* Continuous integration
+* Needs location  (Chr, location on Chromosome)
 
 ***
 
-Python, PgSQL, Docker, Travis
+![Django](images/python-django.png)
+![Pgsql](images/pgsql.png)
+![docker](images/docker.png)
+![TravisCI](images/travis_cl.png)
 
 
 Status
@@ -96,13 +110,16 @@ Screenshot
 Conclusions
 ========================================================
 
-* Concept is simple but a bit nerdy
+* Genotype and phenotype data in one database
+* Kea needs a schnittstelle 
 * It is a great tool already but needs a nerd
-* Blubb
+* It needs some input from teh research community
+* The data input is very manual
+* Better visualisation
 
 Thank you! Questions?
 ========================================================
 
-Image
+![Questions](images/questions.jpg)
 
 
