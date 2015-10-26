@@ -1,0 +1,46 @@
+{% extends "page_base.html" %}
+
+{% load render_table from django_tables2 %}
+
+{% block content %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css" />
+
+    <form action="/report/{{ report }}/" method="post">
+        {% csrf_token %}
+        {{ sel.media }}
+       
+        <script>
+            $(function() {
+                $( "#button_sel" ).click(function() {
+                    $( "#form_select" ).toggle( );
+                });
+                $( "#button_sea" ).click(function() {
+                    $( "#form_search" ).toggle( );
+                });
+                $( "#form_select" ).hide( );
+                $( "#form_search" ).hide( );
+            })
+        </script> 
+        <input type="button" id="button_sel" class="ui-state-default ui-corner-all" value="Select Columns" />
+        <input type="button" id="button_sea" class="ui-state-default ui-corner-all" value="Search" />
+        <br /><br />
+        <div class="toggler">
+            <div id="form_select" class="ui-widget-content ui-corner-all">
+                <h3 class="ui-widget-header ui-corner-all">Select Columns (default: all)</h3>
+                <p>
+                    
+                </p>
+            </div>
+            <div id="form_search" class="ui-widget-content ui-corner-all">
+                <h3 class="ui-widget-header ui-corner-all">Search</h3>
+                <p>
+                    {{ flt }}
+                    <input type="submit" name="filter" value="Search"  />
+                    <input type="submit" name="clear" value="Clear"  />
+                </p>
+          </div>
+
+        </div>
+    </form>
+   {% render_table tab %}
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "django_tables2/table.html" %}
+
+{% load i18n django_tables2 %}
+
+{% block interaction %}
+    {{ block.super }}
+    <a class="odd" href="/gui/marker/create/">create</a> <br /><br />
+    {% block table.report %}
+        {% if table.is_configured %}
+            {% for label, format in table.formats %}
+                <a href="{% querystring table.param_report=format %}&sterm={{sterm}}">
+                    <img src="{{ STATIC_URL }}img/{{ format }}_icon.png" title="{{ label }}"/>
+                </a>
+            {% endfor %}
+        {% endif %}
+    {% endblock table.report %}
+{% endblock %}
+
+
+
+{% block table.thead %}
+    <thead>
+        <tr>
+        {% for column in table.columns %}
+            {% if column.orderable %}
+                <th {{ column.attrs.th.as_html }}>
+                    <a href="{% querystring table.prefixed_order_by_field=column.order_by_alias.next %}">{{ column.header }}</a>
+                </th>
+            {% else %}
+                <th {{ column.attrs.th.as_html }}>{{ column.header }}</th>
+            {% endif %}
+         {% endfor %}
+         {% for field in table.fields %}
+             <th {{ column.attrs.th.as_html }}>{{ field }}</th>
+         {% endfor %}
+        </tr>
+    </thead>
+{% endblock table.thead %}
+
+{%block table.tbody.row %}
+    <tr class="{{ forloop.counter|divisibleby:2|yesno:"even,odd" }}"> {# avoid cycle for Django 1.2-1.6 compatibility #}
+        {% for column, cell in row.items %}
+            <td {{ column.attrs.td.as_html }}>
+                {% if column.localize == None %}
+                    {{ cell }}
+                {% else %}
+                    {% if column.localize %}
+                        {{ cell|localize }}
+                    {% else %}
+                        {{ cell|unlocalize }}
+                    {% endif %}
+                {% endif %}
+            </td>
+        {% endfor %}
+        
+        {% for value in table.values %}
+             <td>{{ value }} </td>
+        {% endfor %}
+    </tr>
+{% endblock table.tbody.row %}
+
+
+

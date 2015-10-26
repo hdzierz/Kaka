@@ -1,0 +1,76 @@
+---
+title: "Kaka: Towards a Distrubuted Genotype Information System"
+author: Helge Dzierzon Samantha Baldwin
+date: October 22, 2015
+output:
+    beamer_presentation: 
+        incremental: true
+        
+---
+
+# Kaka: Towards a Distrubuted Genotype Information System
+Helge Dzierzon, Samantha Baldwin, John McCallum
+
+# TOC
+ 
+* Why?
+* How?
+* Status
+* Conclusions
+
+# Why?
+
+
+* PFR distributed
+* Genotype information created
+* No central place to o to
+* Nobody knows what others do
+
+# PFR Sites Across New Zealand {#test}
+
+![PFR](images/pfr_nz.png)
+
+***
+
+* Genotype infomration is produced on a lot of these sites
+* Analyst usuallu somewhere else and needs access to the data
+* Data currently spread on K-Drives
+
+
+# Existing Databases
+
+* EBrida (provenance)
+* KEA (sample tracking)
+* Ensembl
+
+# DBs in development
+
+* Kaka
+* Kakapo
+
+
+# How?
+
+* Python Django
+* PGSQL and JSON
+* Docker and continuous integration
+
+
+# Status
+
+* DB has been developed as a proof of concept
+* Some example data have been loaded
+* RStudio, noteboods databases etc. have been attached and can access api
+* API has been developed 
+
+# Conclusions
+
+* Concept is simple but a bit nerdy
+* It is a great tool already but needs a nerd
+* Blubb
+
+# Thank you! Questions?
+
+Image
+
+
