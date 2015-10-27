@@ -30,8 +30,8 @@ shinyr:
   build: .
   dockerfile: Dockerfile_shinyr
   volumes:
-    - /Users/cfphxd/Kaka/app/shiny_apps/kaka/seafood:/srv/shiny-server/seafood
-    - /Users/cfphxd/Kaka/app/shiny_apps/kaka/genotype:/srv/shiny-server/genotype
+    - shiny_apps/kaka/seafood:/srv/shiny-server/seafood
+    - shiny_apps/kaka/genotype:/srv/shiny-server/genotype
     - /srv/shinylog/:/var/log/
   links:
     - web

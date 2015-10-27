@@ -97,6 +97,12 @@ Screenshots
 Screenshots
 ======================================================
 
+![exps](images/genotype.png)
+
+
+Screenshots
+======================================================
+
 ![exps](images/datasources.png)
 
 Conclusions
