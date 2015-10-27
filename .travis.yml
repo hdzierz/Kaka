@@ -20,17 +20,9 @@ script:
   - docker-compose ps
 
 after_install:
-  - docker exec -it kaka_web_1 ./manage migrate;\
-        psql -h db -U postgres < onto.sql;\
-        ./manage.py runscript seafood_load_tree;
-
-deploy:
-  provider: releases
-  api_key: "GITHUB OAUTH TOKEN"
-  file: "FILE TO UPLOAD"
-  skip_cleanup: true
-  on:
-    tags: true
+  - docker exec -it kaka_web_1 ./manage syncdb;\
+    docker exec -it kaka_web_1 psql -h db -U postgres -f onto.sql;\
+    #docker exec -it kaka_web_1 ./manage.py runscript seafood_load_tree;
 
 notifications:
   irc:
