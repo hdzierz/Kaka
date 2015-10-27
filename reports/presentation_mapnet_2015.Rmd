@@ -1,76 +1,140 @@
 ---
-title: "Kaka: Towards a Distrubuted Genotype Information System"
-author: Helge Dzierzon Samantha Baldwin
-date: October 22, 2015
-output:
-    beamer_presentation: 
-        incremental: true
-        
+title: "Kaka: Towards a Distributed Genotype Database"
+author: Helge Dzierzon and Samantha Baldwin
+date: October 28 2015
+output: beamer_presentation
 ---
 
-# Kaka: Towards a Distrubuted Genotype Information System
-Helge Dzierzon, Samantha Baldwin, John McCallum
 
-# TOC
- 
+TOC
+========================================================
+
 * Why?
 * How?
-* Status
-* Conclusions
+* Conclusions and Outview
 
-# Why?
+Genotype Data in PFR
+========================================================
 
+* Many species: Kiwifruit, Apple, Pear, Potato, Grape, ...
+* Divers: Genotype data: GBS, QTL. ...
+* The data is semi structured
+  
 
-* PFR distributed
-* Genotype information created
-* No central place to o to
-* Nobody knows what others do
+PFR Wetware Distribution
+========================================================
 
-# PFR Sites Across New Zealand {#test}
-
-![PFR](images/pfr_nz.png)
-
-***
-
-* Genotype infomration is produced on a lot of these sites
-* Analyst usuallu somewhere else and needs access to the data
-* Data currently spread on K-Drives
-
-
-# Existing Databases
-
-* EBrida (provenance)
-* KEA (sample tracking)
-* Ensembl
-
-# DBs in development
-
-* Kaka
-* Kakapo
+\begin{columns}
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+\item 14 PFR sites in NZ
+\item Data exchange across sites challenging
+\item Analysts distributed as well
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\includegraphics{images/pfr_nz}
+\end{column}
+\end{columns}
 
 
-# How?
+Current way of "Sharing"
+========================================================
 
-* Python Django
-* PGSQL and JSON
-* Docker and continuous integration
+\begin{columns}
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+\item The K-Drive
+\item Excel Sheets
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\includegraphics{images/science_thunder}
+\end{column}
+\end{columns}
+
+Database Initiatives in PFR
+========================================================
+
+* EBrida (commercial breeder's DB)
+* Kea (inhouse sample tracking)
+* Ensembl (Genome Browsing)
+* Kaka (Genotypes concentrates on samples)
+* Kakapo (Locations)
+* ...
+
+Kaka
+========================================================
+
+\begin{columns}
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+\item Supplement to Kea
+\item Python Django
+\item PGSQL and JSON (NoSQL)
+\item Continuous integration
+\item Containerisation
+\item Needs location  (Chr, location on Chromosome)
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\includegraphics[width=2cm,height=2cm,keepaspectratio]{images/python-django.png}\\
+\includegraphics[width=2cm,height=2cm,keepaspectratio]{images/pgsql.png}\\
+\includegraphics[width=2cm,height=2cm,keepaspectratio]{images/docker.png}\\
+\includegraphics[width=2cm,height=2cm,keepaspectratio]{images/travis_cl.png}\\
+\end{column}
+\end{columns}
+
+Distributed DB
+======================================================
+
+![distr](images/flow.png)
+
+Querying via API
+======================================================
+
+```
+http://localhost/report/genotype/xlsx/?experiment=12East
+http://localhost/report/genotype/csv/?experiment=12East
+http://localhost/gui/genotype/list/
+```
+
+Screenshots
+======================================================
+
+![exps](images/genotype.png)
 
 
-# Status
+Screenshots
+======================================================
 
-* DB has been developed as a proof of concept
-* Some example data have been loaded
-* RStudio, noteboods databases etc. have been attached and can access api
-* API has been developed 
+![exps](images/datasources.png)
 
-# Conclusions
+Screenshots
+======================================================
 
-* Concept is simple but a bit nerdy
+![exps](images/exps.png)
+
+
+Screenshots
+======================================================
+
+![exps](images/exps_csv.png)
+
+Conclusions
+========================================================
+
+* Genotype and phenotype information in one database
 * It is a great tool already but needs a nerd
-* Blubb
+* It needs some input from the research community
+* Kea needs to be attached as a docker container
+* The data input is very manual
+* It needs an interface to Ensembl
 
-# Thank you! Questions?
 
-Image
+Thank you! Questions?
+========================================================
+
+![Questions](images/questions.jpg)
 
 
