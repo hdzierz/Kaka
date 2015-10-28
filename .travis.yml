@@ -18,8 +18,8 @@ before_install:
 script:
   - docker-compose up -d
   - docker-compose ps
-  - docker exec -it kaka_web_1 ./manage syncdb;\
-    docker exec -it kaka_web_1 psql -h db -U postgres -f onto.sql;\
+  - docker exec -it kaka_web_1 ./manage syncdb
+  - docker exec -it kaka_web_1 psql -h db -U postgres -f onto.sql
     #docker exec -it kaka_web_1 ./manage.py runscript seafood_load_tree;
 
 notifications:
