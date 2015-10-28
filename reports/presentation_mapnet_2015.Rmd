@@ -16,10 +16,19 @@ TOC
 Genotype Data in PFR
 ========================================================
 
-* Many species: Kiwifruit, Apple, Pear, Potato, Grape, ...
-* Divers: Genotype data: GBS, QTL. ...
-* The data is semi structured
-  
+\begin{columns}
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+\item Many species: Kiwifruit, Apple, Pear, Potato, Grape, ...
+\item Divers genotype data: GBS, QTL. ...
+\item The data is semi structured
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\includegraphics{images/red_fleshed_apple_large}
+\end{column}
+\end{columns}
+
 
 PFR Wetware Distribution
 ========================================================
