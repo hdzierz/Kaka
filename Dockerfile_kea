@@ -14,5 +14,5 @@ RUN apt-get update -y; \
 RUN mkdir /code
 WORKDIR /code
 
-RUN git clone https://github.com/hdzierz/Kea ./;\
+RUN git clone https://hdzierz:zt90undr@github.com/hdzierz/Kea ./;\
     make

@@ -3,20 +3,20 @@ from django import forms
 from splitjson.widgets import SplitJSONWidget
 from django.forms import ModelForm
 from .models import *
-from pinf.utils import PinfForm 
+from kaka.utils import KakaForm 
 
 
-class TargetForm(PinfForm):
+class TargetForm(KakaForm):
     title = "Update"
 
-    class Meta(PinfForm.Meta):
+    class Meta(KakaForm.Meta):
         model = Target
         fields = ['kea_id', 'ebrida_id', 'obs']
 
 
-class GeneForm(PinfForm):
+class GeneForm(KakaForm):
     title = "Update"
 
-    class Meta(PinfForm.Meta):
+    class Meta(KakaForm.Meta):
         model = Gene
 

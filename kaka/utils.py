@@ -5,7 +5,7 @@ from django.utils.html import mark_safe
 from django.forms import ModelForm
 from splitjson.widgets import SplitJSONWidget
 
-class PinfForm(ModelForm):
+class KakaForm(ModelForm):
     attrs = {'class': 'special', 'size': '40'}
     obs = forms.CharField(widget=SplitJSONWidget(attrs=attrs, debug=True))
     title = "Update"
@@ -14,7 +14,7 @@ class PinfForm(ModelForm):
         fields = ['obs']
 
 
-class PinfTable(tables.Table):
+class KakaTable(tables.Table):
     edit = tables.LinkColumn('gui-update', kwargs={"pk": tables.A("pk"), 'report': 'marker'} , empty_values=())
     delete = tables.LinkColumn('gui-delete', kwargs={"pk": tables.A("pk"), 'report': 'marker'} , empty_values=())
 

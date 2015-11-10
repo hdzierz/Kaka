@@ -1,5 +1,5 @@
 """
-Django settings for pinf project.
+Django settings for kaka project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/1.6/topics/settings/
@@ -25,7 +25,7 @@ DEBUG = True
 
 TEMPLATE_DEBUG = True
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
-INTERNAL_IPS = '10.1.4.52, 127.0.0.1'
+INTERNAL_IPS = '10.1.8.120, 127.0.0.1'
 
 ALLOWED_HOSTS = []
 
@@ -77,9 +77,9 @@ EXCEL_SUPPORT = 'xlwt'
 
 CRISPY_TEMPLATE_PACK = 'uni_form'
 
-ROOT_URLCONF = 'pinf.urls'
+ROOT_URLCONF = 'kaka.urls'
 
-WSGI_APPLICATION = 'pinf.wsgi.application'
+WSGI_APPLICATION = 'kaka.wsgi.application'
 
 
 # Database
@@ -93,14 +93,14 @@ DATABASES = {
         'PORT': '5432',
         'HOST': 'kaka_db_1',
     },
-    'default2': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'pinf',
-        'USER': 'pinf',
-        'PORT': '5433',
-        'PASSWORD': 'inkl67z',
-        'HOST': '10.1.8.154',
-    },
+#    'default2': {
+#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#        'NAME': 'pionf',
+#        'USER': 'pinf',
+#        'PORT': '5433',
+#        'PASSWORD': 'inkl67z',
+#        'HOST': '10.1.8.154',
+#    },
     'kiwi_marker': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'kiwi_marker',
@@ -111,14 +111,14 @@ DATABASES = {
     },
 #    'mongodb' : {
 #      'ENGINE' : 'django_mongodb_engine',
-#      'NAME' : 'pinf',
+#      'NAME' : 'kaka',
 #      'HOST': '10.1.8.167',
 #      'PORT': '27018',
 #   },
 #    'cassandra': {
 #        'ENGINE': 'django_cassandra_engine',
-#        'NAME': 'pinf_nosql',
-##        'TEST_NAME': 'pinf_db',
+#        'NAME': 'kaka_nosql',
+##        'TEST_NAME': 'kaka_db',
 #        'HOST': '10.1.8.154',
 #        'OPTIONS': {
 #            'replication': {

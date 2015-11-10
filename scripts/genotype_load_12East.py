@@ -58,8 +58,9 @@ def init(fn):
 
 def run():
     path = "data/genotype/East12/"
-
+    print(path)
     for (dirpath, dirname, filenames) in walk(path):
+        print(filenames)
         for fn in filenames:
             if(".gz" in fn):
                 fn = path + fn

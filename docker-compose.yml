@@ -11,6 +11,7 @@ db:
      - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
 web:
   build: .
+  dockerfile: Dockerfile_web
   command: python manage.py runserver 0.0.0.0:8000
   volumes:
     - .:/code

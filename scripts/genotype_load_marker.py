@@ -47,7 +47,7 @@ def init():
         supplieddate=dt,
     )
 
-    st = Study.objects.get_or_create(
+    st, created = Experiment.objects.get_or_create(
         name='Kiwi'
     )
 
