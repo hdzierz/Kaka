@@ -44,14 +44,14 @@ shinyr:
      - https_proxy:http://proxy.pfr.co.nz:8080
      - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
 
-kea:
-  build: .
-  dockerfile: Dockerfile_kea
-  environment:
-     - dummy:dummy
-     - http_proxy:http://proxy.pfr.co.nz:8080
-     - https_proxy:http://proxy.pfr.co.nz:8080
-     - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
+#kea:
+#  build: .
+#  dockerfile: Dockerfile_kea
+#  environment:
+#     - dummy:dummy
+#     - http_proxy:http://proxy.pfr.co.nz:8080
+#     - https_proxy:http://proxy.pfr.co.nz:8080
+#     - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
 
 #pyrat:
 #  image: cfljam/pyrat
