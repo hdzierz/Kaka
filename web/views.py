@@ -240,7 +240,6 @@ def restfully_manage_element(request, report, pk):
 
 def page_report(request, report, fmt='csv', conf=None):
     get_dict = parser.parse(request.GET.urlencode())
-    print get_dict
     objs = get_queryset(request, report, get_dict)
     if not objs:
         return HttpResponse('No Data')
