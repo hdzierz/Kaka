@@ -1,3 +1,7 @@
+# Database Server
+# Software: PostGreSQL
+# You can reconfigure the port in case you
+
 db:
   image: postgres
   volumes:
@@ -43,6 +47,16 @@ shinyr:
      - http_proxy:http://proxy.pfr.co.nz:8080
      - https_proxy:http://proxy.pfr.co.nz:8080
      - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
+cassandra:
+    image: cassandra
+    ports:
+        - "7000:7000"
+    environment:
+        - dummy:dummy
+        - http_proxy:http://proxy.pfr.co.nz:8080
+        - https_proxy:http://proxy.pfr.co.nz:8080
+        - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
+    
 
 #kea:
 #  build: .
@@ -77,23 +91,22 @@ shinyr:
 #     - http_proxy:http://proxy.pfr.co.nz:8080
 #     - https_proxy:http://proxy.pfr.co.nz:8080
 #     - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
-#rstudio:
-  #image: rocker/rstudio
-#  build: .
-#  dockerfile: Dockerfile_rstudio
-#  volumes:
-#    - /input:/input
-#    - /output:/output
-#    - /workspace:/workspace
-#  links:
-#    - web
-#  ports:
-#     - "8788:8787"
-#  environment:
-#     - dummy:dummy
-#     - http_proxy:http://proxy.pfr.co.nz:8080
-#     - https_proxy:http://proxy.pfr.co.nz:8080
-#     - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
+rstudio:
+  build: .
+  dockerfile: Dockerfile_rstudio
+  volumes:
+    - /input:/input
+    - /output:/output
+    - /workspace:/workspace
+  links:
+    - web
+  ports:
+     - "8788:8787"
+  environment:
+     - dummy:dummy
+     - http_proxy:http://proxy.pfr.co.nz:8080
+     - https_proxy:http://proxy.pfr.co.nz:8080
+     - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
 #anaconda:
 #  image: continuumio/anaconda
 #  volumes:
