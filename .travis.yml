@@ -16,6 +16,7 @@ before_install:
  - grep -vi proxy Dockerfile_shinyr_tmpl > Dockerfile_shinyr
 
 script:
+  - docker-compose build
   - docker-compose up -d
   - docker-compose ps
   - docker exec -it kaka_web_1 ./manage.py syncdb
