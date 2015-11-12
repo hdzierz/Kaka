@@ -31,22 +31,22 @@ web:
      - http_proxy:http://proxy.pfr.co.nz:8080
      - https_proxy:http://proxy.pfr.co.nz:8080
      - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
-shinyr:
-  build: .
-  dockerfile: Dockerfile_shinyr
-  volumes:
-    - ./shinyapps/kaka/seafood:/srv/shiny-server/seafood
-    - ./shinyapps/kaka/genotype:/srv/shiny-server/genotype
-    - /srv/shinylog/:/var/log/
-  links:
-    - web
-  ports:
-    - "3839:3838"
-  environment:
-     - dummy:dummy
-     - http_proxy:http://proxy.pfr.co.nz:8080
-     - https_proxy:http://proxy.pfr.co.nz:8080
-     - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
+#shinyr:
+#  build: .
+#  dockerfile: Dockerfile_shinyr
+#  volumes:
+#    - ./shinyapps/kaka/seafood:/srv/shiny-server/seafood
+#    - ./shinyapps/kaka/genotype:/srv/shiny-server/genotype
+#    - /srv/shinylog/:/var/log/
+#  links:
+#    - web
+#  ports:
+#    - "3839:3838"
+#  environment:
+#     - dummy:dummy
+#     - http_proxy:http://proxy.pfr.co.nz:8080
+#     - https_proxy:http://proxy.pfr.co.nz:8080
+#     - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
 cassandra:
     image: cassandra
     ports:
