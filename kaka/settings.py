@@ -58,7 +58,7 @@ INSTALLED_APPS = (
     'genotype',
     'gene_expression',
     #'nosql',
-    'cassy',
+    #'cassy',
     'web',
     'inplaceeditform',
 
@@ -117,18 +117,18 @@ DATABASES = {
 #      'HOST': '10.1.8.167',
 #      'PORT': '27018',
 #   },
-    'cassandra': {
-        'ENGINE': 'django_cassandra_engine',
-        'NAME': 'kaka_nosql',
-        #'TEST_NAME': 'kaka_db',
-        'HOST': 'kaka_cassandra_1',
-        'OPTIONS': {
-            'replication': {
-               'strategy_class': 'SimpleStrategy',
-                'replication_factor': 1
-            }
-        }
-    },
+#    'cassandra': {
+#        'ENGINE': 'django_cassandra_engine',
+#        'NAME': 'kaka_nosql',
+#        #'TEST_NAME': 'kaka_db',
+#        'HOST': 'kaka_cassandra_1',
+#        'OPTIONS': {
+#            'replication': {
+#               'strategy_class': 'SimpleStrategy',
+#                'replication_factor': 1
+#            }
+#        }
+#    },
 #    'test': {
 #        'ENGINE': 'django.db.backends.sqlite3',
 #        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
