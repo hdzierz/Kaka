@@ -12,6 +12,19 @@ import xlrd
 from .logger import *
 
 
+############################
+## Data connectors are building on teh algoirthms defined in algorithms.py.
+## These connectors see data as list of rows the connector loops through and
+## apllies an operator on the row of data.
+## There are foulr classes inhertiting from Data Connector:
+## ExcelConnector
+## SqlConnector
+## CsvConnector
+## DictListConnector
+## The aim is to give the programmer teh abilitity to write an e.g. import operator for data which can be aplied
+## to different input data formats.
+############################
+
 class DataConnector:
     name = 'None'
     header = None

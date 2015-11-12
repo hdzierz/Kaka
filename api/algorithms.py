@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+########################
+## Algorithms is a concept from C++ (STL http://www.sgi.com/tech/stl/). It allows 
+## Looping through lists without having to write teh actual loop again and again
+## and tehrefore follows the DNRY paradigm. 
+## You define an operator which will be applied to a list item.
+########################
 
 class traverse:
     last = None

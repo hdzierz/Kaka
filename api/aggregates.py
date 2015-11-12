@@ -3,6 +3,11 @@ from django.db.models import Aggregate
 from django.db.models.sql.aggregates import Aggregate as SQLAggregate
 
 
+#######################
+## Group Concat Aggregate for PostGreSQL. 
+## Group concat is a function in MySQL PGSQL does not have
+#######################
+
 class GroupConcat(Aggregate):
     name = "GroupConcat"
 
