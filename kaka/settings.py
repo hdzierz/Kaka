@@ -11,8 +11,8 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -26,6 +26,8 @@ DEBUG = True
 TEMPLATE_DEBUG = True
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
 INTERNAL_IPS = '10.1.8.120, 127.0.0.1'
+
+
 
 ALLOWED_HOSTS = []
 
@@ -115,18 +117,18 @@ DATABASES = {
 #      'HOST': '10.1.8.167',
 #      'PORT': '27018',
 #   },
-#    'cassandra': {
-#        'ENGINE': 'django_cassandra_engine',
-#        'NAME': 'kaka_nosql',
-##        'TEST_NAME': 'kaka_db',
-#        'HOST': '10.1.8.154',
-#        'OPTIONS': {
-#            'replication': {
-#                'strategy_class': 'SimpleStrategy',
-#                'replication_factor': 1
-#            }
-#        }
-#    },
+    'cassandra': {
+        'ENGINE': 'django_cassandra_engine',
+        'NAME': 'kaka_nosql',
+        #'TEST_NAME': 'kaka_db',
+        'HOST': 'kaka_cassandra_1',
+        'OPTIONS': {
+            'replication': {
+               'strategy_class': 'SimpleStrategy',
+                'replication_factor': 1
+            }
+        }
+    },
 #    'test': {
 #        'ENGINE': 'django.db.backends.sqlite3',
 #        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
