@@ -93,7 +93,7 @@ DATABASES = {
         'NAME': 'postgres',
         'USER': 'postgres',
         'PORT': '5432',
-        'HOST': 'kaka_db_1',
+        'HOST': 'db',
     },
 #    'default2': {
 #        'ENGINE': 'django.db.backends.postgresql_psycopg2',
