@@ -121,7 +121,7 @@ DATABASES = {
 #        'ENGINE': 'django_cassandra_engine',
 #        'NAME': 'kaka_nosql',
 #        #'TEST_NAME': 'kaka_db',
-#        'HOST': 'kaka_cassandra_1',
+#        'HOST': 'cassandra',
 #        'OPTIONS': {
 #            'replication': {
 #               'strategy_class': 'SimpleStrategy',
