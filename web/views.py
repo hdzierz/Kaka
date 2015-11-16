@@ -241,24 +241,26 @@ def restfully_manage_element(request, report, pk):
 def page_report(request, report, fmt='csv', conf=None):
     get_dict = parser.parse(request.GET.urlencode())
     objs = get_queryset(request, report, get_dict)
-    if not objs:
+    if objs.count()==0:
         return HttpResponse('No Data')
 
+    data = None
     if(isinstance(objs, list)):
         conn = DictListConnector(objs, expand_obs=True)
     else:
         conn = DjangoQuerySetConnector(objs)
 
-    if report in REPORTS:
-        cls = REPORTS[report]
-        if cls.Meta.fields:
-            conn.header = cls.Meta.fields
-        elif cls.Meta.exclude:
-            conn.header = Set(conn.header) - Set(cls.Meta.exclude)
-        elif cls.Meta.sequence:
-            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
+    #if report in REPORTS:
+    #    cls = REPORTS[report]
+    #    if cls.Meta.fields:
+    #        conn.header = cls.Meta.fields
+    #    elif cls.Meta.exclude:
+    #        conn.header = Set(conn.header) - Set(cls.Meta.exclude)
+    #    elif cls.Meta.sequence:
+    #        conn.header = Set(cls.Meta.sequence) | Set(conn.header)
 
-    data = DataProvider.GetData(conn, fmt)
-    return HttpDataDownloadResponse(data, report, fmt, False)
+    #data = DataProvider.GetData(conn, fmt)
+    return HttpResponse("None")
+    #return HttpDataDownloadResponse(data, report, fmt, False)
 
 
