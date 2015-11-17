@@ -13,19 +13,29 @@ db:
      - http_proxy:http://proxy.pfr.co.nz:8080
      - https_proxy:http://proxy.pfr.co.nz:8080
      - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
+cassandra:
+    image: cassandra
+    ports:
+        - "7000:7000"
+    environment:
+        - dummy:dummy
+        - http_proxy:http://proxy.pfr.co.nz:8080
+        - https_proxy:http://proxy.pfr.co.nz:8080
+        - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
 web:
   build: .
   dockerfile: Dockerfile_web
-  command: python manage.py runserver 0.0.0.0:8000
+  command: python manage.py runserver 0.0.0.0:80
   volumes:
     - .:/code
     - /input:/input
     - /output:/output
     - /workspace:/workspace
   ports:
-    - "8000:8000"
+    - "8000:80"
   links:
     - db
+    - cassandra
   environment:
      - dummy:dummy
      - http_proxy:http://proxy.pfr.co.nz:8080
@@ -47,17 +57,6 @@ web:
 #     - http_proxy:http://proxy.pfr.co.nz:8080
 #     - https_proxy:http://proxy.pfr.co.nz:8080
 #     - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
-cassandra:
-    image: cassandra
-    ports:
-        - "7000:7000"
-    environment:
-        - dummy:dummy
-        - http_proxy:http://proxy.pfr.co.nz:8080
-        - https_proxy:http://proxy.pfr.co.nz:8080
-        - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
-    
-
 #kea:
 #  build: .
 #  dockerfile: Dockerfile_kea

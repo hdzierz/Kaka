@@ -67,12 +67,6 @@ class Study(models.Model):
         return self.name
 
 
-class Experiment(models.Model):
-    name = models.CharField(max_length=2048, default="Unkown")
-    def __unicode__(self):
-        return self.name
-
-
 class Term(models.Model):
     name = models.CharField(max_length=2048)
     definition = models.CharField(max_length=2048, null=True, default='')
@@ -83,6 +77,22 @@ class Term(models.Model):
     def __unicode__(self):
         return self.name
 
+
+class Experiment(models.Model):
+    name = models.CharField(max_length=2048, default="Unkown")
+    pi = models.CharField(max_length=2048, default="Unkown")
+    createddate = models.DateTimeField(auto_now_add=True)
+    createdby = models.CharField(max_length=255)
+    description = models.TextField(default="")
+
+    search_index = VectorField()
+    objects = SearchManager(
+            fields=('name', 'description'),
+                    auto_update_search_field=True
+                    )
+
+    def __unicode__(self):
+        return self.name
 
 
 class Feature(models.Model):
