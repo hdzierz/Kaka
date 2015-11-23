@@ -60,6 +60,10 @@ def get_queryset(request, report, conf=None):
     if 'ds' in conf:
         ds = conf['ds']
 
+    nam = None
+    if 'name' in conf:
+        nam = conf['name']
+
     cls = get_model_class(report)
 
     if not cls:
@@ -73,6 +77,11 @@ def get_queryset(request, report, conf=None):
             obs = cls.objects.filter(values__contains=term)
         else:
             obs = cls.objects.search(term)
+
+    if nam and not obs:
+        obs = cls.objects.filter(name__contains=nam)
+    if nam and obs:
+        obs = obs.filter(name__contains=nam)
 
     if ds and not obs:
         ds = DataSource.objects.get(name__contains=ds)
