@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+
 from .http_data_download_response import *
 from api.connectors import *
 from api.reports import *
@@ -55,14 +55,6 @@ def get_queryset(request, report, conf=None):
     term = None
     if('term' in conf):
         term = conf['term']
-
-    #ds = None
-    #if('ds' in conf):
-    #    ds = conf['ds']
-    #    if(isinstance(ds, dict)):
-    #        ds = list(ds.values())
-    #    else:
-    #      ds = [ds]
 
     ds = None
     if 'ds' in conf:
@@ -250,17 +242,16 @@ def page_report(request, report, fmt='csv', conf=None):
     else:
         conn = DjangoQuerySetConnector(objs)
 
-    #if report in REPORTS:
-    #    cls = REPORTS[report]
-    #    if cls.Meta.fields:
-    #        conn.header = cls.Meta.fields
-    #    elif cls.Meta.exclude:
-    #        conn.header = Set(conn.header) - Set(cls.Meta.exclude)
-    #    elif cls.Meta.sequence:
-    #        conn.header = Set(cls.Meta.sequence) | Set(conn.header)
-
-    #data = DataProvider.GetData(conn, fmt)
-    return HttpResponse("None")
-    #return HttpDataDownloadResponse(data, report, fmt, False)
+    if report in REPORTS:
+        cls = REPORTS[report]
+        if cls.Meta.fields:
+            conn.header = cls.Meta.fields
+        elif cls.Meta.exclude:
+            conn.header = Set(conn.header) - Set(cls.Meta.exclude)
+        elif cls.Meta.sequence:
+            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
+    data = DataProvider.GetData(conn, fmt)
+    #return HttpResponse("None")
+    return HttpDataDownloadResponse(data, report, fmt, False)
 
 
