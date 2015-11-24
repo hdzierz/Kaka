@@ -28,9 +28,9 @@ web:
   command: python manage.py runserver 0.0.0.0:80
   volumes:
     - .:/code
-    - /input:/input
-    - /output:/output
-    - /workspace:/workspace
+    #- /input:/input
+    #- /output:/output
+    #- /workspace:/workspace
   ports:
     - "8000:80"
   links:
@@ -93,10 +93,10 @@ web:
 rstudio:
   build: .
   dockerfile: Dockerfile_rstudio
-  volumes:
-    - /input:/input
-    - /output:/output
-    - /workspace:/workspace
+#  volumes:
+#    - /input:/input
+#    - /output:/output
+#    - /workspace:/workspace
   links:
     - web
   ports:
