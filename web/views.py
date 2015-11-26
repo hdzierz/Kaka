@@ -77,30 +77,38 @@ def get_queryset(request, report, conf=None):
     if not cls:
         return None
 
+    filtered = False
     obs = None
     if term:
         if(hasattr(cls, 'obs')):
             obs = cls.objects.filter(obs__contains=term)
+            filtered = True
         elif(hasattr(cls, 'values')):
             obs = cls.objects.filter(values__contains=term)
+            filtered = True
         else:
+            filtered = True
             obs = cls.objects.search(term)
 
     if nam and not obs:
+        filtered = True
         obs = cls.objects.filter(name__contains=nam)
     if nam and obs:
+        filtered = True
         obs = obs.filter(name__contains=nam)
 
     if ds and not obs:
+        filtered = True
         ds = DataSource.objects.get(name__contains=ds)
         obs = cls.objects.filter(datasource=ds)
     if ds and obs:
+        filtered = True
         ds = DataSource.objects.get(name__contains=ds)
         obs = obs.filter(datasource=ds)
 
-    if not obs:
+    if not obs and not filtered:
         obs = cls.objects.all()
-    return obs
+    return obs[:100]
 
 
 def to_underline(name):
