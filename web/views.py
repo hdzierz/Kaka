@@ -69,30 +69,38 @@ def get_queryset(request, report, conf=None):
     if not cls:
         return None
 
+    filtered = False
     obs = None
     if term:
         if(hasattr(cls, 'obs')):
             obs = cls.objects.filter(obs__contains=term)
+            filtered = True
         elif(hasattr(cls, 'values')):
             obs = cls.objects.filter(values__contains=term)
+            filtered = True
         else:
+            filtered = True
             obs = cls.objects.search(term)
 
     if nam and not obs:
+        filtered = True
         obs = cls.objects.filter(name__contains=nam)
     if nam and obs:
+        filtered = True
         obs = obs.filter(name__contains=nam)
 
     if ds and not obs:
+        filtered = True
         ds = DataSource.objects.get(name__contains=ds)
         obs = cls.objects.filter(datasource=ds)
     if ds and obs:
+        filtered = True
         ds = DataSource.objects.get(name__contains=ds)
         obs = obs.filter(datasource=ds)
 
-    if not obs:
+    if not obs and not filtered:
         obs = cls.objects.all()
-    return obs
+    return obs[:100]
 
 
 def to_underline(name):
@@ -279,29 +287,34 @@ def page_report4(request, report, fmt='csv', conf=None):
 
     return render_to_csv_response(qs)
     
-
 def page_report(request, report, fmt='csv', conf=None):
     get_dict = parser.parse(request.GET.urlencode())
     objs = get_queryset(request, report, get_dict)[:100]
     if objs.count()==0:
         return HttpResponse('No Data')
 
-    data = None
-    if(isinstance(objs, list)):
-        conn = DictListConnector(objs, expand_obs=True)
-    else:
-        conn = DjangoQuerySetConnector(objs)
+#    if(isinstance(objs, list)):
+#        conn = DictListConnector(objs, expand_obs=True)
+#    else:
+#        conn = DjangoQuerySetConnector(objs)
 
-    if report in REPORTS:
-        cls = REPORTS[report]
-        if cls.Meta.fields:
-            conn.header = cls.Meta.fields
-        elif cls.Meta.exclude:
-            conn.header = Set(conn.header) - Set(cls.Meta.exclude)
-        elif cls.Meta.sequence:
-            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
-    data = DataProvider.GetData(conn, fmt)
-    #return HttpResponse("None")
-    return HttpDataDownloadResponse(data, report, fmt, False)
+#    if report in REPORTS:
+#        cls = REPORTS[report]
+#        if cls.Meta.fields:
+#            conn.header = cls.Meta.fields
+#        elif cls.Meta.exclude:
+#            conn.header = Set(conn.header) - Set(cls.Meta.exclude)
+#        elif cls.Meta.sequence:
+#            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
+
+    tf = tempfile.NamedTemporaryFile()
+    fn = tf.name
+    fp = open(fn, "w+")
+    DataProvider.WriteData(objs, fmt, fn)
+    fclose(fp)
+    response = StreamingHttpResponse(open(fn), content_type='text/csv') 
+    response['Content-Disposition'] = 'attachment; filename=' + fn + ".csv"
+    return response
+    #return HttpDataDownloadResponse(data, report, fmt, False)
 
 

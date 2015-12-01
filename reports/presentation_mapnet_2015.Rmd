@@ -3,8 +3,7 @@ title: "Kaka: Towards a Distributed Genotype Database"
 author: Helge Dzierzon and Samantha Baldwin
 date: October 28 2015
 output: 
-  beamer_presentation:
-    #theme: "Copenhagen"
+  beamer_presentation
 ---
 
 Genotype Data in PFR
@@ -22,8 +21,6 @@ Genotype Data in PFR
 \includegraphics{images/red_fleshed_apple_large}
 \end{column}
 \end{columns}
-
-![pfr](images/pfr-logo.png)
 
 
 PFR Wetware Distribution
@@ -104,27 +101,22 @@ http://localhost/report/genotype/csv/?experiment=12East
 http://localhost/gui/genotype/list/
 ```
 
-Screenshots
+Data Access
 ======================================================
 
 ![exps](images/genotype.png)
 
 
-Screenshots
+Data Access
 ======================================================
 
 ![exps](images/datasources.png)
 
-Screenshots
+Data Access
 ======================================================
 
 ![exps](images/exps.png)
 
-
-Screenshots
-======================================================
-
-![exps](images/exps_csv.png)
 
 Conclusions
 ========================================================
