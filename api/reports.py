@@ -11,23 +11,13 @@ from .logger import *
 from api.connectors import *
 from .queries import *
 
-
-class ReportQDict:
-    qdict = {}
-
-    def __init__(self):
-        pass
-
-    def GetQ(self, nam):
-        if nam - self.qdict:
-            return qdict[nam]
-        else:
-            return None
-
-    def RegisterQ(self, nam, q):
-        self.qdict[nam] = q
-
-
+def write_data(row, fp):
+    try:
+        dat = row.GetData()
+    except:
+        dat = row
+    fp.write(row)
+    return fp
 
 def collect_data(row, tgt):
     #print(row)
@@ -49,6 +39,13 @@ class DataProvider:
     @staticmethod
     def ManipulateData(conn, op):
         for_each(conn, op)
+
+    @staticmethos
+    def WriteData(conn, fmt, fn):
+        self.fmt = fmt
+        with open(fn, "w+") as fp:
+            accumulate(conn, write_data, fp)
+            fp.close()
 
     @staticmethod
     def GetData(conn, fmt, conf={}):

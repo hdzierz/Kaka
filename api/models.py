@@ -24,7 +24,10 @@ from djgeojson.fields import PointField
 class DataError(Exception):
     pass
 
+""" Class for Ontology terms
 
+
+"""
 class Ontology(models.Model):
     ontology = 'unkown'
     name = models.CharField(max_length=2048)
@@ -38,7 +41,10 @@ class Ontology(models.Model):
     def __unicode__(self):
         return self.name
 
+""" Class for referencing meta data around the source of the data. 
+You will usually get file names here.
 
+"""
 class DataSource(models.Model):
     name = models.CharField(max_length=1024)
     typ = models.CharField(null=True, max_length=256, default="None")
@@ -95,7 +101,11 @@ class Experiment(models.Model):
         return self.name
 
 
+""" Class that holds features with observations attached
+"""
 class Feature(models.Model):
+    fmt = "csv"
+
     name = models.CharField(max_length=255, default="unknown")
     dtt = models.DateTimeField(default=timezone.now)
     geom = PointField(default={'type': 'Point', 'coordinates': [0, 0]})    
@@ -119,6 +129,9 @@ class Feature(models.Model):
     )
 
     obs = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
+
+    def GetData(self, fmt="csv"):
+        return self.obs
 
     @classmethod
     def InitOntology(cls):

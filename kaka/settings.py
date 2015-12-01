@@ -90,8 +90,8 @@ WSGI_APPLICATION = 'kaka.wsgi.application'
 DATABASES = {
    'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
-        'USER': 'postgres',
+        'NAME': 'hdzierz',
+        'USER': 'hdzierz',
         'PORT': '5432',
         'HOST': 'kaka_db_1',
     },

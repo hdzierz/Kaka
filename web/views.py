@@ -255,27 +255,36 @@ def restfully_manage_element(request, report, pk):
 ## user defined reports
 ###################################################
 
+from django.http import StreamingHttpResponse
+
 def page_report(request, report, fmt='csv', conf=None):
     get_dict = parser.parse(request.GET.urlencode())
     objs = get_queryset(request, report, get_dict)
     if not objs:
         return HttpResponse('No Data')
 
-    if(isinstance(objs, list)):
-        conn = DictListConnector(objs, expand_obs=True)
-    else:
-        conn = DjangoQuerySetConnector(objs)
+#    if(isinstance(objs, list)):
+#        conn = DictListConnector(objs, expand_obs=True)
+#    else:
+#        conn = DjangoQuerySetConnector(objs)
 
-    if report in REPORTS:
-        cls = REPORTS[report]
-        if cls.Meta.fields:
-            conn.header = cls.Meta.fields
-        elif cls.Meta.exclude:
-            conn.header = Set(conn.header) - Set(cls.Meta.exclude)
-        elif cls.Meta.sequence:
-            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
+#    if report in REPORTS:
+#        cls = REPORTS[report]
+#        if cls.Meta.fields:
+#            conn.header = cls.Meta.fields
+#        elif cls.Meta.exclude:
+#            conn.header = Set(conn.header) - Set(cls.Meta.exclude)
+#        elif cls.Meta.sequence:
+#            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
 
-    data = DataProvider.GetData(conn, fmt)
-    return HttpDataDownloadResponse(data, report, fmt, False)
+    tf = tempfile.NamedTemporaryFile()
+    fn = tf.name
+    fp = open(fn, "w+")
+    DataProvider.WriteData(objs, fmt, fn)
+    fclose(fp)
+    response = StreamingHttpResponse(open(fn), content_type='text/csv') 
+    response['Content-Disposition'] = 'attachment; filename=' + fn + ".csv"
+    return response
+    #return HttpDataDownloadResponse(data, report, fmt, False)
 
 
