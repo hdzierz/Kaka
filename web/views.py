@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+
 from .http_data_download_response import *
 from api.connectors import *
 from api.reports import *
@@ -55,14 +55,6 @@ def get_queryset(request, report, conf=None):
     term = None
     if('term' in conf):
         term = conf['term']
-
-    #ds = None
-    #if('ds' in conf):
-    #    ds = conf['ds']
-    #    if(isinstance(ds, dict)):
-    #        ds = list(ds.values())
-    #    else:
-    #      ds = [ds]
 
     ds = None
     if 'ds' in conf:
@@ -257,10 +249,48 @@ def restfully_manage_element(request, report, pk):
 
 from django.http import StreamingHttpResponse
 
+
+class Echo(object):
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+    def write(self, obj):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return obj
+
+
+def page_report5(request, report, fmt='csv', conf=None):
+    get_dict = parser.parse(request.GET.urlencode())
+    objs = get_queryset(request, report, get_dict)[:100]
+    if objs.count()==0:
+        return HttpResponse('No Data')
+
+    rows = (["{0},{1}".format(obj.name, ','.join(obj.obs.values()))] for obj in objs)
+
+    #rows = []
+    #for obj in objs:
+    #    rows.append("{0},{1}".format(obj.name, ','.join(obj.obs.values())))
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+
+    response = StreamingHttpResponse((writer.writerow(row) for row in rows),
+                                     content_type="text/csv")
+
+    return response
+
+from djqscsv import render_to_csv_response
+
+def page_report4(request, report, fmt='csv', conf=None):
+    get_dict = parser.parse(request.GET.urlencode())
+    qs = get_queryset(request, report, get_dict)
+
+    return render_to_csv_response(qs)
+    
 def page_report(request, report, fmt='csv', conf=None):
     get_dict = parser.parse(request.GET.urlencode())
-    objs = get_queryset(request, report, get_dict)
-    if not objs:
+    objs = get_queryset(request, report, get_dict)[:100]
+    if objs.count()==0:
         return HttpResponse('No Data')
 
 #    if(isinstance(objs, list)):

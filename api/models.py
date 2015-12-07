@@ -21,6 +21,13 @@ from djgeojson.fields import PointField
 
 
 # Create your models here.
+
+"""DataError
+This is an Exception for data erros when importing data. 
+It is also been used in the signals section
+* test
+"""
+
 class DataError(Exception):
     pass
 

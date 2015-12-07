@@ -31,6 +31,18 @@ def collect_data(row, tgt):
     return tgt
 
 
+def append_data(row, tgt):
+    return tgt.append(list(row))
+
+
+def transpose_data(conn, data):
+    return accumulate(conn, collect_data, data)
+
+
+def attach_data(conn, data):
+   return accumulate(conn, append_data, data) 
+
+
 class DataProvider:
     fmt = 'csv'
     max_rows = 200000000
