@@ -12,6 +12,22 @@ from core.django_ext import *
 from core.models import *
 
 
+class Tissue(Feature):
+    pass
+
+
+class Treatment(Feature):
+    no = models.IntegerField(default=0)
+
+
+class SampleMethod(Feature):
+    pass
+
+
+class Instrument(Feature):
+    pass
+
+
 class City(Feature):
     pass
 
@@ -83,7 +99,7 @@ class Fish(Feature):
     def GetValuesAsDict(self):
         return dict(self.values)
 
-    class Meta(Ob.Meta):
+    class Meta(Feature.Meta):
         pass
 
 

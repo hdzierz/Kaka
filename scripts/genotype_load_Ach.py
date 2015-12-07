@@ -2,9 +2,9 @@
 
 
 import datetime
-from api.connectors import *
-from api.imports import *
-from api.models import *
+from core.connectors import *
+from core.imports import *
+from core.models import *
 from genotype.models import *
 from os import walk, path
 

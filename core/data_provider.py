@@ -8,7 +8,7 @@ from django.db import connection
 # Project imports
 from .models import *
 from .logger import *
-from api.connectors import *
+from core.connectors import *
 from .queries import *
 
 def write_data(row, fp):
@@ -16,7 +16,7 @@ def write_data(row, fp):
         dat = row.GetData()
     except:
         dat = row
-    fp.write(row)
+    fp.write(str(row))
     return fp
 
 def collect_data(row, tgt):
@@ -52,9 +52,9 @@ class DataProvider:
     def ManipulateData(conn, op):
         for_each(conn, op)
 
-    @staticmethos
+    @staticmethod
     def WriteData(conn, fmt, fn):
-        self.fmt = fmt
+        DataProvider.fmt = fmt
         with open(fn, "w+") as fp:
             accumulate(conn, write_data, fp)
             fp.close()
