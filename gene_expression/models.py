@@ -1,6 +1,7 @@
 from django.db import models
 
-from api.models import *
+from core.models import *
+
 
 from jsonfield import JSONField
 # Create your models here.

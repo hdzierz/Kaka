@@ -2,7 +2,7 @@ from django import forms
 from django_pfr.widgets import JQSelect
 
 # api includes
-from api.models import *
+from core.models import *
 from seafood.models import *
 from genotype.models import *
 

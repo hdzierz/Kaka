@@ -53,7 +53,7 @@ INSTALLED_APPS = (
     'djgeojson',
     #'compressor',
     'async',
-    'api',
+    'core',
     'seafood',
     'genotype',
     'gene_expression',
@@ -90,8 +90,8 @@ WSGI_APPLICATION = 'kaka.wsgi.application'
 DATABASES = {
    'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'hdzierz',
-        'USER': 'hdzierz',
+        'NAME': 'postgres',
+        'USER': 'postgres',
         'PORT': '5432',
         'HOST': 'db',
     },

@@ -4,7 +4,7 @@
 #from django.db.models import Sum
 from django_tables2_reports.tables import TableReport
 import django_tables2 as tables
-from api.models import *
+from core.models import *
 from seafood.models import *
 from genotype.models import *
 

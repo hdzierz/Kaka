@@ -1,8 +1,8 @@
 
 from .http_data_download_response import *
-from api.connectors import *
-from api.reports import *
-from api.serializer import *
+from core.connectors import *
+from core.data_provider import *
+from core.serializer import *
 #from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response

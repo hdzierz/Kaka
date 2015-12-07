@@ -9,7 +9,7 @@ from djorm_pgfulltext.fields import VectorField
 
 from .logger import *
 from .django_ext import *
-from api.algorithms import *
+from .algorithms import *
 
 import datetime
 from django.utils import timezone

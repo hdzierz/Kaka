@@ -7,9 +7,9 @@ from django_countries.fields import CountryField
 from django.db.models.base import *
 from jsonfield import JSONField
 
-from api.logger import *
-from api.django_ext import *
-from api.models import *
+from core.logger import *
+from core.django_ext import *
+from core.models import *
 
 
 class City(Feature):

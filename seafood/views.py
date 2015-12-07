@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from api.http_data_download_response import *
-from api.connectors import *
-from api.reports import *
+from core.http_data_download_response import *
+from core.connectors import *
+from core.reports import *
 from .models import *
 
 
