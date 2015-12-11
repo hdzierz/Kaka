@@ -1,5 +1,5 @@
 from django.db import models
-from api.models import Feature
+from core.models import Feature
 
 from django.core.urlresolvers import reverse
 

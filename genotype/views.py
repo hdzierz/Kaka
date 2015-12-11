@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-from api.http_data_download_response import *
-from api.connectors import *
-from api.reports import *
-from api.serializer import *
+from core.http_data_download_response import *
+from core.connectors import *
+from core.reports import *
+from core.serializer import *
 #from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response

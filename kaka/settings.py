@@ -53,7 +53,7 @@ INSTALLED_APPS = (
     'djgeojson',
     #'compressor',
     'async',
-    'api',
+    'core',
     'seafood',
     'genotype',
     'gene_expression',

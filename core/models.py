@@ -9,7 +9,7 @@ from djorm_pgfulltext.fields import VectorField
 
 from .logger import *
 from .django_ext import *
-from api.algorithms import *
+from .algorithms import *
 
 import datetime
 from django.utils import timezone
@@ -74,12 +74,6 @@ class DataSource(models.Model):
         return self.name
 
 
-class Study(models.Model):
-    name = models.CharField(max_length=2048, default="Unkown")
-    def __unicode__(self):
-        return self.name
-
-
 class Term(models.Model):
     name = models.CharField(max_length=2048)
     definition = models.CharField(max_length=2048, null=True, default='')
@@ -138,7 +132,10 @@ class Feature(models.Model):
     obs = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
 
     def GetData(self, fmt="csv"):
-        return self.obs
+        res = []
+        for h in self.header:
+            res.append(self.obs[h])
+        return ','.res
 
     @classmethod
     def InitOntology(cls):
@@ -188,55 +185,6 @@ class Species(Feature):
         return self.name
 
 
-class StudyGroup(Feature):
-    species = models.ForeignKey(Species)
-
-
-class StudyArea(Feature):
-    wiki = models.CharField(max_length=255)
-
-
-class Diet(Feature):
-    pass
-
-
-class Ob(models.Model):
-    name = models.CharField(max_length=255)
-    daughters = []
-    obid = models.AutoField(primary_key=True)
-    ontology = models.ForeignKey(Ontology, default=1)
-    datasource = models.ForeignKey(DataSource, null=True)
-    study = models.ForeignKey(Study, null=True)
-    xreflsid = models.CharField(max_length=2048)
-    createddate = models.DateField(auto_now_add=True)
-    createdby = models.CharField(max_length=255)
-    lastupdateddate = models.DateField(auto_now=True)
-    lastupdatedby = models.CharField(max_length=50)
-    obkeywords = models.TextField()
-    statuscode = models.IntegerField(default=1)
-    group = models.CharField(max_length=1024, default="NA")
-    recordeddate = models.DateField(auto_now_add=True)
-
-    search_index = VectorField()
-    objects = SearchManager(
-        fields=('obkeywords'),
-        auto_update_search_field=False
-    )
-
-    def IsOntology(self):
-        return True
-
-    def GetName(self):
-        return self.study.name + '.' + self.name
-
-    class Meta:
-        abstract = True
-
-
-class Unit(Feature):
-    pass
-
-
 def SaveKV(ob, key, value, save=False):
 
     if hasattr(ob, 'obs'):
@@ -269,10 +217,6 @@ def GetKV(ob, key):
     return None
 
 
-class Protein(Feature):
-    pass
-
-
 class BioSubject(Feature):
     species = models.ForeignKey(Species)
     subjectname = models.CharField(max_length=255)
@@ -290,23 +234,6 @@ class BioSubject(Feature):
 
     def GetName(self):
         return self.subjectname
-
-
-
-class Tissue(Feature):
-    pass
-
-
-class Treatment(Feature):
-    no = models.IntegerField(default=0)
-
-
-class SampleMethod(Feature):
-    pass
-
-
-class Instrument(Feature):
-    pass
 
 
 def convert(name):

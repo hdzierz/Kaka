@@ -1,13 +1,13 @@
 
 from .http_data_download_response import *
-from api.connectors import *
-from api.reports import *
-from api.serializer import *
+from core.connectors import *
+from core.data_provider import *
+from core.serializer import *
 #from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
+import tempfile
 #from django.http import JsonResponse
 
 # Create your views here.
@@ -311,9 +311,9 @@ def page_report(request, report, fmt='csv', conf=None):
     fn = tf.name
     fp = open(fn, "w+")
     DataProvider.WriteData(objs, fmt, fn)
-    fclose(fp)
+    fp.close()
     response = StreamingHttpResponse(open(fn), content_type='text/csv') 
-    response['Content-Disposition'] = 'attachment; filename=' + fn + ".csv"
+    response['Content-Disposition'] = 'attachment; filename=' + report  + '.csv'
     return response
     #return HttpDataDownloadResponse(data, report, fmt, False)
 

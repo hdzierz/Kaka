@@ -1,6 +1,6 @@
 from django.forms import widgets
 from rest_framework import serializers
-from api.models import *
+from core.models import *
 
 
 class FishObSerializer(serializers.Serializer):
