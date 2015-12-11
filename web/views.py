@@ -313,7 +313,7 @@ def page_report(request, report, fmt='csv', conf=None):
     DataProvider.WriteData(objs, fmt, fn)
     fp.close()
     response = StreamingHttpResponse(open(fn), content_type='text/csv') 
-    response['Content-Disposition'] = 'attachment; filename=' + fn + ".csv"
+    response['Content-Disposition'] = 'attachment; filename=' + report  + '.csv'
     return response
     #return HttpDataDownloadResponse(data, report, fmt, False)
 

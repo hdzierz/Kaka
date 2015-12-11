@@ -132,7 +132,10 @@ class Feature(models.Model):
     obs = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
 
     def GetData(self, fmt="csv"):
-        return self.obs
+        res = []
+        for h in self.header:
+            res.append(self.obs[h])
+        return ','.res
 
     @classmethod
     def InitOntology(cls):

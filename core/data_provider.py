@@ -11,13 +11,15 @@ from .logger import *
 from core.connectors import *
 from .queries import *
 
+
 def write_data(row, fp):
     try:
         dat = row.GetData()
     except:
         dat = row
-    fp.write(str(row))
+    fp.write(dat +"\n")
     return fp
+
 
 def collect_data(row, tgt):
     #print(row)
