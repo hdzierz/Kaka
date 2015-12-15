@@ -1,5 +1,6 @@
 from mongcore.models import Experiment, DataSourceForTable
 from datetime import datetime
+from pytz import timezone
 
 
 class AbstractQueryStrategy:
@@ -27,7 +28,7 @@ class ExperimentQueryStrategy(AbstractQueryStrategy):
         # Creates and returns an experiment model from the values in the row
         name = row['name']
         who = row['pi']
-        when = ExperimentQueryStrategy.string_to_datetime(row['createddate'])
+        when = string_to_datetime(row['createddate'])
         ds = ExperimentQueryStrategy.data_source_url + name.replace(" ", "+")
         dl = ExperimentQueryStrategy.download_url + name.replace(" ", "+") + "/"
         return Experiment(
@@ -35,21 +36,23 @@ class ExperimentQueryStrategy(AbstractQueryStrategy):
             download_link=dl, data_source=ds,
         )
 
-    @staticmethod
-    def string_to_datetime(date_string):
-        """
-        createddate field values in the database have a colon in the UTC info,
-        preventing a simple call of just strptime(). Removes colon in UTC info
-        so can create a datetime from strptime
-        :param date_string: Date string from createddate field
-        :return: datetime from processed date string
-        """
-        # removing the colon from the UTC info (the last colon)
-        split_at_colon = date_string.split(":")
-        front_rebuild = ":".join(split_at_colon[:-1])
-        formatable_time = ''.join([front_rebuild, split_at_colon[-1]])
 
-        return datetime.strptime(formatable_time, "%Y-%m-%d %X.%f%z")
+def string_to_datetime(date_string):
+    """
+    createddate field values in the database have a colon in the UTC info,
+    preventing a simple call of just strptime(). Removes colon in UTC info
+    so can create a datetime from strptime
+    :param date_string: Date string from createddate field
+    :return: datetime from processed date string
+    """
+    # removing the colon from the UTC info (the last colon)
+    split_at_colon = date_string.split(":")
+    front_rebuild = ":".join(split_at_colon[:-1])
+    formatable_time = ''.join([front_rebuild, split_at_colon[-1]])
+    _datetime = datetime.strptime(formatable_time, "%Y-%m-%d %X.%f%z")
+    return _datetime
+    # nz_time = timezone('Pacific/Auckland')
+    # return _datetime.astimezone(nz_time)
 
 
 class ExperimentUpdate(AbstractQueryStrategy):
@@ -60,19 +63,18 @@ class ExperimentUpdate(AbstractQueryStrategy):
     def create_model(row):
         # Creates and returns an experiment model from the values in the row
         name = row['name']
-        who = row['pi']
-        when = ExperimentQueryStrategy.string_to_datetime(row['createddate'])
-        ds = ExperimentQueryStrategy.data_source_url + name.replace(" ", "+")
-        dl = ExperimentQueryStrategy.download_url + name.replace(" ", "+") + "/"
+        pi = row['pi']
+        creator = row['createdby']
+        when = string_to_datetime(row['createddate'])
+        descr = row['description']
         try:
             Experiment.objects.get(
-                name=name, createddate=when, pi=who,
-                download_link=dl, data_source=ds
+                name=name, createddate=when, pi=pi, createdby=creator
             )
         except Experiment.DoesNotExist :
             experi = Experiment(
-                name=name, createddate=when, pi=who,
-                download_link=dl, data_source=ds
+                name=name, createddate=when, pi=pi, createdby=creator,
+                description=descr
             )
             experi.save()
 

@@ -116,13 +116,16 @@ class Term(mongoengine.Document):
 
 
 class Experiment(mongoengine.Document):
-    name = mongoengine.StringField(max_length=2048, default="Unkown")
-    pi = mongoengine.StringField(max_length=2048, default="Unkown")
+
+    field_names = [
+        'Name', 'Primary Investigator', 'Date Created', 'Description'
+    ]
+
+    name = mongoengine.StringField(max_length=2048, default="Unknown")
+    pi = mongoengine.StringField(max_length=2048, default="Unknown")
     createddate = mongoengine.DateTimeField(default=datetime.now())
     createdby = mongoengine.StringField(max_length=255)
     description = mongoengine.StringField(default="")
-    data_source = mongoengine.StringField(max_length=200)
-    download_link = mongoengine.StringField(max_length=200)
 
 
     def __unicode__(self):
@@ -130,6 +133,9 @@ class Experiment(mongoengine.Document):
 
 
 class ExperimentForTable(models.Model):
+
+    data_source_url = "data_source/?name="
+    download_url = "download/"
 
     field_names = [
         'Name', 'Primary Investigator', 'Date Created', 'Data Source',
@@ -147,10 +153,14 @@ class ExperimentForTable(models.Model):
 
 
 def make_table_experiment(experiment):
+    name = experiment.name
+    data_source = ExperimentForTable.data_source_url + name.replace(" ", "+")
+    download_link = ExperimentForTable.download_url + name.replace(" ", "+") + "/"
+
     return ExperimentForTable(
-        name=experiment.name, primary_investigator=experiment.pi,
-        date_created=experiment.createddate, data_source=experiment.data_source,
-        download_link=experiment.download_link,
+        name=name, primary_investigator=experiment.pi,
+        date_created=experiment.createddate, data_source=data_source,
+        download_link=download_link,
     )
 
 
