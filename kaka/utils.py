@@ -3,11 +3,14 @@ from django import forms
 from django_tables2.utils import A
 from django.utils.html import mark_safe
 from django.forms import ModelForm
-from splitjson.widgets import SplitJSONWidget
+# from splitjson.widgets import SplitJSONWidget
 
 class KakaForm(ModelForm):
     attrs = {'class': 'special', 'size': '40'}
-    obs = forms.CharField(widget=SplitJSONWidget(attrs=attrs, debug=True))
+    # Sorry but there is no splitjson in python 3
+    # obs = forms.CharField(widget=SplitJSONWidget(attrs=attrs, debug=True))
+
+    obs = forms.CharField()
     title = "Update"
 
     class Meta:

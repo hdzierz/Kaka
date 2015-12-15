@@ -1,6 +1,6 @@
 
 from django import forms
-from splitjson.widgets import SplitJSONWidget
+# from splitjson.widgets import SplitJSONWidget
 from django.forms import ModelForm
 from .models import *
 from kaka.utils import KakaForm 

@@ -8,7 +8,7 @@ admin.autodiscover()
 from genotype.views import *
 
 
-urlpatterns = patterns('',
+urlpatterns = [
     # Examples:
     # url(r'^$', 'kaka.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
@@ -24,7 +24,8 @@ urlpatterns = patterns('',
     url(r'^report/(?P<report>[0-9a-zA-Z_]*)/$', 'web.views.page_report'),
     url(r'^report/(?P<report>[0-9a-zA-Z_]*)/(?P<fmt>[a-z]*)/$', 'web.views.page_report'),
     url(r'^report/(?P<report>[0-9a-zA-Z_]*)/(?P<fmt>[a-z]*)/(?P<conf>.*)$', 'web.views.page_report'),
-)
+    url(r'^experimentsearch/', include('experimentsearch.urls', namespace='experimentsearch')),
+]
 
 if settings.DEBUG and False:
     import debug_toolbar

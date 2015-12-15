@@ -14,6 +14,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+MONGO_DB_NAME = 'gds'
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
@@ -49,19 +51,20 @@ INSTALLED_APPS = (
     'rest_framework',
     'crispy_forms',
     'djorm_pgfulltext',
-    'django_cassandra_engine',
+    # 'django_cassandra_engine',
     'djgeojson',
     #'compressor',
     'async',
     'core',
-    'seafood',
+    'mongcore',
+    'seafood',  # TODO: Uncomment once Mongo-ized
     'genotype',
     'gene_expression',
     #'nosql',
     'cassy',
     'web',
     'inplaceeditform',
-
+    'experimentsearch',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -89,11 +92,11 @@ WSGI_APPLICATION = 'kaka.wsgi.application'
 
 DATABASES = {
    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PORT': '5432',
-        'HOST': 'db',
+        # 'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        # 'NAME': 'postgres',
+        # 'USER': 'postgres',
+        # 'PORT': '5432',
+        # 'HOST': 'db',
     },
 #    'default2': {
 #        'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -103,14 +106,19 @@ DATABASES = {
 #        'PASSWORD': 'inkl67z',
 #        'HOST': '10.1.8.154',
 #    },
-    'kiwi_marker': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'kiwi_marker',
-        'USER': 'kiwi',
-        'PORT': '3306',
-        'PASSWORD': 'inkl67z',
-        'HOST': 'localhost',
-    },
+
+      # MySQL-python no longer supported in python 3
+
+#     'kiwi_marker': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'kiwi_marker',
+#         'USER': 'kiwi',
+#         'PORT': '3306',
+#         'PASSWORD': 'inkl67z',
+#         'HOST': 'localhost',
+#     },
+
+
 #    'mongodb' : {
 #      'ENGINE' : 'django_mongodb_engine',
 #      'NAME' : 'kaka',

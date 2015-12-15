@@ -11,6 +11,7 @@ from core.logger import *
 from core.django_ext import *
 from core.models import *
 
+# TODO: Mongo-ize
 
 class Tissue(Feature):
     pass

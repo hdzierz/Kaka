@@ -1,0 +1,19 @@
+body {
+    margin: 0px;
+}
+.menu {
+    float: left;
+    margin-right: 30px;
+    width: auto;
+    height: 100%;
+    border-right: 3px solid #73AD21;
+    background-color: #d9ffd5;
+}
+#logo {
+    position: relative;
+    left: 0
+}
+.content {
+    padding: 10px;
+    width: 100%;
+}

@@ -1,0 +1,38 @@
+{% extends "experimentsearch/menu.html" %}
+{% load staticfiles %}
+{% load render_table from django_tables2 %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/screen.css" %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/searchstyle.css" %}">
+    <script type="text/javascript" src="{% static "jslibraries/jquery-1.11.3.min.js" %}"></script>
+    <script>
+        $(document).ready(function(){
+            // Adds a from field to the GET data in the datasource table links
+            // that matches the current url
+            // For the 'back to search' buttons in the datasoure table pages
+            $(".dslinks").each(function(){
+                var link = $(this).attr("href");
+                var link_w_from = link + "&from=" + window.location.href;
+                $(this).attr("href", link_w_from);
+            });
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <h1>Experiment Search</h1>
+    <form>
+        {{ search_select }}
+    </form>
+    <form>
+        {{ search_form }}
+        <input type="submit" value="Search">
+    </form>
+{% block results %}
+    {% if table %}
+        {% render_table table %}
+    {% elif search_term %}
+        <p>Search came up with no results</p>
+    {% endif %}
+{% endblock %}
+{% endblock %}

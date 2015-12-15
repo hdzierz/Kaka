@@ -23,7 +23,7 @@ from seafood.tables import *
 from seafood.models import *
 from seafood.serializer import *
 from seafood.report import *
-from sets import Set
+# from sets import Set
 
 from gene_expression.models import *
 from gene_expression.tables import *
@@ -279,14 +279,14 @@ def page_report5(request, report, fmt='csv', conf=None):
 
     return response
 
-from djqscsv import render_to_csv_response
+# from djqscsv import
+#
+# def page_report4(request, report, fmt='csv', conf=None):
+#     get_dict = parser.parse(request.GET.urlencode())
+#     qs = get_queryset(request, report, get_dict)
+#
+#     return render_to_csv_response(qs)
 
-def page_report4(request, report, fmt='csv', conf=None):
-    get_dict = parser.parse(request.GET.urlencode())
-    qs = get_queryset(request, report, get_dict)
-
-    return render_to_csv_response(qs)
-    
 def page_report(request, report, fmt='csv', conf=None):
     get_dict = parser.parse(request.GET.urlencode())
     objs = get_queryset(request, report, get_dict)[:100]
