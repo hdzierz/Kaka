@@ -16,6 +16,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 MONGO_DB_NAME = 'gds'
 connect(MONGO_DB_NAME)
+TEST_DB_NAME = 'sandwidge'
+TEST_DB_ALIAS = 'test'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -150,7 +152,7 @@ AUTHENTICATION_BACKENDS = (
     'mongoengine.django.auth.MongoEngineBackend',
 )
 
-TEST_RUNNER = 'experimentsearch.tests.MyTestRunner'
+# TEST_RUNNER = 'experimentsearch.tests.MyTestRunner'
 
 #SOUTH_MIGRATION_MODULES = {
 #    'nosql': 'ignore',

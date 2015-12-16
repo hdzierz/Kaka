@@ -12,6 +12,9 @@ from .query_strategy import ExperimentQueryStrategy, DataSourceQueryStrategy
 from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
 from .errors import QueryError
 from .tables import ExperimentTable, DataSourceTable
+from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
+from mongoengine import register_connection
+from mongoengine.context_managers import switch_db
 
 # WARNING: Tests rely on these globals matching the files in dir test_resources
 test_resources_path = '/test_resources/'
@@ -50,12 +53,15 @@ class MyTestRunner(DiscoverRunner):
     """
     Copied from:
     http://stackoverflow.com/questions/4774800/mongoengine-connect-in-settings-py-testing-problem
+
+    Not currently in use
     """
 
     mongodb_name = 'testsuite'
 
     def setup_databases(self, **kwargs):
         from mongoengine import connect
+        from mongoengine.connection import disconnect
         disconnect()
         connect(self.mongodb_name)
         print('Creating mongo test-database ' + self.mongodb_name)
@@ -71,6 +77,10 @@ class MyTestRunner(DiscoverRunner):
 
 
 class ExperimentsearchTestCase(TestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(ExperimentsearchTestCase, self).__init__(*args, **kwargs)
+        self.test_models = []
 
     @classmethod
     def setUpClass(cls):
@@ -100,8 +110,14 @@ class ExperimentsearchTestCase(TestCase):
         views.genotype_url = resource_path + '/genotype/'
         views.name_query_prefix = ''
         views.experi_query_prefix = ''
-        sync.sync_with_genotype_db()
+        views.testing = True
+        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME)
+        self.test_models.extend(sync.sync_with_genotype_db(test=True))
         self.client = Client()
+
+    def tearDown(self):
+        for model in self.test_models:
+            model.delete()
 
     def test_url_build_1(self):
         url = 'www.foo.bar/?baz='
@@ -125,7 +141,8 @@ class ExperimentsearchTestCase(TestCase):
         self.assertEqual(expected, actual)
 
     def test_experiment_query_1(self):
-        actual_model = Experiment.objects.get(name="What is up")
+        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
+            actual_model = test_db.objects.get(name="What is up")
         self.assertEqual(expected_experi_model.name, actual_model.name)
         self.assertEqual(expected_experi_model.pi, actual_model.pi)
         self.assertEqual(expected_experi_model.createddate, actual_model.createddate)
@@ -140,7 +157,8 @@ class ExperimentsearchTestCase(TestCase):
         self.assertIsNone(actual_models)
 
     def test_data_source_query_1(self):
-        actual_model = DataSource.objects.get(name="What is up")
+        with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
+            actual_model = test_db.objects.get(name="What is up")
         self.assertEqual(expected_ds_model.name, actual_model.name)
         self.assertEqual(expected_ds_model.source, actual_model.source)
         self.assertEqual(expected_ds_model.supplier, actual_model.supplier)
@@ -185,6 +203,7 @@ class ExperimentsearchTestCase(TestCase):
         self.assertEqual(form.cleaned_data['search_name'], 'What is up')
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
+        self.assertIsNotNone(actual_table)
         self.assertEqual(len(actual_table.rows), len(expected_table.rows))
         for row in range(0, len(actual_table.rows)):
             actual_row = actual_table.rows[row]
@@ -208,11 +227,12 @@ class ExperimentsearchTestCase(TestCase):
 
     def test_ds_response_1(self):
         response = self.client.get(
-            '/experimentsearch/data_source/', {'name': 'foo.csv'}
+            '/experimentsearch/data_source/', {'name': 'What is up'}
         )
         self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
         expected_table = DataSourceTable(ds_table_set)
         actual_table = response.context['table']
+        self.assertIsNotNone(actual_table)
         self.assertEqual(len(actual_table.rows), len(expected_table.rows))
         for row in range(0, len(actual_table.rows)):
             actual_row = actual_table.rows[row]

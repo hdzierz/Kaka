@@ -8,7 +8,9 @@ from .query_maker import QueryMaker
 from .query_strategy import ExperimentQueryStrategy, DataSourceQueryStrategy
 from .tables import ExperimentTable, DataSourceTable
 from . import forms as my_forms
-from mongcore.models import Experiment, make_table_experiment
+from mongcore.models import Experiment, make_table_experiment, DataSource, make_table_datasource
+from mongoengine.context_managers import switch_db
+from kaka.settings import TEST_DB_ALIAS
 
 genotype_url = "http://10.1.8.167:8000/report/genotype/csv/"
 data_source_url = "http://10.1.8.167:8000/report/data_source/csv/"
@@ -18,6 +20,7 @@ experi_query_prefix = "?experiment="
 name_query_prefix = "?name="
 pi_query_prefix = "?pi="
 date_query_prefix = "?date="
+testing = False
 
 
 class IndexHelper:
@@ -34,6 +37,10 @@ class IndexHelper:
         self.search_list = None
         self.search_term = None
         self.request = request
+        if testing:
+            self.db_alias = TEST_DB_ALIAS
+        else:
+            self.db_alias = 'default'
 
     def handle_request(self):
         self.select_search_type()
@@ -67,18 +74,20 @@ class IndexHelper:
         self.form = my_forms.NameSearchForm(self.request.GET)
         #  Makes query
         self.search_term = self.request.GET['search_name'].strip()
-        self.search_list = Experiment.objects(
-            name__contains=self.search_term
-        )
+        with switch_db(Experiment, self.db_alias) as db:
+            self.search_list = db.objects(
+                name__contains=self.search_term
+            )
 
     def search_by_pi(self):
         # Updates search form
         self.form = my_forms.PISearchForm(self.request.GET)
         #  Makes Query
         self.search_term = self.request.GET['search_pi'].strip()
-        self.search_list = Experiment.objects(
-            pi__contains=self.search_term
-        )
+        with switch_db(Experiment, self.db_alias) as db:
+            self.search_list = db.objects(
+                pi__contains=self.search_term
+            )
         # Updates 'Search by' dropdown
         self.type_select = my_forms.SearchTypeSelect(
             initial={'search_by': Experiment.field_names[1]}
@@ -91,10 +100,11 @@ class IndexHelper:
             # Queries for experiments with created dates in between the
             # 'from' and 'to' dates
             dates = self.form.cleaned_data
-            self.search_list = Experiment.objects(
-                createddate__gt=dates['from_date'],
-                createddate__lt=dates['to_date']
-            )
+            with switch_db(Experiment, self.db_alias) as db:
+                self.search_list = db.objects(
+                    createddate__gt=dates['from_date'],
+                    createddate__lt=dates['to_date']
+                )
             # Updates 'Search by' dropdown
             self.type_select = my_forms.SearchTypeSelect(
                 initial={'search_by': Experiment.field_names[2]}
@@ -180,13 +190,19 @@ def datasource(request):
             from_page = None
         if 'name' in request.GET:
             ds_name = request.GET['name']
-            query_maker = QueryMaker(DataSourceQueryStrategy())
-            query_url = data_source_url + experi_query_prefix
-            ds_list = query_maker.make_query(ds_name, query_url)
-            if ds_list is None:
+            # TODO: Query by related experiments, whatever that means...
+            if testing:
+                with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
+                    ds_list = test_db.objects(name__contains=ds_name)
+            else:
+                ds_list = DataSource.objects(name__contains=ds_name)
+            if len(ds_list) == 0:
                 table = None
             else:
-                table = DataSourceTable(ds_list)
+                table_list = []
+                for doc in ds_list:
+                    table_list.append(make_table_datasource(doc))
+                table = DataSourceTable(table_list)
                 RequestConfig(request, paginate={"per_page": 25}).configure(table)
             return render(
                 request, 'experimentsearch/datasource.html',

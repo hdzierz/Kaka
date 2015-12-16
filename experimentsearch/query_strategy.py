@@ -1,6 +1,7 @@
 from mongcore.models import Experiment, DataSourceForTable, DataSource
 from datetime import datetime
 from pytz import timezone
+from kaka.settings import TEST_DB_ALIAS
 
 
 class AbstractQueryStrategy:
@@ -13,7 +14,7 @@ class AbstractQueryStrategy:
     """
 
     @staticmethod
-    def create_model(self, row):
+    def create_model(row, test=False):
         raise NotImplementedError("Concrete QueryStrategy missing this method")
 
 
@@ -24,7 +25,7 @@ class ExperimentQueryStrategy(AbstractQueryStrategy):
     download_url = "download/"
 
     @staticmethod
-    def create_model(row):
+    def create_model(row, test=False):
         # Creates and returns an experiment model from the values in the row
         name = row['name']
         who = row['pi']
@@ -60,7 +61,7 @@ class ExperimentUpdate(AbstractQueryStrategy):
     file_name = ExperimentQueryStrategy.file_name
 
     @staticmethod
-    def create_model(row):
+    def create_model(row, test=False):
         # Creates and returns an experiment model from the values in the row
         name = row['name']
         pi = row['pi']
@@ -76,7 +77,10 @@ class ExperimentUpdate(AbstractQueryStrategy):
                 name=name, createddate=when, pi=pi, createdby=creator,
                 description=descr
             )
+            if test:
+                experi.switch_db(TEST_DB_ALIAS)
             experi.save()
+            return experi
 
 
 class DataSourceQueryStrategy(AbstractQueryStrategy):
@@ -84,7 +88,7 @@ class DataSourceQueryStrategy(AbstractQueryStrategy):
     file_name = "ds.csv"
 
     @staticmethod
-    def create_model(row):
+    def create_model(row, test=False):
         # Creates a models.DataSource from the values in the given row
         supplieddate = datetime.strptime(row['supplieddate'], "%Y-%m-%d").date()
         return DataSourceForTable(
@@ -98,17 +102,14 @@ class DataSourceUpdate(AbstractQueryStrategy):
     file_name = DataSourceQueryStrategy.file_name
 
     @staticmethod
-    def create_model(row):
+    def create_model(row, test=False):
         supplieddate = datetime.strptime(row['supplieddate'], "%Y-%m-%d").date()
         name = row['name']
         typ = row['typ']
         source = row['source']
         supplier = row['supplier']
         comment = row['comment']
-        print('is_active: ' + row['is_active'])
-        print('is_active == \'True\'? ' + str(row['is_active'] == 'True'))
         is_active = row['is_active'] == 'True'
-        print('Feild is going to be: ' + str(is_active))
         try:
             DataSource.objects.get(
                 name=name, source=source, supplieddate=supplieddate
@@ -118,5 +119,7 @@ class DataSourceUpdate(AbstractQueryStrategy):
                 name=name, source=source, supplieddate=supplieddate, typ=typ,
                 supplier=supplier, comment=comment, is_active=is_active
             )
-            print('Feild actually is: ' + str(DataSource.is_active))
+            if test:
+                ds.switch_db(TEST_DB_ALIAS)
             ds.save()
+            return ds

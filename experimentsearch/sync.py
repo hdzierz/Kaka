@@ -15,15 +15,18 @@ ds_sync_url = resource_path = pathlib.Path(
         ).as_uri()
 
 
-def sync_with_genotype_db():
-    syncer = QueryMaker(ExperimentUpdate)
+def sync_with_genotype_db(test=False):
+    retrieved_models = []
+    syncer = QueryMaker(ExperimentUpdate, test=test)
     try:
-        syncer.make_query('', sync_url)
+        retrieved_models.extend(syncer.make_query('', sync_url))
     except QueryError as e:
         print("Syncing Failed because:\n" + str(e))
 
-    syncer = QueryMaker(DataSourceUpdate)
+    syncer = QueryMaker(DataSourceUpdate, test=test)
     try:
-        syncer.make_query('', ds_sync_url)
+        retrieved_models.extend(syncer.make_query('', ds_sync_url))
     except QueryError as e:
         print("Syncing Failed because:\n" + str(e))
+
+    return retrieved_models

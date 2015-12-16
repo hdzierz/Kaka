@@ -4,9 +4,10 @@ from .errors import QueryError
 
 class QueryMaker:
 
-    def __init__(self, query_strategy):
+    def __init__(self, query_strategy, test=False):
         self.file_name = query_strategy.file_name
         self._create_model = query_strategy.create_model
+        self.test = test
 
     def make_query(self, search_term, table_url):
         """
@@ -14,9 +15,6 @@ class QueryMaker:
         (typically a url that request a query from an external db)
         Creates a Model (type determined by query strategy) from each row
         in the returned file.
-
-        Does not save the models as this website does not store a local
-        database. Instead returns a list of the models
 
         :param search_term term used to find appropriate csv
         :param table_url url to retrieve csv from
@@ -43,7 +41,7 @@ class QueryMaker:
         reader = csv.DictReader(experi_file)
         results = []
         for row in reader:
-            results.append(self._create_model(row))
+            results.append(self._create_model(row, test=self.test))
         return results
 
     @staticmethod

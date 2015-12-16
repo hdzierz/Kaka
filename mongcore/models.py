@@ -100,7 +100,7 @@ class Term(mongoengine.Document):
     name = mongoengine.StringField(max_length=2048)
     definition = mongoengine.StringField(max_length=2048, null=True, default='')
     group = mongoengine.StringField(max_length=255, null=True, default='None')
-    #datasource = models.ForeignKey(DataSource)
+    datasource = mongoengine.ReferenceField(DataSource)
     values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
 
     def __unicode__(self):
