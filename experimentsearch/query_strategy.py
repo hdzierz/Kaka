@@ -1,4 +1,4 @@
-from mongcore.models import Experiment, DataSourceForTable
+from mongcore.models import Experiment, DataSourceForTable, DataSource
 from datetime import datetime
 from pytz import timezone
 
@@ -91,3 +91,32 @@ class DataSourceQueryStrategy(AbstractQueryStrategy):
             name=row['name'], is_active=row['is_active'], source=row['source'],
             supplier=row['supplier'], supply_date=supplieddate,
         )
+
+
+class DataSourceUpdate(AbstractQueryStrategy):
+
+    file_name = DataSourceQueryStrategy.file_name
+
+    @staticmethod
+    def create_model(row):
+        supplieddate = datetime.strptime(row['supplieddate'], "%Y-%m-%d").date()
+        name = row['name']
+        typ = row['typ']
+        source = row['source']
+        supplier = row['supplier']
+        comment = row['comment']
+        print('is_active: ' + row['is_active'])
+        print('is_active == \'True\'? ' + str(row['is_active'] == 'True'))
+        is_active = row['is_active'] == 'True'
+        print('Feild is going to be: ' + str(is_active))
+        try:
+            DataSource.objects.get(
+                name=name, source=source, supplieddate=supplieddate
+            )
+        except DataSource.DoesNotExist:
+            ds = DataSource(
+                name=name, source=source, supplieddate=supplieddate, typ=typ,
+                supplier=supplier, comment=comment, is_active=is_active
+            )
+            print('Feild actually is: ' + str(DataSource.is_active))
+            ds.save()

@@ -10,11 +10,12 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-
+from mongoengine import connect
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 MONGO_DB_NAME = 'gds'
+connect(MONGO_DB_NAME)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -92,7 +93,7 @@ WSGI_APPLICATION = 'kaka.wsgi.application'
 
 DATABASES = {
    'default': {
-        # 'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': '',
         # 'NAME': 'postgres',
         # 'USER': 'postgres',
         # 'PORT': '5432',
@@ -143,6 +144,13 @@ DATABASES = {
 #    }
 }
 
+SESSION_ENGINE = 'mongoengine.django.sessions'
+
+AUTHENTICATION_BACKENDS = (
+    'mongoengine.django.auth.MongoEngineBackend',
+)
+
+TEST_RUNNER = 'experimentsearch.tests.MyTestRunner'
 
 #SOUTH_MIGRATION_MODULES = {
 #    'nosql': 'ignore',

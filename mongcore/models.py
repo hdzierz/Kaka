@@ -21,10 +21,6 @@ from djgeojson.fields import PointField
 import mongoengine
 from datetime import datetime
 
-from kaka.settings import MONGO_DB_NAME
-
-mongoengine.connect(MONGO_DB_NAME)
-
 
 # Create your models here.
 
@@ -68,10 +64,6 @@ class DataSource(mongoengine.Document):
     is_active = mongoengine.BooleanField(default=False)
     values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
     search_index = VectorField()
-    objects = SearchManager(
-        fields=('name', 'typ'),
-        auto_update_search_field=True
-    )
 
     def GetName(self):
         return self.name
