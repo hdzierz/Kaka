@@ -43,8 +43,8 @@ def init(fn):
         name='Import Kiwifruit East12',
         supplieddate=dt,
         supplier='John McCallum',
-	typ="CSV",
-	source=fn,
+        typ="CSV",
+        source=fn,
     )
 
 

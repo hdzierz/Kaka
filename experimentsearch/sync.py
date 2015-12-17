@@ -2,8 +2,8 @@ import pathlib, os
 
 from .query_maker import QueryMaker
 from .query_strategy import ExperimentUpdate, DataSourceUpdate
-from .views import experi_table_url
 from .errors import QueryError
+from .primrepsync import synchronise
 
 # sync_url = experi_table_url
 # When genotype database down:
@@ -16,17 +16,20 @@ ds_sync_url = resource_path = pathlib.Path(
 
 
 def sync_with_genotype_db(test=False):
-    retrieved_models = []
-    syncer = QueryMaker(ExperimentUpdate, test=test)
-    try:
-        retrieved_models.extend(syncer.make_query('', sync_url))
-    except QueryError as e:
-        print("Syncing Failed because:\n" + str(e))
+    if test:
+        retrieved_models = []
+        syncer = QueryMaker(ExperimentUpdate, test=test)
+        try:
+            retrieved_models.extend(syncer.make_query('', sync_url))
+        except QueryError as e:
+            print("Syncing Failed because:\n" + str(e))
 
-    syncer = QueryMaker(DataSourceUpdate, test=test)
-    try:
-        retrieved_models.extend(syncer.make_query('', ds_sync_url))
-    except QueryError as e:
-        print("Syncing Failed because:\n" + str(e))
+        syncer = QueryMaker(DataSourceUpdate, test=test)
+        try:
+            retrieved_models.extend(syncer.make_query('', ds_sync_url))
+        except QueryError as e:
+            print("Syncing Failed because:\n" + str(e))
 
-    return retrieved_models
+        return retrieved_models
+    else:
+        synchronise()

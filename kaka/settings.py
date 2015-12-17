@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from mongoengine import connect
+from mongoengine import connect, register_connection
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -18,6 +18,10 @@ MONGO_DB_NAME = 'gds'
 connect(MONGO_DB_NAME)
 TEST_DB_NAME = 'sandwidge'
 TEST_DB_ALIAS = 'test'
+
+PRIMARY_DB_NAME = 'primary'
+PRIMARY_DB_ALIAS = 'primary'
+register_connection(PRIMARY_DB_ALIAS, name=PRIMARY_DB_NAME, host='10.1.8.61')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/

@@ -4,8 +4,6 @@ from django.shortcuts import render
 from django.http import StreamingHttpResponse
 from django_tables2 import RequestConfig
 
-from .query_maker import QueryMaker
-from .query_strategy import ExperimentQueryStrategy, DataSourceQueryStrategy
 from .tables import ExperimentTable, DataSourceTable
 from . import forms as my_forms
 from mongcore.models import Experiment, make_table_experiment, DataSource, make_table_datasource
@@ -13,13 +11,8 @@ from mongoengine.context_managers import switch_db
 from kaka.settings import TEST_DB_ALIAS
 
 genotype_url = "http://10.1.8.167:8000/report/genotype/csv/"
-data_source_url = "http://10.1.8.167:8000/report/data_source/csv/"
-experi_table_url = "http://10.1.8.167:8000/report/experiment/csv/"
 genotype_file_name = 'experiment.csv'
 experi_query_prefix = "?experiment="
-name_query_prefix = "?name="
-pi_query_prefix = "?pi="
-date_query_prefix = "?date="
 testing = False
 
 
@@ -163,12 +156,6 @@ def choose_form(search_by):
         return my_forms.PISearchForm()
     else:
         return my_forms.NameSearchForm()
-
-
-def make_experiment_query(search_term, prefix):
-    query_maker = QueryMaker(ExperimentQueryStrategy)
-    query_url = experi_table_url + prefix
-    return query_maker.make_query(search_term, query_url)
 
 
 def datasource(request):

@@ -1,4 +1,4 @@
-from mongcore.models import Experiment, DataSourceForTable, DataSource
+from mongcore.models import Experiment, DataSource
 from datetime import datetime
 from pytz import timezone
 from kaka.settings import TEST_DB_ALIAS
@@ -16,26 +16,6 @@ class AbstractQueryStrategy:
     @staticmethod
     def create_model(row, test=False):
         raise NotImplementedError("Concrete QueryStrategy missing this method")
-
-
-class ExperimentQueryStrategy(AbstractQueryStrategy):
-
-    file_name = "experi_list.csv"
-    data_source_url = "data_source/?name="
-    download_url = "download/"
-
-    @staticmethod
-    def create_model(row, test=False):
-        # Creates and returns an experiment model from the values in the row
-        name = row['name']
-        who = row['pi']
-        when = string_to_datetime(row['createddate'])
-        ds = ExperimentQueryStrategy.data_source_url + name.replace(" ", "+")
-        dl = ExperimentQueryStrategy.download_url + name.replace(" ", "+") + "/"
-        return Experiment(
-            name=name, primary_investigator=who, date_created=when,
-            download_link=dl, data_source=ds,
-        )
 
 
 def string_to_datetime(date_string):
@@ -58,7 +38,7 @@ def string_to_datetime(date_string):
 
 class ExperimentUpdate(AbstractQueryStrategy):
 
-    file_name = ExperimentQueryStrategy.file_name
+    file_name = "experi_list.csv"
 
     @staticmethod
     def create_model(row, test=False):
@@ -83,23 +63,9 @@ class ExperimentUpdate(AbstractQueryStrategy):
             return experi
 
 
-class DataSourceQueryStrategy(AbstractQueryStrategy):
-
-    file_name = "ds.csv"
-
-    @staticmethod
-    def create_model(row, test=False):
-        # Creates a models.DataSource from the values in the given row
-        supplieddate = datetime.strptime(row['supplieddate'], "%Y-%m-%d").date()
-        return DataSourceForTable(
-            name=row['name'], is_active=row['is_active'], source=row['source'],
-            supplier=row['supplier'], supply_date=supplieddate,
-        )
-
-
 class DataSourceUpdate(AbstractQueryStrategy):
 
-    file_name = DataSourceQueryStrategy.file_name
+    file_name = "ds.csv"
 
     @staticmethod
     def create_model(row, test=False):

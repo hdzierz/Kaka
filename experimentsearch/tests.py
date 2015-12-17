@@ -8,8 +8,8 @@ from django.test.runner import DiscoverRunner
 from django.test import TestCase, Client
 from . import views, sync
 from .query_maker import QueryMaker
-from .query_strategy import ExperimentQueryStrategy, DataSourceQueryStrategy
 from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
+from .query_strategy import ExperimentUpdate
 from .errors import QueryError
 from .tables import ExperimentTable, DataSourceTable
 from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
@@ -81,6 +81,7 @@ class ExperimentsearchTestCase(TestCase):
     def __init__(self, *args, **kwargs):
         super(ExperimentsearchTestCase, self).__init__(*args, **kwargs)
         self.test_models = []
+        self.experi_table_url = ''
 
     @classmethod
     def setUpClass(cls):
@@ -105,11 +106,8 @@ class ExperimentsearchTestCase(TestCase):
         ).as_uri()
         sync.sync_url = resource_path + '/experiment/bar.csv'
         sync.ds_sync_url = resource_path + '/data_source/foo.csv'
-        views.data_source_url = resource_path + '/data_source/'
-        views.experi_table_url = resource_path + '/experiment/'
+        self.experi_table_url = resource_path + '/experiment/'
         views.genotype_url = resource_path + '/genotype/'
-        views.name_query_prefix = ''
-        views.experi_query_prefix = ''
         views.testing = True
         register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME)
         self.test_models.extend(sync.sync_with_genotype_db(test=True))
@@ -150,11 +148,9 @@ class ExperimentsearchTestCase(TestCase):
         self.assertEqual(expected_experi_model.createdby, actual_model.createdby)
 
     def test_experiment_query_2(self):
-        querier = QueryMaker(ExperimentQueryStrategy)
-        actual_models = querier.make_query(
-            "found nothing.csv", views.experi_table_url
-        )
-        self.assertIsNone(actual_models)
+        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
+            with self.assertRaises(test_db.DoesNotExist):
+                test_db.objects.get(name="Wort is up")
 
     def test_data_source_query_1(self):
         with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
@@ -166,19 +162,17 @@ class ExperimentsearchTestCase(TestCase):
         self.assertEqual(expected_ds_model.is_active, actual_model.is_active)
 
     def test_data_source_query_2(self):
-        querier = QueryMaker(DataSourceQueryStrategy)
-        actual_models = querier.make_query(
-            "found nothing.csv", views.data_source_url
-        )
-        self.assertIsNone(actual_models)
+        with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
+            with self.assertRaises(test_db.DoesNotExist):
+                test_db.objects.get(name="Wort is up")
 
     def test_bad_url_1(self):
-        querier = QueryMaker(ExperimentQueryStrategy())
+        querier = QueryMaker(ExperimentUpdate)
         with self.assertRaises(QueryError):
-            querier.make_query('banana.csv', views.experi_table_url)
+            querier.make_query('banana.csv', self.experi_table_url)
 
     def test_bad_url_2(self):
-        querier = QueryMaker(ExperimentQueryStrategy())
+        querier = QueryMaker(ExperimentUpdate)
         bad_url = pathlib.Path(os.getcwd() + "/nonexistentdir/").as_uri()
         with self.assertRaises(QueryError):
             querier.make_query('bar.csv', bad_url)
