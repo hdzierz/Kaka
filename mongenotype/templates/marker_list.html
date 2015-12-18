@@ -1,0 +1,14 @@
+{% load django_tables2 %}
+
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}django_tables2/themes/paleblue/css/screen.css" />
+
+
+<ul>
+{% for ds in dss %}
+    <li><a href="/gui/{{report}}/list/{{ds.id}}">{{ds}}</a></li>
+{% endfor %}
+</ul>
+
+{% render_table table %}
+
+

@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+    <head></head>
+    <body>
+        Errors: 
+        {% for field, error in form.errors.items %}
+            <ul>
+            <li>{{ error }}</li>
+            </ul>
+        {% empty %}
+            no errors 
+        {% endfor %}
+        <hr/>
+        List of:
+            <form action="" method="post">
+                {% csrf_token %}
+                {{ form.as_p}}
+                <input type="submit" value="Submit" />
+            </form>
+    </body>
+</html>

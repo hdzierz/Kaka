@@ -1,7 +1,9 @@
 from mongcore.models import Experiment, DataSource
+from mongcore.query_set_helpers import fetch_or_save
 from datetime import datetime
 from pytz import timezone
 from kaka.settings import TEST_DB_ALIAS
+from mongoengine.context_managers import switch_db
 
 
 class AbstractQueryStrategy:
@@ -48,19 +50,13 @@ class ExperimentUpdate(AbstractQueryStrategy):
         creator = row['createdby']
         when = string_to_datetime(row['createddate'])
         descr = row['description']
-        try:
-            Experiment.objects.get(
-                name=name, createddate=when, pi=pi, createdby=creator
+        db_alias = TEST_DB_ALIAS if test else 'default'
+        with switch_db(Experiment, db_alias) as TestEx:
+            experi, created = fetch_or_save(
+                TestEx, db_alias=db_alias, name=name, createddate=when, pi=pi,
+                createdby=creator, description=descr
             )
-        except Experiment.DoesNotExist :
-            experi = Experiment(
-                name=name, createddate=when, pi=pi, createdby=creator,
-                description=descr
-            )
-            if test:
-                experi.switch_db(TEST_DB_ALIAS)
-            experi.save()
-            return experi
+        return experi
 
 
 class DataSourceUpdate(AbstractQueryStrategy):
@@ -76,16 +72,11 @@ class DataSourceUpdate(AbstractQueryStrategy):
         supplier = row['supplier']
         comment = row['comment']
         is_active = row['is_active'] == 'True'
-        try:
-            DataSource.objects.get(
-                name=name, source=source, supplieddate=supplieddate
+        db_alias = TEST_DB_ALIAS if test else 'default'
+        with switch_db(DataSource, db_alias) as TestDs:
+            ds, created = fetch_or_save(
+                TestDs, db_alias=db_alias, name=name, source=source,
+                supplieddate=supplieddate, typ=typ, supplier=supplier, comment=comment,
+                is_active=is_active
             )
-        except DataSource.DoesNotExist:
-            ds = DataSource(
-                name=name, source=source, supplieddate=supplieddate, typ=typ,
-                supplier=supplier, comment=comment, is_active=is_active
-            )
-            if test:
-                ds.switch_db(TEST_DB_ALIAS)
-            ds.save()
-            return ds
+        return ds

@@ -115,6 +115,7 @@ class ExperimentsearchTestCase(TestCase):
 
     def tearDown(self):
         for model in self.test_models:
+            # model.switch_db(TEST_DB_ALIAS)
             model.delete()
 
     def test_url_build_1(self):

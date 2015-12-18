@@ -4,7 +4,7 @@
 import datetime
 from core.connectors import *
 from core.imports import *
-from core.models import *
+from mongcore.models import *
 from genotype.models import *
 from os import walk, path
 
