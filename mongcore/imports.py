@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from .models import *
-from .logger import *
+# from .models import *
+# from .logger import *
+from .algorithms import accumulate
 #from .connectors import *
 
 
@@ -49,8 +50,8 @@ class ImportOp:
     def __init__(self):
         pass
 
-    def Op():
-        pass
+    # def Op():
+    #     pass
 
 
 

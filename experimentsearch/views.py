@@ -8,6 +8,7 @@ from .tables import ExperimentTable, DataSourceTable
 from . import forms as my_forms
 from mongcore.models import Experiment, make_table_experiment, DataSource, make_table_datasource
 from mongoengine.context_managers import switch_db
+from mongenotype.models import Genotype
 from kaka.settings import TEST_DB_ALIAS
 
 genotype_url = "http://10.1.8.167:8000/report/genotype/csv/"
@@ -183,6 +184,7 @@ def datasource(request):
                     ds_list = test_db.objects(name__contains=ds_name)
             else:
                 ds_list = DataSource.objects(name__contains=ds_name)
+
             if len(ds_list) == 0:
                 table = None
             else:

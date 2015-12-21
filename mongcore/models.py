@@ -177,10 +177,6 @@ class Feature(mongoengine.Document):
     obkeywords = mongoengine.StringField()
     statuscode = mongoengine.IntField(default=1)
     search_index = VectorField()
-    objects = SearchManager(
-        fields=('name', 'alias', 'description', 'obkeywords'),
-        auto_update_search_field=True
-    )
 
     obs = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
 
