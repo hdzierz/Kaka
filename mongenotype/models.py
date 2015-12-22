@@ -23,7 +23,11 @@ class Genotype(Feature):
         return self.GetName()
 
     def GetName(self):
-        return self.kea_id + '/' + self.ebrida_id
+        name = self.name
+        if self.kea_id is not None and self.ebrida_id is not None:
+            name = name + '/' + self.kea_id + '/' + self.ebrida_id
+        name = name + '/' + self.datasource.GetName()
+        return name
 
 
 class Marker(Feature):
@@ -55,6 +59,9 @@ class OldMarker(OldFeature):
     def get_absolute_url(self):
         return reverse('marker-detail', kwargs={'pk': self.pk})
 
+    class Meta:
+        app_label = 'mongenotype'
+
 
 class Primer(Feature):
     def __unicode__(self):
@@ -79,6 +86,9 @@ class OldPrimer(OldFeature):
     def GetName(self):
         return self.name
 
+    class Meta:
+        app_label = 'mongenotype'
+
 
 class OldPrimerType(OldFeature):
     def __unicode__(self):
@@ -86,6 +96,9 @@ class OldPrimerType(OldFeature):
 
     def GetName(self):
         return self.name
+
+    class Meta:
+        app_label = 'mongenotype'
 
 
 class PrimerOb(Feature):
@@ -106,6 +119,9 @@ class OldPrimerOb(OldFeature):
 
     def GetName(self):
         return self.name
+
+    class Meta:
+        app_label = 'mongenotype'
 
 #primerob
 #    genotype | primertype

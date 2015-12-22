@@ -213,22 +213,47 @@ class Echo(object):
 
 def stream_experiment_csv(request, experi_name):
     """
-    Queries the genotype table with the experi_name as an experiment filter
-    Saves the result to a csv file. Uses that file to write a http response
-    which downloads the csv file for the client
+    Queries the genotype collection with the experiment that matches experi_name
+    as a filter on 'study'. Creates a csv representation of the query set.
+    Writes a http response which downloads the csv file for the client
     :param request:
     :param experi_name: name of experiment to query for associations
     :return: httpresponse that downloads results of query as csv
     """
     # Make query
-    query_url = genotype_url + experi_query_prefix
-    urllib.request.urlretrieve(query_url + experi_name, genotype_file_name)
+    ex = Experiment.objects.get(name=experi_name)
+    genotype = Genotype.objects(study=ex)
 
-    experiment_csv = open(genotype_file_name, 'r')
-    reader = csv.reader(experiment_csv)
+    # Header row from Genotype document fields
+    header = []
+    for key in genotype[0].to_mongo().to_dict():
+        if key[0] != '_':
+            if key is "study" or key is "datasource":
+                header.append(key + "__name")
+            else:
+                header.append(key)
+    header_row = ','.join(header)
+    print(header_row)
+    rows = [header_row]
+
+    # csv row for each document
+    for gen in genotype:
+        ref_fields = {"study":gen.study, "datasource":gen.datasource}
+        gen_dic = gen.to_mongo().to_dict()
+        row = []
+        for key in gen_dic:
+            if key[0] != '_':
+                if key is "study" or key is "datasource":
+                    row.append(ref_fields[key].name)
+                else:
+                    row.append(str(gen_dic[key]))
+        row_string = ','.join(row)
+        rows.append(row_string)
+
     writer = csv.writer(Echo())
+    reader = csv.reader(rows)
     # Write query results to csv response
-    response = StreamingHttpResponse((writer.writerow(row) for row in reader),
+    response = StreamingHttpResponse((writer.writerow(r) for r in reader),
                                      content_type="text/csv")
     content = 'attachment; filename="' + experi_name + '.csv"'
     response['Content-Disposition'] = content

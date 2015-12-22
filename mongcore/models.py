@@ -146,8 +146,8 @@ class ExperimentForTable(models.Model):
 
 def make_table_experiment(experiment):
     name = experiment.name
-    data_source = ExperimentForTable.data_source_url + name.replace(" ", "+")
-    download_link = ExperimentForTable.download_url + name.replace(" ", "+") + "/"
+    data_source = ExperimentForTable.data_source_url + name
+    download_link = ExperimentForTable.download_url + name + "/"
 
     return ExperimentForTable(
         name=name, primary_investigator=experiment.pi,
