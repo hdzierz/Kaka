@@ -7,10 +7,10 @@ from .primrepsync import synchronise
 
 # sync_url = experi_table_url
 # When genotype database down:
-sync_url = resource_path = pathlib.Path(
+sync_url = pathlib.Path(
             "C:/Users/cfpbtj/PycharmProjects/genotypedatasearch" + "/experi_list.csv"
         ).as_uri()
-ds_sync_url = resource_path = pathlib.Path(
+ds_sync_url = pathlib.Path(
             "C:/Users/cfpbtj/PycharmProjects/genotypedatasearch" + "/ds.csv"
         ).as_uri()
 

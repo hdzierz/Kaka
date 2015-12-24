@@ -1,3 +1,5 @@
+import uuid
+
 from mongcore.models import Experiment, DataSource
 from mongcore.query_set_helpers import fetch_or_save
 from datetime import datetime
@@ -53,8 +55,8 @@ class ExperimentUpdate(AbstractQueryStrategy):
         db_alias = TEST_DB_ALIAS if test else 'default'
         with switch_db(Experiment, db_alias) as TestEx:
             experi, created = fetch_or_save(
-                TestEx, db_alias=db_alias, name=name, createddate=when, pi=pi,
-                createdby=creator, description=descr
+                TestEx, db_alias=db_alias, uuid=uuid.uuid4(), name=name, createddate=when,
+                pi=pi, createdby=creator, description=descr
             )
         return experi
 
@@ -75,7 +77,7 @@ class DataSourceUpdate(AbstractQueryStrategy):
         db_alias = TEST_DB_ALIAS if test else 'default'
         with switch_db(DataSource, db_alias) as TestDs:
             ds, created = fetch_or_save(
-                TestDs, db_alias=db_alias, name=name, source=source,
+                TestDs, db_alias=db_alias, uuid=uuid.uuid4(), name=name, source=source,
                 supplieddate=supplieddate, typ=typ, supplier=supplier, comment=comment,
                 is_active=is_active
             )

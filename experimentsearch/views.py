@@ -220,6 +220,7 @@ def stream_experiment_csv(request, experi_name):
     :param experi_name: name of experiment to query for associations
     :return: httpresponse that downloads results of query as csv
     """
+    # TODO: Have a 'preparing your download' page to go to first
     # Make query
     ex = Experiment.objects.get(name=experi_name)
     genotype = Genotype.objects(study=ex)
@@ -227,7 +228,7 @@ def stream_experiment_csv(request, experi_name):
     # Header row from Genotype document fields
     header = []
     for key in genotype[0].to_mongo().to_dict():
-        if key[0] != '_':
+        if key[0] != '_' and key is not 'uuid':
             if key is "study" or key is "datasource":
                 header.append(key + "__name")
             else:
@@ -242,7 +243,7 @@ def stream_experiment_csv(request, experi_name):
         gen_dic = gen.to_mongo().to_dict()
         row = []
         for key in gen_dic:
-            if key[0] != '_':
+            if key[0] != '_' and key is not 'uuid':
                 if key is "study" or key is "datasource":
                     row.append(ref_fields[key].name)
                 else:

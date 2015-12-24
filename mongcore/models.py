@@ -20,7 +20,8 @@ from jsonfield import JSONField
 from djgeojson.fields import PointField
 import mongoengine
 from datetime import datetime
-
+from .document_change_listener import *
+from uuid import uuid4
 
 # Create your models here.
 
@@ -55,6 +56,7 @@ You will usually get file names here.
 
 """
 class DataSource(mongoengine.Document):
+    uuid = mongoengine.UUIDField(unique=True)
     name = mongoengine.StringField(max_length=1024)
     typ = mongoengine.StringField(null=True, max_length=256, default="None")
     source = mongoengine.StringField()
@@ -64,6 +66,23 @@ class DataSource(mongoengine.Document):
     is_active = mongoengine.BooleanField(default=False)
     values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
     search_index = VectorField()
+
+    def save(self, force_insert=False, validate=True, clean=True,
+             write_concern=None,  cascade=None, cascade_kwargs=None,
+             _refs=None, save_condition=None, **kwargs):
+        super(DataSource, self).save(
+            force_insert, validate, clean, write_concern,
+            cascade, cascade_kwargs, _refs, save_condition, **kwargs
+        )
+        log_addition(self)
+
+    def delete(self, **write_concern):
+        log_deletion(self)
+        super(DataSource, self).delete(**write_concern)
+
+    def update(self, **kwargs):
+        super(DataSource, self).update(**kwargs)
+        log_update(self, kwargs)
 
     def GetName(self):
         return self.name
@@ -97,11 +116,16 @@ def make_table_datasource(datasource):
 
 
 class Term(mongoengine.Document):
+    uuid = mongoengine.UUIDField(unique=True)
     name = mongoengine.StringField(max_length=2048)
     definition = mongoengine.StringField(max_length=2048, null=True, default='')
     group = mongoengine.StringField(max_length=255, null=True, default='None')
     datasource = mongoengine.ReferenceField(DataSource)
-    values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
+    values = mongoengine.DictField()
+
+    def update(self, **kwargs):
+        super(Term, self).update(**kwargs)
+        log_update(self, kwargs)
 
     def __unicode__(self):
         return self.name
@@ -113,12 +137,29 @@ class Experiment(mongoengine.Document):
         'Name', 'Primary Investigator', 'Date Created', 'Description'
     ]
 
+    uuid = mongoengine.UUIDField(unique=True)
     name = mongoengine.StringField(max_length=2048, default="Unknown")
     pi = mongoengine.StringField(max_length=2048, default="Unknown")
     createddate = mongoengine.DateTimeField(default=datetime.now())
     createdby = mongoengine.StringField(max_length=255)
     description = mongoengine.StringField(default="")
 
+    def update(self, **kwargs):
+        super(Experiment, self).update(**kwargs)
+        log_update(self, kwargs)
+
+    def save(self, force_insert=False, validate=True, clean=True,
+             write_concern=None,  cascade=None, cascade_kwargs=None,
+             _refs=None, save_condition=None, **kwargs):
+        super(Experiment, self).save(
+            force_insert, validate, clean, write_concern,
+            cascade, cascade_kwargs, _refs, save_condition, **kwargs
+        )
+        log_addition(self)
+
+    def delete(self, **write_concern):
+        log_deletion(self)
+        super(Experiment, self).delete(**write_concern)
 
     def __unicode__(self):
         return self.name
@@ -161,6 +202,7 @@ def make_table_experiment(experiment):
 class Feature(mongoengine.Document):
     fmt = "csv"
 
+    uuid = mongoengine.UUIDField(unique=True)
     name = mongoengine.StringField(max_length=255, default="unknown")
     dtt = mongoengine.DateTimeField(default=timezone.now)
     geom = PointField(default={'type': 'Point', 'coordinates': [0, 0]})    
@@ -178,7 +220,8 @@ class Feature(mongoengine.Document):
     statuscode = mongoengine.IntField(default=1)
     search_index = VectorField()
 
-    obs = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
+
+    obs = mongoengine.DictField()
 
     def GetData(self, fmt="csv"):
         res = []
@@ -205,6 +248,11 @@ class Feature(mongoengine.Document):
 
     def IsOntology(self):
         return True
+
+    def update(self, **kwargs):
+        super(Feature, self).update(**kwargs)
+        self.__dict__['lastupdateddate'] = datetime.now()
+        log_update(self, kwargs)
 
     meta = {
         'allow_inheritance': True, 'abstract': True
@@ -237,7 +285,7 @@ class Species(Feature):
 
 
 def SaveKV(ob, key, value, save=False):
-
+    key = key.replace(".", "-")
     if hasattr(ob, 'obs'):
         if not type(ob.obs) is dict:
             ob.obs = {}
@@ -324,4 +372,3 @@ def set_ontology(sender, instance, **kwargs):
         msg = "ERROR in signal set_ontology. Uknown class: %s." % class_name
         Logger.Warning(msg)
         raise DataError(msg)
-

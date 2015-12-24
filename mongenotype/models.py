@@ -1,9 +1,12 @@
 import mongoengine
 from django.db import models
-from mongcore.models import Feature
+from mongcore.models import Feature, ChangeLog, Addition, Deletion, Change
 from core.models import Feature as OldFeature
+from uuid import uuid4
+from mongcore.document_change_listener import *
 
 from django.core.urlresolvers import reverse
+
 
 class Chromosome(Feature):
     no = mongoengine.StringField(max_length=10)
@@ -18,6 +21,19 @@ class Chromosome(Feature):
 class Genotype(Feature):
     ebrida_id = mongoengine.StringField(max_length=255)
     kea_id = mongoengine.StringField(max_length=255)
+
+    def save(self, force_insert=False, validate=True, clean=True,
+             write_concern=None,  cascade=None, cascade_kwargs=None,
+             _refs=None, save_condition=None, **kwargs):
+        super(Genotype, self).save(
+            force_insert, validate, clean, write_concern,
+            cascade, cascade_kwargs, _refs, save_condition, **kwargs
+        )
+        log_addition(self)
+
+    def delete(self, **write_concern):
+        log_deletion(self)
+        super(Genotype, self).delete(**write_concern)
 
     def __unicode__(self):
         return self.GetName()

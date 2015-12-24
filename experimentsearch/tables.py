@@ -3,7 +3,7 @@ from mongcore.models import ExperimentForTable, DataSourceForTable
 
 
 class ExperimentTable(tables.Table):
-    download_link = tables.TemplateColumn('<a href="{{record.download_link}}">Download</a>')
+    download_link = tables.TemplateColumn('<a class="dl_links" href="{{record.download_link}}">Download</a>')
     data_source = tables.TemplateColumn('<a class="dslinks" href="{{record.data_source}}">Link</a>')
 
     class Meta:

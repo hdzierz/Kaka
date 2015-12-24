@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-
+import uuid
 import datetime
 from mongcore.connectors import CsvConnector
 from mongcore.imports import GenericImport
-from mongcore.query_set_helpers import fetch_or_save
+from mongcore.query_set_helpers import fetch_or_save, build_dict
 from mongcore.models import DataSource, Experiment, SaveKVs
 from mongenotype.models import Primer, Genotype
 from mongoengine import Document, QuerySet
@@ -16,11 +16,13 @@ class Import:
 
     @staticmethod
     def LoadOp(line, succ):
-        pr = Genotype()
-        pr.name = line['rs#']
-        pr.study = Import.study
-        pr.datasource = Import.ds
+        pr = Genotype(
+            name=line['rs#'], study=Import.study, datasource=Import.ds,
+            uuid=uuid.uuid4()
+        )
+        # print("UUID of {0}: {1}".format(pr.name, pr.uuid))
         SaveKVs(pr, line)
+        # print("UUID of {0}: {1}".format(pr.name, pr.uuid))
         pr.save()
         return True
 

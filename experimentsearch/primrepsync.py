@@ -1,13 +1,12 @@
+from mongcore import document_change_listener
+from mongcore.document_change_listener import ChangeLog, Addition, Deletion, Update
 from mongcore.models import Experiment, DataSource
 from mongenotype.models import Genotype
 from kaka.settings import PRIMARY_DB_ALIAS
 from mongoengine.context_managers import switch_db
-from mongcore.query_set_helpers import fetch_or_save
+from mongcore.query_set_helpers import fetch_or_save, build_dict
 from bson.objectid import ObjectId
-
-# TODO: handle updates (currently just makes a new one)
-# TODO: handle deletions
-# TODO: make more efficient?
+from datetime import datetime
 
 
 def synchronise():
@@ -20,87 +19,72 @@ def synchronise():
 
     :return:
     """
-    update_local_replica()
-    update_primary()
-
-
-def update_local_replica():
-    update_local_experiments()
-    update_local_data_source()
-    update_local_genotype()
-
-
-def update_local_experiments():
-    with switch_db(Experiment, PRIMARY_DB_ALIAS) as prim:
-        from_primary = prim.objects.all()
-    for experi in from_primary:
-        fetch_or_save(
-            Experiment, name=experi.name, createddate=experi.createddate,
-            pi=experi.pi, createdby=experi.createdby,
-            description=experi.description
-        )
-
-
-def update_local_data_source():
-    with switch_db(DataSource, PRIMARY_DB_ALIAS) as prim:
-        from_primary = prim.objects.all()
-    for ds in from_primary:
-        fetch_or_save(
-            DataSource, name=ds.name, source=ds.source,
-            supplieddate=ds.supplieddate, typ=ds.typ, supplier=ds.supplier,
-            comment=ds.comment, is_active=ds.is_active
-        )
-
-
-def update_local_genotype():
-    with switch_db(Genotype, PRIMARY_DB_ALIAS) as Prim:
-        from_primary = Prim.objects.all()
-    for gen in from_primary:
-        gen_dict = gen.to_mongo().to_dict()
-        search_dict = searchable_dict(gen_dict)
-        build_dict = buildable_dict(gen_dict)
-        fetch_or_save(Genotype, search_dict=search_dict, **build_dict)
+    document_change_listener.logging = False
+    rep_changes = ChangeLog.objects.all()
+    change_uuids = rep_changes.scalar('uuid')
+    with switch_db(ChangeLog, PRIMARY_DB_ALIAS) as Prim:
+        prim_change_uuids = Prim.objects.all().scalar('uuid')
+        prim_changes = Prim.objects(uuid__nin=change_uuids)
+    if len(prim_changes) == 0:
+        update_primary()
+    else:
+        unique_rep_changes = ChangeLog.objects(uuid__nin=prim_change_uuids)
+        unique_rep_changes = unique_rep_changes.order_by("+time")
+        prim_changes = prim_changes.order_by("+time")
+        earliest = min(prim_changes[0].time, unique_rep_changes[0].time)
+        all_changes = rep_changes.insert(prim_changes)
+        make_changes = all_changes.filter(time__gte=earliest)
+        make_changes = make_changes.order_by("+time")
+        for change in make_changes:
+            apply_change(change)
+            apply_change(change, db_alias=PRIMARY_DB_ALIAS)
+    document_change_listener.logging = True
 
 
 def update_primary():
-    update_primary_experiments()
-    update_primary_data_source()
-    update_primary_genotype()
+    with switch_db(ChangeLog, PRIMARY_DB_ALIAS) as Prim:
+        prim_changes = Prim.objects.all()
+    change_uuids = prim_changes.scalar('uuid')
+    rep_changes = ChangeLog.objects(uuid__nin=change_uuids)
+    if len(rep_changes) == 0:
+        return
+    rep_changes = rep_changes.order_by('+time')
+    for change_log in rep_changes:
+        apply_change(change_log, db_alias=PRIMARY_DB_ALIAS)
 
 
-def update_primary_experiments():
-    from_replica = Experiment.objects.all()
-    for ex in from_replica:
-        with switch_db(Experiment, PRIMARY_DB_ALIAS) as PrimEx:
-            fetch_or_save(
-                PrimEx, db_alias=PRIMARY_DB_ALIAS, name=ex.name,
-                createddate=ex.createddate, pi=ex.pi, createdby=ex.createdby,
-                description=ex.description
-            )
+def apply_change(change_log, db_alias='default'):
+    change = change_log.change
+    if isinstance(change, Addition):
+        apply_addition(change, db_alias=db_alias)
+    if isinstance(change, Deletion):
+        apply_deletion(change, db_alias=db_alias)
+    if isinstance(change, Update):
+        apply_update(change, db_alias=db_alias)
+    change_log.switch_db(db_alias)
+    change_log.save()
 
 
-def update_primary_data_source():
-    from_replica = DataSource.objects.all()
-    for ds in from_replica:
-        with switch_db(DataSource, PRIMARY_DB_ALIAS) as PrimDS:
-            fetch_or_save(
-                PrimDS, db_alias=PRIMARY_DB_ALIAS, name=ds.name, source=ds.source,
-                supplieddate=ds.supplieddate, typ=ds.typ, supplier=ds.supplier,
-                comment=ds.comment, is_active=ds.is_active
-            )
+def apply_addition(change, db_alias='default'):
+    Document = eval(change.collection)
+    doc = Document(**change.doc_added)
+    doc.switch_db(db_alias)
+    doc.save()
 
 
-def update_primary_genotype():
-    from_replica = Genotype.objects.all()
-    for gen in from_replica:
-        gen_dict = gen.to_mongo().to_dict()
-        search_dict = searchable_dict(gen_dict)
-        build_dict = buildable_dict(gen_dict)
-        with switch_db(Genotype, PRIMARY_DB_ALIAS) as PrimGen:
-            fetch_or_save(
-                PrimGen, db_alias=PRIMARY_DB_ALIAS, search_dict=search_dict,
-                **build_dict
-            )
+def apply_deletion(change, db_alias='default'):
+    Document = eval(change.collection)
+    with switch_db(Document, db_alias) as Doc:
+        Doc.objects.get(uuid=change.doc_uuid).delete()
+
+
+def apply_update(change, db_alias='default'):
+    Document = eval(change.collection)
+    with switch_db(Document, db_alias) as Doc:
+        d = Doc.objects.get(uuid=change.doc_uuid)
+    d.switch_db(db_alias)
+    d.update(**change.fields_changed)
+    d.save()
 
 
 def searchable_dict(object_dict):
