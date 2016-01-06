@@ -6,7 +6,7 @@
     <script>
         $(document).ready(function(){
             var link = "{% url 'experimentsearch:stream_experiment_csv' experi_name %}";
-            link = link + "?from=" + "{{ from }}" + "&download=True";
+            link = link + "?from=" + "{{ from }}";
             window.location.href = link;
         });
     </script>

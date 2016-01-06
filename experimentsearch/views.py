@@ -253,7 +253,7 @@ def stream_experiment_csv(request, experi_name):
     global csv_response
 
     if request.method == 'GET' and 'from' in request.GET:
-        redirect_address = request.GET['from']
+        redirect_address = request.GET['from'] + "&download=True"
     else:
         redirect_address = 'experimentsearch:index'
 
