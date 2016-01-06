@@ -21,7 +21,7 @@ TEST_DB_ALIAS = 'test'
 
 PRIMARY_DB_NAME = 'primary'
 PRIMARY_DB_ALIAS = 'primary'
-register_connection(PRIMARY_DB_ALIAS, name=PRIMARY_DB_NAME, host='10.1.8.61')
+register_connection(PRIMARY_DB_ALIAS, name=PRIMARY_DB_NAME, host='10.1.8.102')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/

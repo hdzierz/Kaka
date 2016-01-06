@@ -1,50 +1,69 @@
 from mongcore import document_change_listener
 from mongcore.document_change_listener import ChangeLog, Addition, Deletion, Update
-from mongcore.models import Experiment, DataSource
-from mongenotype.models import Genotype
 from kaka.settings import PRIMARY_DB_ALIAS
 from mongoengine.context_managers import switch_db
-from mongcore.query_set_helpers import fetch_or_save, build_dict
 from bson.objectid import ObjectId
-from datetime import datetime
 
 
 def synchronise():
     """
     Ensures that the docs in both the primary and local db match.
 
-    Currently just gets all the docs from the primary db and for each
-    doc checks for an exact match in the local, then creates a new doc if
-    no matches were found. Then does vice-versa
+    Checks for any ChangeLog documents not in both the primary and the
+    replica's change_log collection, then adds those documents to the database they
+    were missing from.
+    Once ChangeLogs are synced, orders the ChangeLogs by time. Starting from the
+    ChangeLog that was previously not in both databases with the earliest date,
+    iterates through the ChangeLogs applying and reapplying the changes represented
+    by the ChangeLogs to both databases. This ensures the other collections of both
+    databases match
 
     :return:
     """
+    # Turns off change logging while syncing
     document_change_listener.logging = False
+
+    # Finds the ChangeLogs unique to the primary, using UUIDs
     rep_changes = ChangeLog.objects.all()
     change_uuids = rep_changes.scalar('uuid')
     with switch_db(ChangeLog, PRIMARY_DB_ALIAS) as Prim:
         prim_change_uuids = Prim.objects.all().scalar('uuid')
         prim_changes = Prim.objects(uuid__nin=change_uuids)
-    if len(prim_changes) == 0:
-        update_primary()
-    else:
-        unique_rep_changes = ChangeLog.objects(uuid__nin=prim_change_uuids)
-        unique_rep_changes = unique_rep_changes.order_by("+time")
-        prim_changes = prim_changes.order_by("+time")
-        earliest = min(prim_changes[0].time, unique_rep_changes[0].time)
-        all_changes = rep_changes.insert(prim_changes)
-        make_changes = all_changes.filter(time__gte=earliest)
-        make_changes = make_changes.order_by("+time")
-        for change in make_changes:
-            apply_change(change)
-            apply_change(change, db_alias=PRIMARY_DB_ALIAS)
+
+    # finds the ChangeLogs unique to the replica, using UUIDs
+    unique_rep_changes = ChangeLog.objects(uuid__nin=prim_change_uuids)
+
+    if len(prim_changes) == 0 and len(unique_rep_changes) == 0:
+        return  # No new changes to either database
+
+    earliest = earliest_unique_change_time(prim_changes, unique_rep_changes)
+
+    # Applies and reapplies the changes from both databases to both
+    # databases, starting from the earliest unique change
+    all_changes = rep_changes.insert(prim_changes)
+    make_changes = all_changes.filter(time__gte=earliest)
+    make_changes = make_changes.order_by("+time")
+    for change in make_changes:
+        apply_change(change)
+        apply_change(change, db_alias=PRIMARY_DB_ALIAS)
+
+    # Switch change logging back on
     document_change_listener.logging = True
 
 
-def update_primary():
-    with switch_db(ChangeLog, PRIMARY_DB_ALIAS) as Prim:
-        prim_changes = Prim.objects.all()
-    change_uuids = prim_changes.scalar('uuid')
+def earliest_unique_change_time(prim_changes, unique_rep_changes):
+    # finds the earliest ChangeLog's time unique to either database
+    unique_rep_changes = unique_rep_changes.order_by("+time")
+    prim_changes = prim_changes.order_by("+time")
+    if len(prim_changes) == 0:
+        return unique_rep_changes[0].time
+    if len(unique_rep_changes) == 0:
+        return prim_changes[0].time
+    return min(prim_changes[0].time, unique_rep_changes[0].time)
+
+
+def update_primary(change_uuids):
+    # finds the ChangeLogs unique to the replica, using UUIDs
     rep_changes = ChangeLog.objects(uuid__nin=change_uuids)
     if len(rep_changes) == 0:
         return

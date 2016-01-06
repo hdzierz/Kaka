@@ -16,11 +16,19 @@
                 var link_w_from = link + "&from=" + window.location.href;
                 $(this).attr("href", link_w_from);
             });
+            $(".dl_links").each(function(){
+                var link = $(this).attr("href");
+                var link_w_from = link + "?from=" + window.location.href;
+                $(this).attr("href", link_w_from);
+            });
 
             //$(".dl_links").click(function(){
             //    alert("Preparing your download...");
             //    window.location.href = $(this).attr("href");
             //});
+            {% if download %}
+                window.location.href = "{% url 'experimentsearch:download_experiment' %}";
+            {% endif %}
         });
     </script>
 {% endblock %}

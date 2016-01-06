@@ -1,6 +1,6 @@
 import csv, urllib
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import StreamingHttpResponse
 from django_tables2 import RequestConfig
 
@@ -10,11 +10,14 @@ from mongcore.models import Experiment, make_table_experiment, DataSource, make_
 from mongoengine.context_managers import switch_db
 from mongenotype.models import Genotype
 from kaka.settings import TEST_DB_ALIAS
+from .primrepsync import synchronise
 
 genotype_url = "http://10.1.8.167:8000/report/genotype/csv/"
 genotype_file_name = 'experiment.csv'
 experi_query_prefix = "?experiment="
 testing = False
+has_synced = False
+csv_response = None
 
 
 class IndexHelper:
@@ -120,9 +123,12 @@ class IndexHelper:
                 table_list.append(make_table_experiment(experiment))
             table = ExperimentTable(table_list)
             RequestConfig(self.request, paginate={"per_page": 25}).configure(table)
+        download = False
+        if 'download' in self.request.GET:
+            download = True
         return {
             'search_form': self.form, 'search_term': self.search_term,
-            'table': table, 'search_select': self.type_select
+            'table': table, 'search_select': self.type_select, 'download': download
         }
 
 
@@ -137,6 +143,9 @@ def index(request):
     :param request:
     :return:
     """
+    # global has_synced
+    if not has_synced:
+        return redirect('experimentsearch:sync_message')
     template = 'experimentsearch/index.html'
     if request.method == 'GET':
         index_helper = IndexHelper(request)
@@ -148,6 +157,17 @@ def index(request):
             {'search_form': my_forms.NameSearchForm(),
              'search_select': my_forms.SearchTypeSelect()}
         )
+
+
+def sync_message(request):
+    return render(request, 'experimentsearch/sync.html', {})
+
+
+def syncing(request):
+    global has_synced
+    synchronise()
+    has_synced = True
+    return redirect('experimentsearch:index')
 
 
 def choose_form(search_by):
@@ -200,6 +220,15 @@ def datasource(request):
     return render(request, 'experimentsearch/datasource.html', {})
 
 
+def download_message(request, experi_name):
+    if request.method == 'GET' and 'from' in request.GET:
+        from_page = request.GET['from']
+        return render(
+            request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_name': experi_name})
+    else:
+        return render(request, 'experimentsearch/download_message.html', {'experi_name': experi_name})
+
+
 class Echo(object):
     """Copied from docs.djangoproject.com/en/1.8/howto/outputting-csv/
 
@@ -221,6 +250,13 @@ def stream_experiment_csv(request, experi_name):
     :return: httpresponse that downloads results of query as csv
     """
     # TODO: Have a 'preparing your download' page to go to first
+    global csv_response
+
+    if request.method == 'GET' and 'from' in request.GET:
+        redirect_address = request.GET['from']
+    else:
+        redirect_address = 'experimentsearch:index'
+
     # Make query
     ex = Experiment.objects.get(name=experi_name)
     genotype = Genotype.objects(study=ex)
@@ -258,4 +294,9 @@ def stream_experiment_csv(request, experi_name):
                                      content_type="text/csv")
     content = 'attachment; filename="' + experi_name + '.csv"'
     response['Content-Disposition'] = content
-    return response
+    csv_response = response
+    return redirect(redirect_address)
+
+
+def download_experiment(request):
+    return csv_response

@@ -1,3 +1,9 @@
+"""
+Module which contains the documents and methods for recording changes to the
+database. The idea is that whenever a document in a replica is saved, deleted or
+updated, a ChangeLog document gets created and saved to record the change.
+"""
+
 import mongoengine
 from uuid import uuid4
 from .query_set_helpers import build_dict
