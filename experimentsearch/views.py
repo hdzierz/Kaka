@@ -124,6 +124,7 @@ class IndexHelper:
             table = ExperimentTable(table_list)
             RequestConfig(self.request, paginate={"per_page": 25}).configure(table)
         download = False
+        #  if request was from a redirect from a download preparation page
         if 'download' in self.request.GET:
             download = True
         return {
@@ -137,15 +138,18 @@ def index(request):
     Renders the search page according to the index.html template, with a
     form.SearchForm as the search form.
 
+    On visiting for the first time since sever start up, renders the template
+    that prompts the synchronisation of the local backend database with the
+    primary database (which, once syncing is finished, redirect back to here)
+
     If the search form has any GET data, builds the appropriate context dict
     for the render from the request using an IndexHelper
 
     :param request:
     :return:
     """
-    # global has_synced
     if not has_synced:
-        return redirect('experimentsearch:sync_message')
+        return render(request, 'experimentsearch/sync.html', {})
     template = 'experimentsearch/index.html'
     if request.method == 'GET':
         index_helper = IndexHelper(request)
@@ -159,11 +163,13 @@ def index(request):
         )
 
 
-def sync_message(request):
-    return render(request, 'experimentsearch/sync.html', {})
-
-
 def syncing(request):
+    """
+    Runs the Primary Replica backend database syncing, marks the app as synced,
+    then redirects back to the index
+    :param request:
+    :return:
+    """
     global has_synced
     synchronise()
     has_synced = True
@@ -221,6 +227,14 @@ def datasource(request):
 
 
 def download_message(request, experi_name):
+    """
+    Renders the template with the download preparation message and the loading gif that,
+    once loaded, tries to redirect to the url that calls the stream_experiment_csv() view
+    with the given experiment name
+    :param request:
+    :param experi_name:
+    :return:
+    """
     if request.method == 'GET' and 'from' in request.GET:
         from_page = request.GET['from']
         return render(
@@ -244,22 +258,34 @@ def stream_experiment_csv(request, experi_name):
     """
     Queries the genotype collection with the experiment that matches experi_name
     as a filter on 'study'. Creates a csv representation of the query set.
-    Writes a http response which downloads the csv file for the client
+
+    Writes a http response which downloads the csv file for the client. This response
+    is stored by this module to be downloaded by the download_experiment() view, which
+    gets called by the index.html template once there is a redirect to the index() view,
+    which this view returns
+
     :param request:
     :param experi_name: name of experiment to query for associations
-    :return: httpresponse that downloads results of query as csv
+    :return: Redirect to index
     """
-    # TODO: Have a 'preparing your download' page to go to first
     global csv_response
 
     if request.method == 'GET' and 'from' in request.GET:
         redirect_address = request.GET['from'] + "&download=True"
+        from_url = request.GET['from']
     else:
         redirect_address = 'experimentsearch:index'
+        from_url = ""
 
     # Make query
     ex = Experiment.objects.get(name=experi_name)
     genotype = Genotype.objects(study=ex)
+
+    if len(genotype) == 0:
+        # No data found so go to the no_download page
+        return render(
+            request, "experimentsearch/no_download.html", {"from_url": from_url}
+        )
 
     # Header row from Genotype document fields
     header = []
@@ -299,4 +325,9 @@ def stream_experiment_csv(request, experi_name):
 
 
 def download_experiment(request):
+    """
+    Returns the stored response with the experiment csv attachment
+    :param request:
+    :return:
+    """
     return csv_response

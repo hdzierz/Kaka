@@ -1,0 +1,11 @@
+{% extends "experimentsearch/menu.html" %}
+{% load staticfiles %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/searchstyle.css" %}">
+{% endblock %}
+{% block content %}
+    <img id="no_download" src="{% static "images/Sad Kiwifruit.jpg" %}">
+    <p>No data for this experiment found</p>
+    <a class="clean_font" href="{{ from_url }}">Back to search</a>
+{% endblock %}

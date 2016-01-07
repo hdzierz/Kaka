@@ -5,7 +5,14 @@ import datetime
 
 
 def datetime_parse(d):
+    """
+    Method to be used as the object_hook kwarg in json.load
 
+    Gets given a dictionary from a JSON file/string and returns a copy with the
+    string values for dates replaced with datetime objects
+    :param d: Dictionary read from JSON file/string
+    :return: Copy of d with datetime objects replacing strings of dates
+    """
     datetime_pat = re.compile(
         'dt\((\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2})Z)?\)'
     )
@@ -26,7 +33,9 @@ def datetime_parse(d):
 
 
 class DateTimeJSONEncoder(json.JSONEncoder):
-
+    """
+    Extension of JSONEncoder that makes datetime objects JSON serializable
+    """
     def default(self, o):
         if isinstance(o, datetime.datetime):
             return o.strftime("dt(%Y-%m-%dT%H:%M:%SZ)")
