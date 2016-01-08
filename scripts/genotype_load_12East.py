@@ -8,7 +8,8 @@ from mongcore.query_set_helpers import fetch_or_save, build_dict
 from mongcore.models import DataSource, Experiment, SaveKVs
 from mongenotype.models import Primer, Genotype
 from mongoengine import Document, QuerySet
-from os import walk, path
+from os import walk
+
 
 class Import:
     ds = None

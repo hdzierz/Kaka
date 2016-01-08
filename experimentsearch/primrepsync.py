@@ -3,6 +3,11 @@ from mongcore.document_change_listener import ChangeLog, Addition, Deletion, Upd
 from kaka.settings import PRIMARY_DB_ALIAS
 from mongoengine.context_managers import switch_db
 from bson.objectid import ObjectId
+from mongcore.query_set_helpers import fetch_or_save
+
+# Used by eval()
+from mongcore.models import DataSource, Experiment
+from mongenotype.models import Genotype
 
 
 def synchronise():
@@ -40,8 +45,9 @@ def synchronise():
 
     # Applies and reapplies the changes from both databases to both
     # databases, starting from the earliest unique change
-    all_changes = rep_changes.insert(prim_changes)
-    make_changes = all_changes.filter(time__gte=earliest)
+    for doc in prim_changes:
+        rep_changes.insert(doc)
+    make_changes = rep_changes.filter(time__gte=earliest)
     make_changes = make_changes.order_by("+time")
     for change in make_changes:
         apply_change(change)
@@ -86,9 +92,9 @@ def apply_change(change_log, db_alias='default'):
 
 def apply_addition(change, db_alias='default'):
     Document = eval(change.collection)
-    doc = Document(**change.doc_added)
-    doc.switch_db(db_alias)
-    doc.save()
+    fetch_or_save(
+        Document, db_alias, change.doc_added
+    )
 
 
 def apply_deletion(change, db_alias='default'):
@@ -103,7 +109,6 @@ def apply_update(change, db_alias='default'):
         d = Doc.objects.get(uuid=change.doc_uuid)
     d.switch_db(db_alias)
     d.update(**change.fields_changed)
-    d.save()
 
 
 def searchable_dict(object_dict):

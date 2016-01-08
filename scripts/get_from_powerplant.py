@@ -9,7 +9,7 @@ def get_files(path):
     powerplant_address = 'http://storage.powerplant.pfr.co.nz/workspace/cfphxd/Kaka/data/'
     urlpath = urlopen(powerplant_address + path)
     string = urlpath.read().decode('utf-8')
-    pattern = re.compile('(?<=href=")((\w+)((\.hmp.txt.gz)|(\.csv)))')
+    pattern = re.compile('(?<=href=")((\S+)((\.gz)|(\.csv)))(?=">)')
     cwd = os.getcwd()
     windows = 'Windows' in platform()
     # print("Current working directory: " + cwd)
