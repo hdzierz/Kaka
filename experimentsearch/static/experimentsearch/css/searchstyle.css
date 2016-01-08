@@ -9,6 +9,7 @@ h1, p, label, .clean_font {
 
 .search_field {
     max-width: 800px;
-    width: 90%;
+    min-width: 275px;
+    width: 100%;
 }
 

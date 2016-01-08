@@ -1,8 +1,13 @@
-body {
+html, body {
     margin: 0px;
+    height: 100%;
+}
+.container {
+    overflow: auto;
+    white-space: nowrap;
 }
 .menu {
-    float: left;
+    display: inline-block;
     margin-right: 30px;
     width: auto;
     height: 100%;
@@ -11,9 +16,14 @@ body {
 }
 #logo {
     position: relative;
-    left: 0
+    left: 0;
 }
 .content {
-    padding: 10px;
-    width: 100%;
+    position: absolute;
+    left: 275px;
+    right: 80px;
+    display: inline-block;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: auto;
 }
