@@ -1,9 +1,11 @@
 from mongcore import document_change_listener
-from mongcore.document_change_listener import ChangeLog, Addition, Deletion, Update
+from mongcore.document_change_listener import ChangeLog, Addition, Deletion, Update, LastSynced
 from kaka.settings import PRIMARY_DB_ALIAS
 from mongoengine.context_managers import switch_db
+from mongoengine import Document
 from bson.objectid import ObjectId
 from mongcore.query_set_helpers import fetch_or_save
+from datetime import datetime
 
 # Used by eval()
 from mongcore.models import DataSource, Experiment
@@ -25,6 +27,16 @@ def synchronise():
 
     :return:
     """
+    rep_last_synced = LastSynced.objects.all()
+    with switch_db(LastSynced, PRIMARY_DB_ALIAS) as Prim:
+        prim_last_synced = Prim.objects.all()
+
+    if len(rep_last_synced) != 0 and len(prim_last_synced) != 0:
+        rep_last_synced = rep_last_synced[0]
+        prim_last_synced = prim_last_synced[0]
+        if rep_last_synced.time == prim_last_synced.time:
+            return  # No new changes to either database
+
     # Turns off change logging while syncing
     document_change_listener.logging = False
 
@@ -39,6 +51,7 @@ def synchronise():
     unique_rep_changes = ChangeLog.objects(uuid__nin=prim_change_uuids)
 
     if len(prim_changes) == 0 and len(unique_rep_changes) == 0:
+        update_last_synced_time(prim_last_synced, rep_last_synced)
         return  # No new changes to either database
 
     earliest = earliest_unique_change_time(prim_changes, unique_rep_changes)
@@ -53,8 +66,25 @@ def synchronise():
         apply_change(change)
         apply_change(change, db_alias=PRIMARY_DB_ALIAS)
 
+    update_last_synced_time(prim_last_synced, rep_last_synced)
     # Switch change logging back on
     document_change_listener.logging = True
+
+
+def update_last_synced_time(prim_last_synced, rep_last_synced):
+    sync_time = datetime.now()
+    if isinstance(rep_last_synced, LastSynced):
+        rep_last_synced.update(time=sync_time)
+        prim_last_synced.switch_db(PRIMARY_DB_ALIAS)
+        prim_last_synced.update(time=sync_time)
+    else:
+        rep_last_synced.delete()
+        prim_last_synced.delete()
+        rep_last_synced = LastSynced(time=sync_time)
+        rep_last_synced.save()
+        prim_last_synced = LastSynced(time=sync_time)
+        prim_last_synced.switch_db(PRIMARY_DB_ALIAS)
+        prim_last_synced.save()
 
 
 def earliest_unique_change_time(prim_changes, unique_rep_changes):

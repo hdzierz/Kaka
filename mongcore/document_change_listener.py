@@ -12,6 +12,10 @@ from datetime import datetime
 logging = True
 
 
+class LastSynced(mongoengine.Document):
+    time = mongoengine.DateTimeField()
+
+
 class Change(mongoengine.EmbeddedDocument):
     collection = mongoengine.StringField()
     doc_uuid = mongoengine.UUIDField()
