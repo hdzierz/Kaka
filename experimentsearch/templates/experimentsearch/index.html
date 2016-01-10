@@ -23,7 +23,7 @@
             });
 
             {% if download %}
-                window.location.href = "{% url 'experimentsearch:download_experiment' %}";
+                window.location.href = "{% url 'experimentsearch:download_experiment' %}" + "?from=" + window.location.href;
             {% endif %}
         });
     </script>

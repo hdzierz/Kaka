@@ -4,9 +4,12 @@
 import datetime
 from mongcore.connectors import CsvConnector
 from mongcore.imports import GenericImport
-from api.models import *
-from genotype.models import *
-from os import walk, path
+from mongcore.models import SaveKVs, DataSource, Experiment
+from mongenotype.models import Genotype, Primer
+from os import walk
+from mongcore.query_set_helpers import fetch_or_save
+import uuid
+
 
 class Import:
     ds = None
@@ -14,10 +17,10 @@ class Import:
 
     @staticmethod
     def LoadOp(line, succ):
-        pr = Genotype()
-        pr.name = line['rs#']
-        pr.study = Import.study
-        pr.datasource = Import.ds
+        pr = Genotype(
+            name=line['rs#'], study=Import.study, datasource=Import.ds,
+            uuid=uuid.uuid4()
+        )
         SaveKVs(pr, line)
         pr.save()
         return True
@@ -36,33 +39,39 @@ def load(fn):
     im.Load()
 
 
-def init(fn):
+def init(fn, experi_name, supplier, fruit):
     dt = datetime.datetime.now()
 
-    ds, created = DataSource.objects.get_or_create(
-        name='Import Kiwifruit GBS_Workshop_Maize',
+    if fruit:
+        name_used = fruit + ' ' + experi_name
+    else:
+        name_used = experi_name
+
+    ds, created = fetch_or_save(
+        DataSource,
+        name='Import ' + name_used,
         supplieddate=dt,
-        supplier='John McCallum',
-	typ="CSV",
-	source=fn,
+        supplier=supplier,
+        typ="CSV",
+        source=fn,
     )
 
-
-    st, created = Experiment.objects.get_or_create(
-        name='Kiwifruit GBS_Workshop_Maize'
+    st, created = fetch_or_save(
+        Experiment,
+        name=name_used
     )
 
     Import.study = st
     Import.ds = ds
 
 
-def run():
-    path = "data/genotype/GBS_Workshop_Maize/"
+def run(experi_name, supplier, fruit=None):
+    path = "data/genotype/" + experi_name + "/"
 
     for (dirpath, dirname, filenames) in walk(path):
         for fn in filenames:
             if(".gz" in fn):
                 fn = path + fn
                 print("Processing: " + fn)
-                init(fn)
+                init(fn, experi_name, supplier, fruit)
                 load(fn)

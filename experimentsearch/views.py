@@ -1,7 +1,7 @@
 import csv, urllib
 
 from django.shortcuts import render, redirect
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse, HttpResponse
 from django_tables2 import RequestConfig
 
 from .tables import ExperimentTable, DataSourceTable
@@ -125,7 +125,7 @@ class IndexHelper:
             RequestConfig(self.request, paginate={"per_page": 25}).configure(table)
         download = False
         #  if request was from a redirect from a download preparation page
-        if 'download' in self.request.GET:
+        if csv_response:
             download = True
         return {
             'search_form': self.form, 'search_term': self.search_term,
@@ -271,7 +271,7 @@ def stream_experiment_csv(request, experi_name):
     global csv_response
 
     if request.method == 'GET' and 'from' in request.GET:
-        redirect_address = request.GET['from'] + "&download=True"
+        redirect_address = request.GET['from']
         from_url = request.GET['from']
     else:
         redirect_address = 'experimentsearch:index'
@@ -330,4 +330,10 @@ def download_experiment(request):
     :param request:
     :return:
     """
-    return csv_response
+    if not csv_response:
+        from_url = request.GET['from']
+        return redirect(from_url)
+    global csv_response
+    download = csv_response
+    csv_response = None
+    return download
