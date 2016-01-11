@@ -287,8 +287,7 @@ class Species(Feature):
 def SaveKV(ob, key, value, save=False):
     key = key.replace(".", "-")
     if hasattr(ob, 'obs'):
-        if not type(ob.obs) is dict:
-            ob.obs = {}
+        # As dictfields in mongoengine default to an empty dictionary, assumes ob.obs is a dictionary
         ob.obs[key] = value
     if hasattr(ob, 'values'):
         if not type(ob.values) is dict:
@@ -304,7 +303,6 @@ def SaveKVs(ob, lst, save=False):
         SaveKV(ob, key, value)
     if save:
         ob.save()
-
 
 
 def GetKV(ob, key):

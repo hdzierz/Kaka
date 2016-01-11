@@ -278,7 +278,11 @@ def stream_experiment_csv(request, experi_name):
         from_url = ""
 
     # Make query
-    ex = Experiment.objects.get(name=experi_name)
+    try:
+        ex = Experiment.objects.get(name=experi_name)
+    except Experiment.MultipleObjectsReturned:
+        # TODO: Decide on the proper way of handling this
+        ex = Experiment.objects.filter(name=experi_name).first()
     genotype = Genotype.objects(study=ex)
 
     if len(genotype) == 0:
@@ -326,7 +330,8 @@ def stream_experiment_csv(request, experi_name):
 
 def download_experiment(request):
     """
-    Returns the stored response with the experiment csv attachment
+    Returns the stored response with the experiment csv attachment, then removes it
+    from storage
     :param request:
     :return:
     """
