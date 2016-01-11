@@ -10,13 +10,11 @@ from mongcore.models import Experiment, make_table_experiment, DataSource, make_
 from mongoengine.context_managers import switch_db
 from mongenotype.models import Genotype
 from kaka.settings import TEST_DB_ALIAS
-from .primrepsync import synchronise
 
 genotype_url = "http://10.1.8.167:8000/report/genotype/csv/"
 genotype_file_name = 'experiment.csv'
 experi_query_prefix = "?experiment="
 testing = False
-has_synced = False
 csv_response = None
 
 
@@ -138,18 +136,12 @@ def index(request):
     Renders the search page according to the index.html template, with a
     form.SearchForm as the search form.
 
-    On visiting for the first time since sever start up, renders the template
-    that prompts the synchronisation of the local backend database with the
-    primary database (which, once syncing is finished, redirect back to here)
-
     If the search form has any GET data, builds the appropriate context dict
     for the render from the request using an IndexHelper
 
     :param request:
     :return:
     """
-    if not has_synced:
-        return render(request, 'experimentsearch/sync.html', {})
     template = 'experimentsearch/index.html'
     if request.method == 'GET':
         index_helper = IndexHelper(request)
@@ -161,19 +153,6 @@ def index(request):
             {'search_form': my_forms.NameSearchForm(),
              'search_select': my_forms.SearchTypeSelect()}
         )
-
-
-def syncing(request):
-    """
-    Runs the Primary Replica backend database syncing, marks the app as synced,
-    then redirects back to the index
-    :param request:
-    :return:
-    """
-    global has_synced
-    synchronise()
-    has_synced = True
-    return redirect('experimentsearch:index')
 
 
 def choose_form(search_by):

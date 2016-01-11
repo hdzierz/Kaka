@@ -3,7 +3,6 @@ import pathlib, os
 from .query_maker import QueryMaker
 from .query_strategy import ExperimentUpdate, DataSourceUpdate
 from .errors import QueryError
-from .primrepsync import synchronise
 
 # sync_url = experi_table_url
 # When genotype database down:
@@ -31,5 +30,3 @@ def sync_with_genotype_db(test=False):
             print("Syncing Failed because:\n" + str(e))
 
         return retrieved_models
-    else:
-        synchronise()
