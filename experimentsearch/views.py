@@ -246,20 +246,8 @@ def stream_experiment_csv(request, experi_name):
     """
     global csv_response
 
-    if request.method == 'GET' and 'from' in request.GET:
-        redirect_address = request.GET['from']
-        from_url = request.GET['from']
-    else:
-        redirect_address = 'experimentsearch:index'
-        from_url = ""
-
-    # Make query
-    try:
-        ex = Experiment.objects.get(name=experi_name)
-    except Experiment.MultipleObjectsReturned:
-        # TODO: Decide on the proper way of handling this
-        ex = Experiment.objects.filter(name=experi_name).first()
-    genotype = Genotype.objects(study=ex)
+    redirect_address, from_url = get_redirect_address(request)
+    genotype = query_genotype_by_experiment(experi_name)
 
     if len(genotype) == 0:
         # No data found so go to the no_download page
@@ -267,22 +255,32 @@ def stream_experiment_csv(request, experi_name):
             request, "experimentsearch/no_download.html", {"from_url": from_url}
         )
 
-    # Header row from Genotype document fields
-    header = []
-    head_dict = genotype[0].to_mongo().to_dict()
-    sorted_keys = sorted(head_dict.keys())
-    for key in sorted_keys:
-        if key[0] != '_' and key is not 'uuid':
-            if key is "study" or key is "datasource":
-                header.append(key + "__name")
-            else:
-                header.append(key)
-    header_row = ','.join(header)
-    print(header_row)
+    header_row, sorted_keys = write_header_row(genotype)
     rows = [header_row]
+    rows.extend(rows_from_query(genotype, sorted_keys))
+
+    write_stream_response(rows, experi_name)
+    return redirect(redirect_address)
+
+
+def write_stream_response(rows, experi_name):
+    global csv_response
+
+    writer = csv.writer(Echo())
+    reader = csv.reader(rows)
+    # Write query results to csv response
+    response = StreamingHttpResponse((writer.writerow(r) for r in reader),
+                                     content_type="text/csv")
+    content = 'attachment; filename="' + experi_name + '.csv"'
+    response['Content-Disposition'] = content
+    csv_response = response
+
+
+def rows_from_query(query, sorted_keys):
+    rows = []
 
     # csv row for each document
-    for gen in genotype:
+    for gen in query:
         ref_fields = {"study":gen.study, "datasource":gen.datasource}
         gen_dic = gen.to_mongo().to_dict()
         row = []
@@ -298,15 +296,44 @@ def stream_experiment_csv(request, experi_name):
         row_string = ','.join(row)
         rows.append(row_string)
 
-    writer = csv.writer(Echo())
-    reader = csv.reader(rows)
-    # Write query results to csv response
-    response = StreamingHttpResponse((writer.writerow(r) for r in reader),
-                                     content_type="text/csv")
-    content = 'attachment; filename="' + experi_name + '.csv"'
-    response['Content-Disposition'] = content
-    csv_response = response
-    return redirect(redirect_address)
+    return rows
+
+
+def write_header_row(genotype):
+    # Header row from Genotype document fields
+    header = []
+    head_dict = genotype[0].to_mongo().to_dict()
+    sorted_keys = sorted(head_dict.keys())
+    for key in sorted_keys:
+        if key[0] != '_' and key is not 'uuid':
+            if key is "study" or key is "datasource":
+                header.append(key + "__name")
+            else:
+                header.append(key)
+    header_row = ','.join(header)
+    return header_row, sorted_keys
+
+
+def query_genotype_by_experiment(experi_name):
+    # Make query
+    try:
+        ex = Experiment.objects.get(name=experi_name)
+    except Experiment.MultipleObjectsReturned:
+        # TODO: Decide on the proper way of handling this
+        ex = Experiment.objects.filter(name=experi_name).first()
+    genotype = Genotype.objects(study=ex)
+    return genotype
+
+
+def get_redirect_address(request):
+    if request.method == 'GET' and 'from' in request.GET:
+        redirect_address = request.GET['from']
+        from_url = request.GET['from']
+    else:
+        redirect_address = 'experimentsearch:index'
+        from_url = ""
+
+    return redirect_address, from_url
 
 
 def download_experiment(request):
