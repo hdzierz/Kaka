@@ -6,10 +6,10 @@ import re
 
 from django.test.runner import DiscoverRunner
 from django.test import TestCase, Client
-from . import views, sync
-from .query_maker import QueryMaker
+from . import views, test_db_setup
+from .csv_to_doc import CsvToDocConverter
 from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
-from .query_strategy import ExperimentUpdate
+from .csv_to_doc_strategy import ExperimentCsvToDoc
 from .errors import QueryError
 from .tables import ExperimentTable, DataSourceTable
 from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
@@ -28,8 +28,8 @@ expected_experi_model = Experiment(
 )
 expected_table_experi = ExperimentForTable(
     name='What is up', primary_investigator='Badi James',
-    data_source="data_source/?name=What+is+up",
-    download_link='download/What+is+up/',
+    data_source="data_source/?name=What is up",
+    download_link='download/What is up/',
     date_created=datetime.datetime(
         2015, 11, 20, 11, 14, 40, round(386012, -2)
     )
@@ -49,37 +49,10 @@ expected_ds_set = [expected_ds_model]
 ds_table_set = [expected_table_ds]
 
 
-class MyTestRunner(DiscoverRunner):
-    """
-    Copied from:
-    http://stackoverflow.com/questions/4774800/mongoengine-connect-in-settings-py-testing-problem
-
-    Not currently in use
-    """
-
-    mongodb_name = 'testsuite'
-
-    def setup_databases(self, **kwargs):
-        from mongoengine import connect
-        from mongoengine.connection import disconnect
-        disconnect()
-        connect(self.mongodb_name)
-        print('Creating mongo test-database ' + self.mongodb_name)
-        return super(MyTestRunner, self).setup_databases(**kwargs)
-
-    def teardown_databases(self, old_config, **kwargs):
-        from mongoengine.connection import get_connection, disconnect
-        connection = get_connection()
-        connection.drop_database(self.mongodb_name)
-        print('Dropping mongo test-database: ' + self.mongodb_name)
-        disconnect()
-        super(MyTestRunner, self).teardown_databases(old_config, **kwargs)
-
-
-class ExperimentsearchTestCase(TestCase):
+class ExperimentSearchTestCase(TestCase):
 
     def __init__(self, *args, **kwargs):
-        super(ExperimentsearchTestCase, self).__init__(*args, **kwargs)
+        super(ExperimentSearchTestCase, self).__init__(*args, **kwargs)
         self.test_models = []
         self.experi_table_url = ''
 
@@ -101,16 +74,9 @@ class ExperimentsearchTestCase(TestCase):
         return
 
     def setUp(self):
-        resource_path = pathlib.Path(
-            os.getcwd() + test_resources_path
-        ).as_uri()
-        sync.sync_url = resource_path + '/experiment/bar.csv'
-        sync.ds_sync_url = resource_path + '/data_source/foo.csv'
-        self.experi_table_url = resource_path + '/experiment/'
-        views.genotype_url = resource_path + '/genotype/'
         views.testing = True
-        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME)
-        self.test_models.extend(sync.sync_with_genotype_db(test=True))
+        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
+        self.test_models.extend(test_db_setup.set_up_test_db())
         self.client = Client()
 
     def tearDown(self):
@@ -122,21 +88,21 @@ class ExperimentsearchTestCase(TestCase):
         url = 'www.foo.bar/?baz='
         search = "banana"
         expected = 'www.foo.bar/?baz=banana'
-        actual = QueryMaker._make_query_url(url, search)
+        actual = CsvToDocConverter._make_query_url(url, search)
         self.assertEqual(expected, actual)
 
     def test_url_build_2(self):
         url = 'www.foo.bar/?baz='
         search = "banana cake"
         expected = 'www.foo.bar/?baz=banana+cake'
-        actual = QueryMaker._make_query_url(url, search)
+        actual = CsvToDocConverter._make_query_url(url, search)
         self.assertEqual(expected, actual)
 
     def test_url_build_3(self):
         url = 'file://C:/foo bar/'
         search = "banana cake"
         expected = 'file://C:/foo bar/banana+cake'
-        actual = QueryMaker._make_query_url(url, search)
+        actual = CsvToDocConverter._make_query_url(url, search)
         self.assertEqual(expected, actual)
 
     def test_experiment_query_1(self):
@@ -167,22 +133,22 @@ class ExperimentsearchTestCase(TestCase):
             with self.assertRaises(test_db.DoesNotExist):
                 test_db.objects.get(name="Wort is up")
 
-    def test_bad_url_1(self):
-        querier = QueryMaker(ExperimentUpdate)
-        with self.assertRaises(QueryError):
-            querier.make_query('banana.csv', self.experi_table_url)
-
     def test_bad_url_2(self):
-        querier = QueryMaker(ExperimentUpdate)
+        querier = CsvToDocConverter(ExperimentCsvToDoc)
         bad_url = pathlib.Path(os.getcwd() + "/nonexistentdir/").as_uri()
         with self.assertRaises(QueryError):
-            querier.make_query('bar.csv', bad_url)
+            querier.convert_csv('bar.csv', bad_url)
 
     def test_download_1(self):
         # Feels like I'm doing something wrong here...
         # Need a cleaner way of comparing the streaming content to the file
         # Right now having to get it to ignore whitespace on both to pass
-        response = self.client.get('/experimentsearch/download/baz.csv/')
+        response = self.client.get('/experimentsearch/download/What is up/')
+        self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
+        response = self.client.get('/experimentsearch/stream_experiment_csv/What is up/')
+        self.assertRedirects(response, '/experimentsearch/')
+        response = self.client.get('/experimentsearch/download_experiment/')
+        self.assertIsNone(views.csv_response)
         actual_bytes = b"".join(response.streaming_content)
         pat = re.compile(b'[\s+]')
         actual_bytes = re.sub(pat, b'', actual_bytes)  # this is dodgy

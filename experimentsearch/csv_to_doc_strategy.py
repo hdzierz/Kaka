@@ -1,6 +1,8 @@
 import uuid
+import ast
 
 from mongcore.models import Experiment, DataSource
+from mongenotype.models import Genotype
 from mongcore.query_set_helpers import fetch_or_save
 from datetime import datetime
 from pytz import timezone
@@ -8,17 +10,17 @@ from kaka.settings import TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
 
 
-class AbstractQueryStrategy:
+class AbstractCsvToDocStrategy:
     """
-    query_strategy for QueryMaker. All instances must have a file_name class
-    field and an implemented create_model method
+    query_strategy for CsvToDocConverter. All instances must have a file_name class
+    field and an implemented create_document method
 
-    Essentially tells the QueryMaker which file to save the query to and which
+    Essentially tells the CsvToDocConverter which file to save the query to and which
     model to build from the rows in the query file
     """
 
     @staticmethod
-    def create_model(row, test=False):
+    def create_document(row, test=False):
         raise NotImplementedError("Concrete QueryStrategy missing this method")
 
 
@@ -40,12 +42,12 @@ def string_to_datetime(date_string):
     # return _datetime.astimezone(nz_time)
 
 
-class ExperimentUpdate(AbstractQueryStrategy):
+class ExperimentCsvToDoc(AbstractCsvToDocStrategy):
 
     file_name = "experi_list.csv"
 
     @staticmethod
-    def create_model(row, test=False):
+    def create_document(row, test=False):
         # Creates and returns an experiment model from the values in the row
         name = row['name']
         pi = row['pi']
@@ -55,18 +57,18 @@ class ExperimentUpdate(AbstractQueryStrategy):
         db_alias = TEST_DB_ALIAS if test else 'default'
         with switch_db(Experiment, db_alias) as TestEx:
             experi, created = fetch_or_save(
-                TestEx, db_alias=db_alias, uuid=uuid.uuid4(), name=name, createddate=when,
+                TestEx, db_alias=db_alias, name=name, createddate=when,
                 pi=pi, createdby=creator, description=descr
             )
         return experi
 
 
-class DataSourceUpdate(AbstractQueryStrategy):
+class DataSourceCsvToDoc(AbstractCsvToDocStrategy):
 
     file_name = "ds.csv"
 
     @staticmethod
-    def create_model(row, test=False):
+    def create_document(row, test=False):
         supplieddate = datetime.strptime(row['supplieddate'], "%Y-%m-%d").date()
         name = row['name']
         typ = row['typ']
@@ -77,8 +79,36 @@ class DataSourceUpdate(AbstractQueryStrategy):
         db_alias = TEST_DB_ALIAS if test else 'default'
         with switch_db(DataSource, db_alias) as TestDs:
             ds, created = fetch_or_save(
-                TestDs, db_alias=db_alias, uuid=uuid.uuid4(), name=name, source=source,
+                TestDs, db_alias=db_alias, name=name, source=source,
                 supplieddate=supplieddate, typ=typ, supplier=supplier, comment=comment,
                 is_active=is_active
             )
         return ds
+
+
+class GenotypeCsvToDoc(AbstractCsvToDocStrategy):
+
+    file_name = "experiment.csv"
+
+    @staticmethod
+    def create_document(row, test=False):
+        build_dic = {}
+        for key in row:
+            print("Current key in row is " + str(key) + " of type " + str(type(key)))
+            if 'date' == key[-4:] or key == 'dtt':
+                build_dic[key] = datetime.strptime(row[key], "%Y-%m-%d %H:%M:%S.%f")
+            elif 'datasource' in key:
+                datasource, created = fetch_or_save(DataSource, name=row[key])
+                build_dic['datasource'] = datasource
+            elif 'study' in key:
+                study, created = fetch_or_save(Experiment, name=row[key])
+                build_dic['study'] = study
+            elif key == 'obs':
+                build_dic[key] = ast.literal_eval(row[key])
+            else:
+                build_dic[key] = row[key]
+
+        db_alias = TEST_DB_ALIAS if test else 'default'
+        with switch_db(Genotype, db_alias) as TestGen:
+            gen, created = fetch_or_save(TestGen, **build_dic)
+        return gen

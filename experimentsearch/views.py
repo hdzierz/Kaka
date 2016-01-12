@@ -11,9 +11,6 @@ from mongoengine.context_managers import switch_db
 from mongenotype.models import Genotype
 from kaka.settings import TEST_DB_ALIAS
 
-genotype_url = "http://10.1.8.167:8000/report/genotype/csv/"
-genotype_file_name = 'experiment.csv'
-experi_query_prefix = "?experiment="
 testing = False
 csv_response = None
 
@@ -272,7 +269,9 @@ def stream_experiment_csv(request, experi_name):
 
     # Header row from Genotype document fields
     header = []
-    for key in genotype[0].to_mongo().to_dict():
+    head_dict = genotype[0].to_mongo().to_dict()
+    sorted_keys = sorted(head_dict.keys())
+    for key in sorted_keys:
         if key[0] != '_' and key is not 'uuid':
             if key is "study" or key is "datasource":
                 header.append(key + "__name")
@@ -287,10 +286,13 @@ def stream_experiment_csv(request, experi_name):
         ref_fields = {"study":gen.study, "datasource":gen.datasource}
         gen_dic = gen.to_mongo().to_dict()
         row = []
-        for key in gen_dic:
+
+        for key in sorted_keys:
             if key[0] != '_' and key is not 'uuid':
                 if key is "study" or key is "datasource":
                     row.append(ref_fields[key].name)
+                elif key is 'obs':
+                    row.append('"' + str(gen_dic[key]) + '"')
                 else:
                     row.append(str(gen_dic[key]))
         row_string = ','.join(row)

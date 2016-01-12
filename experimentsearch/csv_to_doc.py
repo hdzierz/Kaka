@@ -2,14 +2,14 @@ import urllib, csv
 from .errors import QueryError
 
 
-class QueryMaker:
+class CsvToDocConverter:
 
     def __init__(self, query_strategy, test=False):
         self.file_name = query_strategy.file_name
-        self._create_model = query_strategy.create_model
+        self._create_model = query_strategy.create_document
         self.test = test
 
-    def make_query(self, search_term, table_url):
+    def convert_csv(self, search_term, table_url):
         """
         Retrieves a csv file from a url built from the two parameters
         (typically a url that request a query from an external db)
@@ -34,13 +34,16 @@ class QueryMaker:
             return None
 
         query_csv = open(self.file_name, 'r')
-        return self._create_models(query_csv)
+        return self._create_documents(query_csv)
 
-    def _create_models(self, experi_file):
+    def _create_documents(self, experi_file):
         # Creates and returns a list of models.Experiment from the given csv file
         reader = csv.DictReader(experi_file)
         results = []
         for row in reader:
+            if None in row.keys():
+                print("Obs of row: " + str(row['obs']))
+                raise ValueError
             results.append(self._create_model(row, test=self.test))
         return results
 
