@@ -289,7 +289,7 @@ def rows_from_query(query, sorted_keys):
             ds_id = ds_son.get('$id')
             with switch_db(DataSource, TEST_DB_ALIAS) as Dat:
                 ref_fields['datasource'] = Dat.objects.get(id=ds_id)
-        
+
         gen_dic = gen.to_mongo().to_dict()
         row = []
 
@@ -298,7 +298,7 @@ def rows_from_query(query, sorted_keys):
                 if key is "study" or key is "datasource":
                     row.append(ref_fields[key].name)
                 elif key is 'obs':
-                    row.append('"' + str(gen_dic[key]) + '"')
+                    row.append('"' + print_ordered_dict(gen_dic[key]) + '"')
                 else:
                     row.append(str(gen_dic[key]).strip())
 
@@ -306,6 +306,15 @@ def rows_from_query(query, sorted_keys):
         rows.append(row_string)
 
     return rows
+
+
+def print_ordered_dict(dictionary):
+    sorted_keys = sorted(dictionary.keys())
+    strings = []
+    for key in sorted_keys:
+        dict_entry_str = "'" + key + "':'" + dictionary[key] + "'"
+        strings.append(dict_entry_str)
+    return "{" + ','.join(strings) + "}"
 
 
 def write_header_row(genotype):

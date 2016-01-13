@@ -140,21 +140,16 @@ class ExperimentSearchTestCase(TestCase):
             querier.convert_csv('bar.csv', bad_url)
 
     def test_download_1(self):
-        # Feels like I'm doing something wrong here...
-        # Need a cleaner way of comparing the streaming content to the file
-        # Right now having to get it to ignore whitespace on both to pass
+        # Has to strip leading and trailing whitespace to pass
         response = self.client.get('/experimentsearch/download/What is up/')
         self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
         response = self.client.get('/experimentsearch/stream_experiment_csv/What is up/')
         self.assertRedirects(response, '/experimentsearch/')
         response = self.client.get('/experimentsearch/download_experiment/')
         self.assertIsNone(views.csv_response)
-        actual_bytes = b"".join(response.streaming_content)
-        pat = re.compile(b'[\s+]')
-        actual_bytes = re.sub(pat, b'', actual_bytes)  # this is dodgy
+        actual_bytes = b"".join(response.streaming_content).strip()  # is this dodgy?
         expected_file = open('test_resources/genotype/baz.csv', 'rb')
-        expected_bytes = expected_file.read()
-        expected_bytes = re.sub(pat, b'', expected_bytes)  # so is this
+        expected_bytes = expected_file.read().strip()
         self.assertEqual(actual_bytes, expected_bytes)
 
     def test_index_response_1(self):
