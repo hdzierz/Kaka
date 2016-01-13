@@ -1,0 +1,117 @@
+import uuid
+
+from pathlib import Path
+from .configuration_parser import get_dic_from_path
+from mongcore.query_set_helpers import fetch_or_save
+from mongcore.models import DataSource, Experiment, SaveKVs
+from mongenotype.models import Genotype, Primer
+from mongcore.connectors import CsvConnector
+from mongcore.imports import GenericImport
+
+
+def run(path_str):
+    path = Path(path_str)
+
+    config_dic = get_config_parser(path)
+    build_dic = init_for_all(path, config_dic)
+    for file_path in path.glob("*.gz"):
+        print("Processing: " + str(file_path))
+        init_file(file_path, build_dic)
+        load(str(file_path))
+
+
+def init_for_all(path, config_dic):
+    posix_path = path.as_posix()
+    dir_list = posix_path.split("/")
+    name = dir_list[-1]
+    build_dic = config_dic_to_build_dic(config_dic)
+    build_dic['name'] = name
+    ex, created = fetch_or_save(Experiment, **make_field_dic(Experiment, build_dic))
+    Import.study = ex
+    Import.createddate = build_dic['createddate']
+    Import.description = build_dic['description']
+    return build_dic
+
+
+def init_file(file_path, build_dic):
+    posix_path = file_path.as_posix()
+    build_dic['source'] = posix_path
+
+    ds, created = fetch_or_save(DataSource, **make_field_dic(DataSource, build_dic))
+    Import.ds = ds
+
+
+def make_field_dic(document, build_dic):
+    field_dic = {}
+    for key in build_dic:
+        if key in document._fields_ordered:
+            field_dic[key] = build_dic[key]
+    return field_dic
+
+
+class Import:
+    ds = None
+    study = None
+    createddate = None
+    description = None
+
+    @staticmethod
+    def load_op(line, succ):
+        pr = Genotype(
+            name=line['rs#'], study=Import.study, datasource=Import.ds,
+            createddate=Import.createddate, description=Import.description,
+            uuid=uuid.uuid4()
+        )
+        SaveKVs(pr, line)
+        pr.save()
+        return True
+
+    @staticmethod
+    def clean_op():
+        Primer.objects.filter(datasource=Import.ds).delete()
+
+
+def load(fn):
+    conn = CsvConnector(fn, delimiter='\t', gzipped=True)
+    im = GenericImport(conn)
+    im.load_op = Import.load_op
+    im.clean_op = Import.clean_op
+    im.Clean()
+    im.Load()
+
+
+def config_dic_to_build_dic(config_dic):
+    build_dic = {}
+    for key in config_dic:
+        if key == "Experiment Description":
+            build_dic['description'] = config_dic[key]
+        elif key == "Data Creator":
+            build_dic['pi'] = config_dic[key]
+        elif key == "Experiment Date":
+            build_dic['createddate'] = config_dic[key]
+        elif key == "Upload Date":
+            build_dic['supplieddate'] = config_dic[key]
+        else:
+            build_dic[key] = config_dic[key]
+    return build_dic
+
+
+def get_config_parser(path):
+
+    yaml_config_1 = path / "config.yaml"
+    yaml_config_2 = path / "config.yml"
+    json_config = path / "config.json"
+
+    if yaml_config_1.exists():
+        config_path = yaml_config_1
+    elif yaml_config_2.exists():
+        config_path = yaml_config_2
+    elif json_config.exists():
+        config_path = json_config
+    else:
+        raise FileNotFoundError(
+            "Could not find a 'config' file of .yml, .yaml or .json format in path: " + str(path)
+        )
+
+    return get_dic_from_path(str(config_path))
+

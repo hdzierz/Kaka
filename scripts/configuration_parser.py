@@ -69,3 +69,17 @@ class YamlConfigParser:
     def get_json_string(self):
         yaml_dict = self.read()
         return json.dumps(yaml_dict, cls=DateTimeJSONEncoder)
+
+
+def get_dic_from_path(path):
+
+    if '.yaml' == path[-5:] or '.yml' == path[-4:]:
+        parser = YamlConfigParser(path)
+    elif '.json' == path[-5:]:
+        parser = JsonConfigParser(path)
+    else:
+        raise FileNotFoundError(
+            "Could not find a 'config' file of .yml, .yaml or .json format in path: " + path
+        )
+
+    return parser.read()

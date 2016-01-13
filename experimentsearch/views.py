@@ -244,8 +244,6 @@ def stream_experiment_csv(request, experi_name):
     :param experi_name: name of experiment to query for associations
     :return: Redirect to index
     """
-    global csv_response
-
     redirect_address, from_url = get_redirect_address(request)
     genotype = query_genotype_by_experiment(experi_name)
 
@@ -278,7 +276,6 @@ def write_stream_response(rows, experi_name):
 
 def rows_from_query(query, sorted_keys):
     rows = []
-
     # csv row for each document
     for gen in query:
         ref_fields = {"study":gen.study, "datasource":gen.datasource}
@@ -292,7 +289,8 @@ def rows_from_query(query, sorted_keys):
                 elif key is 'obs':
                     row.append('"' + str(gen_dic[key]) + '"')
                 else:
-                    row.append(str(gen_dic[key]))
+                    row.append(str(gen_dic[key]).strip())
+
         row_string = ','.join(row)
         rows.append(row_string)
 
