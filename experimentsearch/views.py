@@ -9,7 +9,7 @@ from . import forms as my_forms
 from mongcore.models import Experiment, make_table_experiment, DataSource, make_table_datasource
 from mongoengine.context_managers import switch_db
 from mongenotype.models import Genotype
-from kaka.settings import TEST_DB_ALIAS
+from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
 
 testing = False
 csv_response = None
@@ -279,6 +279,17 @@ def rows_from_query(query, sorted_keys):
     # csv row for each document
     for gen in query:
         ref_fields = {"study":gen.study, "datasource":gen.datasource}
+
+        if testing:
+            study_son = ref_fields['study'].as_doc()
+            ds_son = ref_fields['datasource'].as_doc()
+            study_id = study_son.get('$id')
+            with switch_db(Experiment, TEST_DB_ALIAS) as Exper:
+                ref_fields['study'] = Exper.objects.get(id=study_id)
+            ds_id = ds_son.get('$id')
+            with switch_db(DataSource, TEST_DB_ALIAS) as Dat:
+                ref_fields['datasource'] = Dat.objects.get(id=ds_id)
+        
         gen_dic = gen.to_mongo().to_dict()
         row = []
 
@@ -313,13 +324,17 @@ def write_header_row(genotype):
 
 
 def query_genotype_by_experiment(experi_name):
+    db_alias = TEST_DB_ALIAS if testing else 'default'
     # Make query
     try:
-        ex = Experiment.objects.get(name=experi_name)
+        with switch_db(Experiment, db_alias) as Exper:
+            ex = Exper.objects.get(name=experi_name)
     except Experiment.MultipleObjectsReturned:
         # TODO: Decide on the proper way of handling this
-        ex = Experiment.objects.filter(name=experi_name).first()
-    genotype = Genotype.objects(study=ex)
+        with switch_db(Experiment, db_alias) as Exper:
+            ex = Exper.objects.filter(name=experi_name).first()
+    with switch_db(Genotype, db_alias) as Gen:
+        genotype = Gen.objects(study=ex)
     return genotype
 
 

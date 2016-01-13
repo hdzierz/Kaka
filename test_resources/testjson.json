@@ -1,9 +1,7 @@
 {
-    "Configuration": {
-        "Data Creator" : "Badi James",
-        "Experiment Description" : "Test json configuration for kaka",
-        "Experiment Code" : 123456,
-        "Upload Date" : "dt(2016-01-07)",
-        "Experiment Date" : "dt(2016-01-07)"
-    }
+    "Data Creator" : "Badi James",
+    "Experiment Description" : "Test json configuration for kaka",
+    "Experiment Code" : 123456,
+    "Upload Date" : "dt(2016-01-07)",
+    "Experiment Date" : "dt(2016-01-07)"
 }

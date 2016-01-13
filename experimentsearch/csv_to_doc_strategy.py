@@ -92,23 +92,28 @@ class GenotypeCsvToDoc(AbstractCsvToDocStrategy):
 
     @staticmethod
     def create_document(row, test=False):
+        db_alias = TEST_DB_ALIAS if test else 'default'
         build_dic = {}
         for key in row:
-            print("Current key in row is " + str(key) + " of type " + str(type(key)))
             if 'date' == key[-4:] or key == 'dtt':
                 build_dic[key] = datetime.strptime(row[key], "%Y-%m-%d %H:%M:%S.%f")
             elif 'datasource' in key:
-                datasource, created = fetch_or_save(DataSource, name=row[key])
+                with switch_db(DataSource, db_alias) as TestDat:
+                    datasource, created = fetch_or_save(
+                        TestDat, db_alias=db_alias, name=row[key]
+                    )
                 build_dic['datasource'] = datasource
             elif 'study' in key:
-                study, created = fetch_or_save(Experiment, name=row[key])
+                with switch_db(Experiment, db_alias) as TestEx:
+                    study, created = fetch_or_save(
+                        TestEx, db_alias=db_alias, name=row[key]
+                    )
                 build_dic['study'] = study
             elif key == 'obs':
                 build_dic[key] = ast.literal_eval(row[key])
             else:
                 build_dic[key] = row[key]
 
-        db_alias = TEST_DB_ALIAS if test else 'default'
         with switch_db(Genotype, db_alias) as TestGen:
-            gen, created = fetch_or_save(TestGen, **build_dic)
+            gen, created = fetch_or_save(TestGen, db_alias=db_alias, **build_dic)
         return gen
