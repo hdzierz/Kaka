@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from mongoengine import connect
+from mongoengine import connect, register_connection
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -19,7 +19,8 @@ TEST_DB_ALIAS = 'test'
 
 PRIMARY_DB_NAME = 'primary'
 PRIMARY_DB_ALIAS = 'primary'
-connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
+# connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
+connect(PRIMARY_DB_NAME, host='mongodb://mongo', replicaSet='kaka1')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/

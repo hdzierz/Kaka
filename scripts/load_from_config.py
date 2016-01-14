@@ -7,9 +7,17 @@ from mongcore.models import DataSource, Experiment, SaveKVs
 from mongenotype.models import Genotype, Primer
 from mongcore.connectors import CsvConnector
 from mongcore.imports import GenericImport
+from kaka.settings import TEST_DB_ALIAS
+from mongoengine.context_managers import switch_db
+
+testing = False
+db_alias = 'default'
 
 
 def run(path_str):
+    global db_alias
+    if testing:
+        db_alias = TEST_DB_ALIAS
     path = Path(path_str)
 
     config_dic = get_config_parser(path)
@@ -26,6 +34,7 @@ def init_for_all(path, config_dic):
     name = dir_list[-1]
     build_dic = config_dic_to_build_dic(config_dic)
     build_dic['name'] = name
+
     ex, created = fetch_or_save(Experiment, **make_field_dic(Experiment, build_dic))
     Import.study = ex
     Import.createddate = build_dic['createddate']
