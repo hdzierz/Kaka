@@ -35,7 +35,8 @@ def init_for_all(path, config_dic):
     build_dic = config_dic_to_build_dic(config_dic)
     build_dic['name'] = name
 
-    ex, created = fetch_or_save(Experiment, **make_field_dic(Experiment, build_dic))
+    with switch_db(Experiment, db_alias) as Exper:
+        ex, created = fetch_or_save(Exper, db_alias=db_alias, **make_field_dic(Exper, build_dic))
     Import.study = ex
     Import.createddate = build_dic['createddate']
     Import.description = build_dic['description']
@@ -46,7 +47,8 @@ def init_file(file_path, build_dic):
     posix_path = file_path.as_posix()
     build_dic['source'] = posix_path
 
-    ds, created = fetch_or_save(DataSource, **make_field_dic(DataSource, build_dic))
+    with switch_db(DataSource, db_alias) as DatS:
+        ds, created = fetch_or_save(DatS, db_alias=db_alias, **make_field_dic(DatS, build_dic))
     Import.ds = ds
 
 
@@ -72,6 +74,7 @@ class Import:
             uuid=uuid.uuid4()
         )
         SaveKVs(pr, line)
+        pr.switch_db(db_alias)
         pr.save()
         return True
 
