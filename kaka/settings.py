@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 TEST_DB_NAME = 'sandwidge'
 TEST_DB_ALIAS = 'test'
 
-PRIMARY_DB_NAME = 'primary'
+PRIMARY_DB_NAME = 'mongo'
 PRIMARY_DB_ALIAS = 'primary'
 # connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
 connect(PRIMARY_DB_NAME, host='mongodb://mongo', replicaSet='kaka1')
