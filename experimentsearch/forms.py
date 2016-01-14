@@ -47,5 +47,5 @@ class DateSearchForm(forms.Form):
         cleaned_data = super(DateSearchForm, self).clean()
         if cleaned_data.get('to_date') < cleaned_data.get('from_date'):
             raise forms.ValidationError(
-                "Date to search from must precede date to search too"
+                "Date to search from must precede date to search to"
             )

@@ -15,6 +15,7 @@ from .tables import ExperimentTable, DataSourceTable
 from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
 from mongoengine import register_connection
 from mongoengine.context_managers import switch_db
+from .forms import NameSearchForm, DateSearchForm, PISearchForm
 
 # WARNING: Tests rely on these globals matching the files in dir test_resources
 test_resources_path = '/test_resources/'
@@ -24,6 +25,20 @@ expected_experi_model = Experiment(
     # mongoengine rounds microseconds to milliseconds
     createddate=datetime.datetime(
         2015, 11, 20, 11, 14, 40, round(386012, -2)
+    )
+)
+unexpected_experi_model_1 = Experiment(
+    name='QUE PASSSAAA', pi="James James", createdby='Badi James',
+    description='Hey man',
+    createddate=datetime.datetime(
+        2015, 11, 19, 11, 14, 40, round(386012, -2)
+    )
+)
+unexpected_experi_model_2 = Experiment(
+    name='Whazzzup', pi="Not John McCallum", createdby='Badi James',
+    description='Hey man',
+    createddate=datetime.datetime(
+        2015, 11, 21, 11, 14, 40, round(386012, -2)
     )
 )
 expected_table_experi = ExperimentForTable(
@@ -156,9 +171,13 @@ class ExperimentSearchTestCase(TestCase):
         response = self.client.get('/experimentsearch/', {'search_name': 'What is up'})
         self.assertTemplateUsed(response, 'experimentsearch/index.html')
         form = response.context['search_form']
+        self.assertIsInstance(form, NameSearchForm)
         self.assertEqual(form.cleaned_data['search_name'], 'What is up')
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def check_tables_equal(self, actual_table, expected_table):
         self.assertIsNotNone(actual_table)
         self.assertEqual(len(actual_table.rows), len(expected_table.rows))
         for row in range(0, len(actual_table.rows)):
@@ -180,6 +199,45 @@ class ExperimentSearchTestCase(TestCase):
         form = response.context['search_form']
         self.assertEqual(form.cleaned_data['search_name'], 'found nothing.csv')
         self.assertIsNone(response.context['table'])
+
+    def test_index_response_3(self):
+        response = self.client.get(
+            '/experimentsearch/', {'search_pi': 'Badi James'}
+        )
+        form = response.context['search_form']
+        self.assertIsInstance(form, PISearchForm)
+        self.assertEqual(form.cleaned_data['search_pi'], 'Badi James')
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_index_response_4(self):
+        response = self.client.get(
+            '/experimentsearch/', {
+                'from_date_year': '2015', 'from_date_month': '11', 'from_date_day': '20',
+                'to_date_year': '2015', 'to_date_month': '11', 'to_date_day': '21',
+            }
+        )
+        form = response.context['search_form']
+        self.assertIsInstance(form, DateSearchForm)
+        from_date = datetime.datetime(2015, 11, 20)
+        to_date = datetime.datetime(2015, 11, 21)
+        self.assertEqual(form.cleaned_data['from_date'], from_date)
+        self.assertEqual(form.cleaned_data['to_date'], to_date)
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_form_error_1(self):
+        response = self.client.get(
+            '/experimentsearch/', {
+                'from_date_year': '2015', 'from_date_month': '11', 'from_date_day': '21',
+                'to_date_year': '2015', 'to_date_month': '11', 'to_date_day': '20',
+            }
+        )
+        self.assertFormError(
+            response, 'search_form', field=None, errors="Date to search from must precede date to search to"
+        )
 
     def test_ds_response_1(self):
         response = self.client.get(
