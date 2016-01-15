@@ -62,6 +62,10 @@ class ScriptsTestCase(TestCase):
     def test_run_json(self):
         load_from_config.run(path_string_json)
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
-            self.assertQuerysetEqual(TestEx.objects.all(), [expected_experiment_json])
+            query = TestEx.objects.all()
+            self.assertEqual(len(query), 1)
+            self.assertEqual(query.first(), expected_experiment_json)
         with switch_db(DataSource, TEST_DB_ALIAS) as TestDs:
-            self.assertQuerysetEqual(TestDs.objects.all(), [expected_datasource_json])
+            query = TestDs.objects.all()
+            self.assertEqual(len(query), 1)
+            self.assertEqual(query.first(), expected_datasource_json)
