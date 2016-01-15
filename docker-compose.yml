@@ -35,6 +35,7 @@ web:
     - "8000:80"
   links:
     - db
+    - mongo
   environment:
      - dummy:dummy
      - http_proxy:http://proxy.pfr.co.nz:8080
