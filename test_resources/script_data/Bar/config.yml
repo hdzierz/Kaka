@@ -4,14 +4,6 @@ Experiment Description : >-
     Test experiment configuration
     for Kaka
 Experiment Code : 123456
-Upload Date : 
-    !!python/object/new:datetime.datetime
-        - !!int 2016
-        - !!int 1
-        - !!int 8
-Experiment Date :
-    !!python/object/new:datetime.datetime
-        - !!int 2016
-        - !!int 1
-        - !!int 7
+Upload Date : dt(2016-01-08)
+Experiment Date : dt(2016-01-07)
 ...
