@@ -1,0 +1,28 @@
+{% extends "experimentlist/index.html" %}
+{% block results %}
+    {% if search_list %}
+        <!-- Creates a table to display the info on
+        each experiment -->
+        <table style="width:100%">
+            <!-- sets out the header row (Note: does rely
+            on the list of field names being in the order
+            of name, pi, date, ds) -->
+            <tr>
+                {% for name in field_names %}
+                    <th>{{name}}</th>
+                {% endfor %}
+            </tr>
+            <!-- creates a row for each experiment -->
+            {% for experiment in search_list %}
+            <tr>
+                <td>{{ experiment.name }}</td>
+                <td>{{ experiment.primary_investigator }}</td>
+                <td>{{ experiment.date_created }}</td>
+                <td>{{ experiment.data_source }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>Search came up with no results</p>
+    {% endif %}
+{% endblock %}

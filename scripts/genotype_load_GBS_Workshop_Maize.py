@@ -2,8 +2,8 @@
 
 
 import datetime
-from api.connectors import *
-from api.imports import *
+from mongcore.connectors import CsvConnector
+from mongcore.imports import GenericImport
 from api.models import *
 from genotype.models import *
 from os import walk, path

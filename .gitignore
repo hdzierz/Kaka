@@ -69,3 +69,13 @@ docs/_build/
 # Rstudio cache files
 
 .cache
+
+# Pycharm project files
+
+.idea
+
+# (for experimentsearch) Intermediate search files (eventually these wont be here anyway)
+
+ds.csv
+experiment.csv
+experi_list.csv

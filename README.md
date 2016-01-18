@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/MicrowavedScrambledEggs/Kaka.svg?branch=mongosearch)](https://travis-ci.org/MicrowavedScrambledEggs/Kaka)
+
 # Let the Kea Fly-integrating genotype storage with KEA
 
 Kaka has three major aims:
@@ -73,5 +75,4 @@ web:
      - https_proxy:http://proxy.pfr.co.nz:8080
      - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
 ```
-
 

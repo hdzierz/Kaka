@@ -1,0 +1,18 @@
+{% extends "experimentsearch/menu.html" %}
+{% load staticfiles %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/searchstyle.css" %}">
+    <script type="text/javascript" src="{% static "jslibraries/jquery-1.11.3.min.js" %}"></script>
+    <script>
+        $(document).ready(function(){
+            var link = "{% url 'experimentsearch:stream_experiment_csv' experi_name %}";
+            link = link + "?from=" + "{{ from }}";
+            window.location.href = link;
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <img id="loading" src="{% static "images/loading.gif" %}">
+    <p>Preparing your download... This may take a few minutes </p>
+{% endblock %}

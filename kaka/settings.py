@@ -10,9 +10,28 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-
+from mongoengine import connect, register_connection, ConnectionError
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
+TEST_DB_NAME = 'sandwidge'
+TEST_DB_ALIAS = 'test'
+
+PRIMARY_DB_NAME = 'primary'
+PRIMARY_DB_ALIAS = 'primary'
+
+connected = False
+# connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
+# connect(PRIMARY_DB_NAME, host='mongodb://mongo', replicaSet='kaka1')
+# connect(PRIMARY_DB_NAME, host='mongodb://mongo')
+# MONGODB_HOST = os.environ.get('mongo_PORT_27017_TCP_ADDR', '127.0.0.1')
+# connect(host=MONGODB_HOST)
+while not connected:
+    try:
+        connect(PRIMARY_DB_NAME, host='mongodb://mongo')
+        connected = True
+    except ConnectionError:
+        pass
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -49,19 +68,20 @@ INSTALLED_APPS = (
     'rest_framework',
     'crispy_forms',
     'djorm_pgfulltext',
-    'django_cassandra_engine',
+    # 'django_cassandra_engine',
     'djgeojson',
     #'compressor',
     'async',
     'core',
-    'seafood',
+    'mongcore',
+    'seafood',  # TODO: Uncomment once Mongo-ized
     'genotype',
     'gene_expression',
     #'nosql',
     'cassy',
     'web',
     'inplaceeditform',
-
+    'experimentsearch',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -89,11 +109,11 @@ WSGI_APPLICATION = 'kaka.wsgi.application'
 
 DATABASES = {
    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PORT': '5432',
-        'HOST': 'db',
+        'ENGINE': '',
+        # 'NAME': 'postgres',
+        # 'USER': 'postgres',
+        # 'PORT': '5432',
+        # 'HOST': 'db',
     },
 #    'default2': {
 #        'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -103,14 +123,19 @@ DATABASES = {
 #        'PASSWORD': 'inkl67z',
 #        'HOST': '10.1.8.154',
 #    },
-    'kiwi_marker': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'kiwi_marker',
-        'USER': 'kiwi',
-        'PORT': '3306',
-        'PASSWORD': 'inkl67z',
-        'HOST': 'localhost',
-    },
+
+      # MySQL-python no longer supported in python 3
+
+#     'kiwi_marker': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'kiwi_marker',
+#         'USER': 'kiwi',
+#         'PORT': '3306',
+#         'PASSWORD': 'inkl67z',
+#         'HOST': 'localhost',
+#     },
+
+
 #    'mongodb' : {
 #      'ENGINE' : 'django_mongodb_engine',
 #      'NAME' : 'kaka',
@@ -135,6 +160,13 @@ DATABASES = {
 #    }
 }
 
+SESSION_ENGINE = 'mongoengine.django.sessions'
+
+AUTHENTICATION_BACKENDS = (
+    'mongoengine.django.auth.MongoEngineBackend',
+)
+
+# TEST_RUNNER = 'experimentsearch.tests.MyTestRunner'
 
 #SOUTH_MIGRATION_MODULES = {
 #    'nosql': 'ignore',
@@ -168,10 +200,15 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static"),
+    "/static/",
+)

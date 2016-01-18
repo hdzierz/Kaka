@@ -1,0 +1,2 @@
+rs#	foo	bar	baz
+Test source	1	2	3

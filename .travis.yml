@@ -6,7 +6,7 @@ env:
   COMPOSE_VERSION: 1.4.1
 
 before_install:
- - curl -sSL https://get.docker.com/ | sudo sh
+ # - curl -sSL https://get.docker.com/ | sudo sh
  - sudo pip install docker-compose
  - cp docker-compose.yml docker-compose_tmpl.yml
  - cp Dockerfile_web Dockerfile_web_tmpl
@@ -19,6 +19,8 @@ script:
   - docker-compose build
   - docker-compose up -d
   - docker-compose ps
+  - docker exec kaka_web_1 python manage.py test
+  # - docker-compose logs web
   #- docker exec -it kaka_web_1 ./manage.py syncdb
   #- docker exec -it kaka_web_1 psql -h db -U postgres -f data/init/onto.sql
     #docker exec -it kaka_web_1 ./manage.py runscript seafood_load_tree;
@@ -31,3 +33,4 @@ notifications:
 
   email:
     - helge.dzierzon@plantandfood.co.nz
+    - badi.james@plantandfood.co.nz

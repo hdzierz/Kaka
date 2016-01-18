@@ -1,0 +1,29 @@
+html, body {
+    margin: 0px;
+    height: 100%;
+}
+.container {
+    overflow: auto;
+    white-space: nowrap;
+}
+.menu {
+    display: inline-block;
+    margin-right: 30px;
+    width: auto;
+    height: 100%;
+    border-right: 3px solid #73AD21;
+    background-color: #d9ffd5;
+}
+#logo {
+    position: relative;
+    left: 0;
+}
+.content {
+    position: absolute;
+    left: 275px;
+    right: 80px;
+    display: inline-block;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: auto;
+}

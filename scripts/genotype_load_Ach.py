@@ -2,11 +2,13 @@
 
 
 import datetime
-from core.connectors import *
-from core.imports import *
-from core.models import *
-from genotype.models import *
-from os import walk, path
+from mongcore.connectors import CsvConnector
+from mongcore.imports import GenericImport
+from mongcore.models import SaveKVs, DataSource, Experiment
+from mongenotype.models import Genotype, Primer
+from os import walk
+from mongcore.query_set_helpers import fetch_or_save
+
 
 class Import:
     ds = None
@@ -14,10 +16,9 @@ class Import:
 
     @staticmethod
     def LoadOp(line, succ):
-        pr = Genotype()
-        pr.name = line['rs#']
-        pr.study = Import.study
-        pr.datasource = Import.ds
+        pr = Genotype(
+            name=line['rs#'], study=Import.study, datasource=Import.ds,
+        )
         SaveKVs(pr, line)
         pr.save()
         return True
@@ -39,16 +40,17 @@ def load(fn):
 def init(fn):
     dt = datetime.datetime.now()
 
-    ds, created = DataSource.objects.get_or_create(
+    ds, created = fetch_or_save(
+        DataSource,
         name='Import Kiwifruit Ach',
         supplieddate=dt,
         supplier='John McCallum',
-    	typ="CSV",
-	    source=fn,
+        typ="CSV",
+        source=fn,
     )
 
-
-    st, created = Experiment.objects.get_or_create(
+    st, created = fetch_or_save(
+        Experiment,
         name='Kiwifruit Ach'
     )
 

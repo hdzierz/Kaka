@@ -1,0 +1,15 @@
+{% load staticfiles %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/menu.css" %}">
+    {% block head %}{% endblock %}
+</head>
+<div class="container">
+    <div class="menu">
+        <img id="logo" src="{% static "images/pfr_logo.jpg" %}">
+        <ul>
+            <li><a href="{% url 'experimentsearch:index' %}">Search Home</a> </li>
+            <li><a href="https://iplant.plantandfood.co.nz/">iPlant Home</a> </li>
+        </ul>
+    </div>
+    <div class="content">{% block content %}{% endblock %}</div>
+</div>

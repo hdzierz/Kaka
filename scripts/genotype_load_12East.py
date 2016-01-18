@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-
 import datetime
-from core.connectors import *
-from core.imports import *
-from core.models import *
-from genotype.models import *
-from os import walk, path
+from mongcore.connectors import CsvConnector
+from mongcore.imports import GenericImport
+from mongcore.query_set_helpers import fetch_or_save, build_dict
+from mongcore.models import DataSource, Experiment, SaveKVs
+from mongenotype.models import Primer, Genotype
+from mongoengine import Document, QuerySet
+from os import walk
+
 
 class Import:
     ds = None
@@ -14,16 +16,19 @@ class Import:
 
     @staticmethod
     def LoadOp(line, succ):
-        pr = Genotype()
-        pr.name = line['rs#']
-        pr.study = Import.study
-        pr.datasource = Import.ds
+        pr = Genotype(
+            name=line['rs#'], study=Import.study, datasource=Import.ds,
+        )
         SaveKVs(pr, line)
         pr.save()
         return True
 
     @staticmethod
     def CleanOp():
+        if not isinstance(Import.ds, Document):
+            raise TypeError("Wrong type of datasource: " + str(type(Import.ds)))
+        if not isinstance(Primer.objects, QuerySet):
+            raise TypeError("Wrong type of primer: " + str(type(Primer.objects)))
         Primer.objects.filter(datasource=Import.ds).delete()
 
 
@@ -39,20 +44,24 @@ def load(fn):
 def init(fn):
     dt = datetime.datetime.now()
 
-    ds, created = DataSource.objects.get_or_create(
+    ds, created = fetch_or_save(
+        DataSource,
         name='Import Kiwifruit East12',
         supplieddate=dt,
         supplier='John McCallum',
-	typ="CSV",
-	source=fn,
+        typ="CSV",
+        source=fn,
     )
 
-
-    st, created = Experiment.objects.get_or_create(
-        name='Kiwifruit 12East'
+    st, created = fetch_or_save(
+        Experiment, name='Kiwifruit 12East'
     )
 
     Import.study = st
+    if ds is None:
+        raise ValueError("None Type: " + fn + " created a None datasource")
+    if not isinstance(ds, Document):
+        raise TypeError("Wrong type of datasouce: " + str(type(ds)))
     Import.ds = ds
 
 

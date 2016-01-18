@@ -1,0 +1,15 @@
+h1, p, label, .clean_font {
+    font-family: Arial
+}
+/* table, th, tr {
+    border: 2px solid green;
+    border-collapse: collapse;
+    font-family: Arial
+} */
+
+.search_field {
+    max-width: 800px;
+    min-width: 275px;
+    width: 100%;
+}
+

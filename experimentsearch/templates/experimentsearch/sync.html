@@ -1,0 +1,16 @@
+{% extends "experimentsearch/menu.html" %}
+{% load staticfiles %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/searchstyle.css" %}">
+    <script type="text/javascript" src="{% static "jslibraries/jquery-1.11.3.min.js" %}"></script>
+    <script>
+        $(document).ready(function(){
+            window.location.href = "{% url 'experimentsearch:syncing' %}";
+        });
+    </script>
+{% endblock %}
+{% block content %}
+    <img id="loading" src="{% static "images/loading.gif" %}">
+    <p>Syncing with primary database... </p>
+{% endblock %}
