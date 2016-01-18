@@ -2,7 +2,6 @@ import mongoengine
 from django.db import models
 from mongcore.models import Feature
 from core.models import Feature as OldFeature
-from uuid import uuid4
 
 from django.core.urlresolvers import reverse
 

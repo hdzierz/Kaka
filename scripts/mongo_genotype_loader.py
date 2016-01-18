@@ -8,7 +8,6 @@ from mongcore.models import SaveKVs, DataSource, Experiment
 from mongenotype.models import Genotype, Primer
 from os import walk
 from mongcore.query_set_helpers import fetch_or_save
-import uuid
 
 
 class Import:
@@ -19,7 +18,6 @@ class Import:
     def LoadOp(line, succ):
         pr = Genotype(
             name=line['rs#'], study=Import.study, datasource=Import.ds,
-            uuid=uuid.uuid4()
         )
         SaveKVs(pr, line)
         pr.save()

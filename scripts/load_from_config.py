@@ -1,5 +1,3 @@
-import uuid
-
 from pathlib import Path
 from .configuration_parser import get_dic_from_path
 from mongcore.query_set_helpers import fetch_or_save
@@ -71,7 +69,6 @@ class Import:
         pr = Genotype(
             name=line['rs#'], study=Import.study, datasource=Import.ds,
             createddate=Import.createddate, description=Import.description,
-            uuid=uuid.uuid4()
         )
         SaveKVs(pr, line)
         pr.switch_db(db_alias)

@@ -20,7 +20,6 @@ from jsonfield import JSONField
 from djgeojson.fields import PointField
 import mongoengine
 from datetime import datetime
-from uuid import uuid4
 
 # Create your models here.
 
@@ -55,7 +54,6 @@ You will usually get file names here.
 
 """
 class DataSource(mongoengine.Document):
-    uuid = mongoengine.UUIDField(unique=True)
     name = mongoengine.StringField(max_length=1024)
     typ = mongoengine.StringField(null=True, max_length=256, default="None")
     source = mongoengine.StringField()
@@ -98,7 +96,6 @@ def make_table_datasource(datasource):
 
 
 class Term(mongoengine.Document):
-    uuid = mongoengine.UUIDField(unique=True)
     name = mongoengine.StringField(max_length=2048)
     definition = mongoengine.StringField(max_length=2048, null=True, default='')
     group = mongoengine.StringField(max_length=255, null=True, default='None')
@@ -115,7 +112,6 @@ class Experiment(mongoengine.Document):
         'Name', 'Primary Investigator', 'Date Created', 'Description'
     ]
 
-    uuid = mongoengine.UUIDField(unique=True)
     name = mongoengine.StringField(max_length=2048, default="Unknown")
     pi = mongoengine.StringField(max_length=2048, default="Unknown")
     createddate = mongoengine.DateTimeField(default=datetime.now())
@@ -163,7 +159,6 @@ def make_table_experiment(experiment):
 class Feature(mongoengine.Document):
     fmt = "csv"
 
-    uuid = mongoengine.UUIDField(unique=True)
     name = mongoengine.StringField(max_length=255, default="unknown")
     dtt = mongoengine.DateTimeField(default=timezone.now)
     geom = PointField(default={'type': 'Point', 'coordinates': [0, 0]})    

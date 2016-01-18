@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import uuid
 import datetime
 from mongcore.connectors import CsvConnector
 from mongcore.imports import GenericImport
@@ -19,11 +18,8 @@ class Import:
     def LoadOp(line, succ):
         pr = Genotype(
             name=line['rs#'], study=Import.study, datasource=Import.ds,
-            uuid=uuid.uuid4()
         )
-        # print("UUID of {0}: {1}".format(pr.name, pr.uuid))
         SaveKVs(pr, line)
-        # print("UUID of {0}: {1}".format(pr.name, pr.uuid))
         pr.save()
         return True
 

@@ -19,9 +19,12 @@ TEST_DB_ALIAS = 'test'
 
 PRIMARY_DB_NAME = 'primary'
 PRIMARY_DB_ALIAS = 'primary'
+
 # connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
 # connect(PRIMARY_DB_NAME, host='mongodb://mongo', replicaSet='kaka1')
-connect(PRIMARY_DB_NAME, host='mongodb://mongo')
+# connect(PRIMARY_DB_NAME, host='mongodb://mongo')
+MONGODB_HOST = os.environ.get('mongo_PORT_27017_TCP_ADDR', '127.0.0.1')
+connect(host=MONGODB_HOST)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/

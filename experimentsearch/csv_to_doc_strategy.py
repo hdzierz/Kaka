@@ -1,4 +1,3 @@
-import uuid
 import ast
 
 from mongcore.models import Experiment, DataSource

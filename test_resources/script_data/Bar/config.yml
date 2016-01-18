@@ -1,17 +1,17 @@
 ---
 Data Creator : Badi James
-Experiment Description : >
-    Test experiment configuration 
+Experiment Description : >-
+    Test experiment configuration
     for Kaka
 Experiment Code : 123456
 Upload Date : 
     !!python/object/new:datetime.datetime
-        - 2016
-        - 01
-        - 08
+        - !!int 2016
+        - !!int 1
+        - !!int 8
 Experiment Date :
     !!python/object/new:datetime.datetime
-        - 2016
-        - 01
-        - 07
+        - !!int 2016
+        - !!int 1
+        - !!int 7
 ...

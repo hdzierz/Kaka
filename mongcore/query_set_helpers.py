@@ -1,22 +1,19 @@
-import uuid
 
 
 def fetch_or_save(Document, db_alias='default', search_dict=None, **kwargs):
     if search_dict is None:
         search_dict = kwargs
-    if 'uuid' in kwargs:
-        # print("Searching with uuid!")
-        search_dict = {'uuid': search_dict['uuid']}
+    if 'id' in kwargs:
+        # print("Searching with id!")
+        search_dict = {'id': search_dict['id']}
     # else:
-    #     print("No uuid. Searching without ")
+    #     print("No id. Searching without ")
     try:
         doc = Document.objects.get(**search_dict)
-        # print("Found {0} {1}".format(doc.name, doc.uuid))
+        # print("Found {0} {1}".format(doc.name, doc.id))
     except Document.DoesNotExist:
         # print("Saving {0} in {1}".format(kwargs['name'], db_alias))
         doc = Document(**kwargs)
-        if 'uuid' not in kwargs:
-            doc.uuid = uuid.uuid4()
         doc.switch_db(db_alias)
         doc.save()
         return doc, True

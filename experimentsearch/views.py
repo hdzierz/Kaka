@@ -294,7 +294,7 @@ def rows_from_query(query, sorted_keys):
         row = []
 
         for key in sorted_keys:
-            if key[0] != '_' and key is not 'uuid':
+            if key[0] != '_':
                 if key is "study" or key is "datasource":
                     row.append(ref_fields[key].name)
                 elif key is 'obs':
@@ -323,7 +323,7 @@ def write_header_row(genotype):
     head_dict = genotype[0].to_mongo().to_dict()
     sorted_keys = sorted(head_dict.keys())
     for key in sorted_keys:
-        if key[0] != '_' and key is not 'uuid':
+        if key[0] != '_':
             if key is "study" or key is "datasource":
                 header.append(key + "__name")
             else:
