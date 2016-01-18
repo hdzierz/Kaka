@@ -19,7 +19,7 @@ script:
   - docker-compose build
   - docker-compose up -d
   - docker-compose ps
-  - docker exec kaka_web_1 ./python manage.py test
+  - docker exec kaka_web_1 python manage.py test
   # - docker-compose logs web
   #- docker exec -it kaka_web_1 ./manage.py syncdb
   #- docker exec -it kaka_web_1 psql -h db -U postgres -f data/init/onto.sql
