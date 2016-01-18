@@ -365,10 +365,10 @@ def download_experiment(request):
     :param request:
     :return:
     """
+    global csv_response
     if not csv_response:
         from_url = request.GET['from']
         return redirect(from_url)
-    global csv_response
     download = csv_response
     csv_response = None
     return download
