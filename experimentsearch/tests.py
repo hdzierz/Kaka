@@ -90,7 +90,8 @@ class ExperimentSearchTestCase(TestCase):
 
     def setUp(self):
         views.testing = True
-        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
+        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
+        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         self.test_models.extend(test_db_setup.set_up_test_db())
         self.client = Client()
 
@@ -163,8 +164,11 @@ class ExperimentSearchTestCase(TestCase):
         response = self.client.get('/experimentsearch/download_experiment/')
         self.assertIsNone(views.csv_response)
         actual_bytes = b"".join(response.streaming_content).strip()  # is this dodgy?
+        pat = re.compile(b'[\s+]')
+        actual_bytes = re.sub(pat, b'', actual_bytes)  # this is dodgy
         expected_file = open('test_resources/genotype/baz.csv', 'rb')
         expected_bytes = expected_file.read().strip()
+        expected_bytes = re.sub(pat, b'', expected_bytes)  # so is this
         self.assertEqual(actual_bytes, expected_bytes)
 
     def test_index_response_1(self):
