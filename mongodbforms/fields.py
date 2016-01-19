@@ -20,10 +20,10 @@ except ImportError:
     try:
         from django.utils.encoding import smart_unicode
     except ImportError:
-        from django.forms.util import smart_unicode
+        from django.forms.utils import smart_unicode
         
 from django.utils.translation import ugettext_lazy as _
-from django.forms.util import ErrorList
+from django.forms.utils import ErrorList
 from django.core.exceptions import ValidationError
 
 try:  # objectid was moved into bson in pymongo 1.9

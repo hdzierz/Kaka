@@ -6,6 +6,7 @@ import re
 
 from django.test.runner import DiscoverRunner
 from django.test import TestCase, Client
+from django.http import Http404
 from . import views, test_db_setup
 from .csv_to_doc import CsvToDocConverter
 from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
@@ -90,8 +91,8 @@ class ExperimentSearchTestCase(TestCase):
 
     def setUp(self):
         views.testing = True
-        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
-        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
+        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
+        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         self.test_models.extend(test_db_setup.set_up_test_db())
         self.client = Client()
 
@@ -99,6 +100,8 @@ class ExperimentSearchTestCase(TestCase):
         for model in self.test_models:
             # model.switch_db(TEST_DB_ALIAS)
             model.delete()
+
+    # Tests that test the CsvToDocConverter class's methods
 
     def test_url_build_1(self):
         url = 'www.foo.bar/?baz='
@@ -121,6 +124,17 @@ class ExperimentSearchTestCase(TestCase):
         actual = CsvToDocConverter._make_query_url(url, search)
         self.assertEqual(expected, actual)
 
+    def test_bad_url_2(self):
+        querier = CsvToDocConverter(ExperimentCsvToDoc)
+        bad_url = pathlib.Path(os.getcwd() + "/nonexistentdir/").as_uri()
+        with self.assertRaises(QueryError):
+            querier.convert_csv('bar.csv', bad_url)
+
+    # ------------------------------------------------------------
+
+    # Query tests that essentially check the csv_to_doc and csv_to_doc_strategy modules
+    # populated the test database correctly from the given csv files
+
     def test_experiment_query_1(self):
         with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
             actual_model = test_db.objects.get(name="What is up")
@@ -134,6 +148,11 @@ class ExperimentSearchTestCase(TestCase):
         with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
             with self.assertRaises(test_db.DoesNotExist):
                 test_db.objects.get(name="Wort is up")
+
+    def test_experiment_query_3(self):
+        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
+            with self.assertRaises(test_db.MultipleObjectsReturned):
+                test_db.objects.get(description="Hey man")
 
     def test_data_source_query_1(self):
         with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
@@ -149,20 +168,45 @@ class ExperimentSearchTestCase(TestCase):
             with self.assertRaises(test_db.DoesNotExist):
                 test_db.objects.get(name="Wort is up")
 
-    def test_bad_url_2(self):
-        querier = CsvToDocConverter(ExperimentCsvToDoc)
-        bad_url = pathlib.Path(os.getcwd() + "/nonexistentdir/").as_uri()
-        with self.assertRaises(QueryError):
-            querier.convert_csv('bar.csv', bad_url)
+    # -------------------------------------------------------------------------------
 
     def test_download_1(self):
-        # Has to strip leading and trailing whitespace to pass
-        response = self.client.get('/experimentsearch/download/What is up/')
+        """
+        This test tests the sequence that gets triggered when the user clicks a Download link
+        in the results table. As part of the sequence involves jQuery code in templates
+        redirecting to another page once the template is loaded, this has to be mimicked with
+        calls of self.client.get([url jQuery code would have redirected to])
+        """
+
+        # (NOTE: has to remove white space from the download stream to pass. For some reason
+        # the stream has \r characters that the resulting file doesn't have)
+
+        from_url = 'http://testserver/experimentsearch/?search_name=What+is+up'
+
+        # Checks that the download page for an experiment goes to the
+        # 'preparing your download' page
+        response = self.client.get('/experimentsearch/download/What is up/', {'from': from_url})
         self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
-        response = self.client.get('/experimentsearch/stream_experiment_csv/What is up/')
-        self.assertRedirects(response, '/experimentsearch/')
+        self.assertEqual(response.context['from'], from_url)
+        
+        # Tests the rendered html has the code for the redirection
+        var_link = 'var link = "/experimentsearch/stream_experiment_csv/What%20is%20up/";'
+        redirect_address = 'link = link + "?from=" + "' + from_url + '";'
+        self.assertIn(redirect_address, str(response.content))
+        self.assertIn(var_link, str(response.content))
+
+        # Checks that the stream experiment page makes the csv response, then redirects to
+        # the index. Checks that the views module now has a stored csv response
+        response = self.client.get('/experimentsearch/stream_experiment_csv/What is up/', {'from': from_url})
+        self.assertRedirects(response, '/experimentsearch/?search_name=What+is+up')
+        self.assertIsNotNone(views.csv_response)
+
+        # Checks that the download_experiment page returns the csv response made by
+        # stream_experiment_csv and removes it from storage in the views module.
         response = self.client.get('/experimentsearch/download_experiment/')
         self.assertIsNone(views.csv_response)
+
+        # Checks that the csv response's attachment matches the expected csv file
         actual_bytes = b"".join(response.streaming_content).strip()  # is this dodgy?
         pat = re.compile(b'[\s+]')
         actual_bytes = re.sub(pat, b'', actual_bytes)  # this is dodgy
@@ -171,7 +215,33 @@ class ExperimentSearchTestCase(TestCase):
         expected_bytes = re.sub(pat, b'', expected_bytes)  # so is this
         self.assertEqual(actual_bytes, expected_bytes)
 
+    def test_download_2(self):
+        # test renders no download template when query finds nothing
+        response = self.client.get('/experimentsearch/stream_experiment_csv/Whazzzup/')
+        self.assertTemplateUsed(response, 'experimentsearch/no_download.html')
+        self.assertIsNone(views.csv_response)
+
+    def test_download_3(self):
+        # test raises 404 when downloading data for a non existent experiment attempted
+        response = self.client.get('/experimentsearch/stream_experiment_csv/Wort is up/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_download_4(self):
+        # Test download experiment page redirects to index when there's nothing to download
+        response = self.client.get('/experimentsearch/download_experiment/')
+        self.assertRedirects(response, '/experimentsearch/')
+
+    def test_download_5(self):
+        # Test download experiment page redirects to 'from' when there's nothing to download
+        from_url = 'http://testserver/experimentsearch/?search_name=What+is+up'
+        response = self.client.get('/experimentsearch/download_experiment/', {'from': from_url})
+        self.assertRedirects(response, from_url)
+
+    # Tests that check that the index page creates the appropriate table from the results
+    # of queries made using the 'get' data
+
     def test_index_response_1(self):
+        # Testing searching by name
         response = self.client.get('/experimentsearch/', {'search_name': 'What is up'})
         self.assertTemplateUsed(response, 'experimentsearch/index.html')
         form = response.context['search_form']
@@ -181,22 +251,8 @@ class ExperimentSearchTestCase(TestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
 
-    def check_tables_equal(self, actual_table, expected_table):
-        self.assertIsNotNone(actual_table)
-        self.assertEqual(len(actual_table.rows), len(expected_table.rows))
-        for row in range(0, len(actual_table.rows)):
-            actual_row = actual_table.rows[row]
-            expected_row = expected_table.rows[row]
-            with self.subTest(row=row):
-                for col in range(0, len(ExperimentForTable.field_names)):
-                    field = ExperimentForTable.field_names[col]
-                    field = field.lower().replace(' ', '_')
-                    with self.subTest(col=col):
-                        self.assertEqual(
-                            actual_row[field], expected_row[field]
-                        )
-
     def test_index_response_2(self):
+        # Testing that no table gets rendered when no results are found
         response = self.client.get(
             '/experimentsearch/', {'search_name': 'found nothing.csv'}
         )
@@ -205,6 +261,7 @@ class ExperimentSearchTestCase(TestCase):
         self.assertIsNone(response.context['table'])
 
     def test_index_response_3(self):
+        # Testing searching by primary investigator
         response = self.client.get(
             '/experimentsearch/', {'search_pi': 'Badi James'}
         )
@@ -216,6 +273,7 @@ class ExperimentSearchTestCase(TestCase):
         self.check_tables_equal(actual_table, expected_table)
 
     def test_index_response_4(self):
+        # Testing searching by date
         response = self.client.get(
             '/experimentsearch/', {
                 'from_date_year': '2015', 'from_date_month': '11', 'from_date_day': '20',
@@ -232,7 +290,37 @@ class ExperimentSearchTestCase(TestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
 
+    def test_index_response_5(self):
+        # test has the right search form
+        response = self.client.get('/experimentsearch/', {'search_by': "Name"})
+        form = response.context['search_form']
+        self.assertIsInstance(form, NameSearchForm)
+
+    def test_index_response_6(self):
+        # test has the right search form
+        response = self.client.get('/experimentsearch/', {'search_by': "Primary Investigator"})
+        form = response.context['search_form']
+        self.assertIsInstance(form, PISearchForm)
+
+    def test_index_response_7(self):
+        # test has the right search form
+        response = self.client.get('/experimentsearch/', {'search_by': "Date Created"})
+        form = response.context['search_form']
+        self.assertIsInstance(form, DateSearchForm)
+
+    def test_index_response_8(self):
+        # Testing index with no get data
+        response = self.client.post('/experimentsearch/')
+        self.assertTemplateUsed(response, 'experimentsearch/index.html')
+        form = response.context['search_form']
+        self.assertIsInstance(form, NameSearchForm)
+        self.assertFalse(hasattr(form, 'cleaned_data'))
+        self.assertNotIn('table', response.context.keys())
+
+    # -----------------------------------------------------------------------------
+
     def test_form_error_1(self):
+        # Testing the DateSearchForm raises an error when the to_date precedes the from_date
         response = self.client.get(
             '/experimentsearch/', {
                 'from_date_year': '2015', 'from_date_month': '11', 'from_date_day': '21',
@@ -243,11 +331,20 @@ class ExperimentSearchTestCase(TestCase):
             response, 'search_form', field=None, errors="Date to search from must precede date to search to"
         )
 
+    # Tests that check that the index page creates the appropriate table from the results
+    # of queries made using the 'get' data
+
     def test_ds_response_1(self):
+        # testing the appropriate data source table gets displayed, with data that matches
+        # results of the data source query by name
+        from_url = 'http://testserver/experimentsearch/?search_name=What+is+up'
+
         response = self.client.get(
-            '/experimentsearch/data_source/', {'name': 'What is up'}
+            '/experimentsearch/data_source/', {'name': 'What is up', 'from': from_url}
         )
         self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
+        back_button_html = "input type=\"button\" onclick=\"location.href=\\'" + from_url
+        self.assertIn(back_button_html, str(response.content))
         expected_table = DataSourceTable(ds_table_set)
         actual_table = response.context['table']
         self.assertIsNotNone(actual_table)
@@ -265,7 +362,34 @@ class ExperimentSearchTestCase(TestCase):
                         )
 
     def test_ds_response_2(self):
+        # Tests that no table gets displayed when no query results found
         response = self.client.get(
             '/experimentsearch/data_source/', {'name': 'found+nothing.csv'}
         )
+        self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
         self.assertIsNone(response.context['table'])
+
+    def test_ds_response_3(self):
+        # Test no table gets rendered with no query
+        response = self.client.post('/experimentsearch/data_source/')
+        self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
+        self.assertNotIn('table', response.context.keys())
+
+    # --------------------------------------------------------------
+
+    # ---------------------Helper methods------------------------
+
+    def check_tables_equal(self, actual_table, expected_table):
+        self.assertIsNotNone(actual_table)
+        self.assertEqual(len(actual_table.rows), len(expected_table.rows))
+        for row in range(0, len(actual_table.rows)):
+            actual_row = actual_table.rows[row]
+            expected_row = expected_table.rows[row]
+            with self.subTest(row=row):
+                for col in range(0, len(ExperimentForTable.field_names)):
+                    field = ExperimentForTable.field_names[col]
+                    field = field.lower().replace(' ', '_')
+                    with self.subTest(col=col):
+                        self.assertEqual(
+                            actual_row[field], expected_row[field]
+                        )

@@ -14,14 +14,14 @@ class ImportMarkers:
 
     @staticmethod
     def LoadMarkersOp(line, succ):
-    	mob = Marker()
-    	mob.study = ImportMarkers.study
-    	mob.datasource = ImportMarkers.ds
-    	mob.ebrida_id = line["EBRIDA_ID"]	
-    	mob.kea_id = line["KEA_ID"]
-    	mob.sex = line["Sex"]
+        mob = Marker()
+        mob.study = ImportMarkers.study
+        mob.datasource = ImportMarkers.ds
+        mob.ebrida_id = line["EBRIDA_ID"]
+        mob.kea_id = line["KEA_ID"]
+        mob.sex = line["Sex"]
         SaveKVs(mob, line)
-    	mob.save()
+        mob.save()
 
         return True
 

@@ -3,6 +3,7 @@ import csv, urllib
 from django.shortcuts import render, redirect
 from django.http import StreamingHttpResponse, HttpResponse
 from django_tables2 import RequestConfig
+from django.http import Http404
 
 from .tables import ExperimentTable, DataSourceTable
 from . import forms as my_forms
@@ -342,6 +343,8 @@ def query_genotype_by_experiment(experi_name):
         # TODO: Decide on the proper way of handling this
         with switch_db(Experiment, db_alias) as Exper:
             ex = Exper.objects.filter(name=experi_name).first()
+    except Experiment.DoesNotExist:
+        raise Http404("Experiment does not exist")
     with switch_db(Genotype, db_alias) as Gen:
         genotype = Gen.objects(study=ex)
     return genotype
@@ -367,8 +370,11 @@ def download_experiment(request):
     """
     global csv_response
     if not csv_response:
-        from_url = request.GET['from']
-        return redirect(from_url)
+        if request.method == 'GET' and 'from' in request.GET:
+            from_url = request.GET['from']
+            return redirect(from_url)
+        else:
+            return redirect('experimentsearch:index')
     download = csv_response
     csv_response = None
     return download

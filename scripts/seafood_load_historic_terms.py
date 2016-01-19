@@ -19,7 +19,7 @@ class Import(ImportOp):
 
     @staticmethod
     def CleanOp():
-	pass
+        pass
         #Term.objects.filter(datasource=Import.ds).delete()
 
 

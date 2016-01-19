@@ -3,7 +3,7 @@ import copy
 from django.forms.widgets import Widget, Media, TextInput
 from django.utils.safestring import mark_safe
 from django.core.validators import EMPTY_VALUES
-from django.forms.util import flatatt
+from django.forms.utils import flatatt
 
 class ListWidget(Widget):
     def __init__(self, contained_widget, attrs=None):
