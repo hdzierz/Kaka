@@ -39,10 +39,10 @@ def build_dict(document):
     return to_return
 
 
-def query_to_csv_rows_list(query):
+def query_to_csv_rows_list(query, testing=False):
     header_row, sorted_keys = write_header_row(query)
     rows = [header_row]
-    rows.extend(rows_from_query(query, sorted_keys))
+    rows.extend(rows_from_query(query, sorted_keys, testing=testing))
     return rows
 
 

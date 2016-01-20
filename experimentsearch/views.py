@@ -8,6 +8,8 @@ from django.http import Http404
 from .tables import ExperimentTable, DataSourceTable
 from . import forms as my_forms
 from mongcore.models import Experiment, make_table_experiment, DataSource, make_table_datasource
+from mongcore.query_set_helpers import query_to_csv_rows_list
+from mongcore.view_helpers import write_stream_response
 from mongoengine.context_managers import switch_db
 from mongenotype.models import Genotype
 from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
@@ -220,17 +222,6 @@ def download_message(request, experi_name):
         return render(request, 'experimentsearch/download_message.html', {'experi_name': experi_name})
 
 
-class Echo(object):
-    """Copied from docs.djangoproject.com/en/1.8/howto/outputting-csv/
-
-    An object that implements just the write method of the file-like
-    interface.
-    """
-    def write(self, value):
-        """Write the value by returning it, instead of storing in a buffer."""
-        return value
-
-
 def stream_experiment_csv(request, experi_name):
     """
     Queries the genotype collection with the experiment that matches experi_name
@@ -245,6 +236,7 @@ def stream_experiment_csv(request, experi_name):
     :param experi_name: name of experiment to query for associations
     :return: Redirect to index
     """
+    global csv_response
     redirect_address, from_url = get_redirect_address(request)
     genotype = query_genotype_by_experiment(experi_name)
 
@@ -254,83 +246,10 @@ def stream_experiment_csv(request, experi_name):
             request, "experimentsearch/no_download.html", {"from_url": from_url}
         )
 
-    header_row, sorted_keys = write_header_row(genotype)
-    rows = [header_row]
-    rows.extend(rows_from_query(genotype, sorted_keys))
+    rows = query_to_csv_rows_list(genotype, testing=testing)
 
-    write_stream_response(rows, experi_name)
+    csv_response = write_stream_response(rows, experi_name)
     return redirect(redirect_address)
-
-
-def write_stream_response(rows, experi_name):
-    global csv_response
-
-    writer = csv.writer(Echo())
-    reader = csv.reader(rows)
-    # Write query results to csv response
-    response = StreamingHttpResponse((writer.writerow(r) for r in reader),
-                                     content_type="text/csv")
-    content = 'attachment; filename="' + experi_name + '.csv"'
-    response['Content-Disposition'] = content
-    csv_response = response
-
-
-def rows_from_query(query, sorted_keys):
-    rows = []
-    # csv row for each document
-    for gen in query:
-        ref_fields = {"study":gen.study, "datasource":gen.datasource}
-
-        if testing:
-            study_son = ref_fields['study'].as_doc()
-            ds_son = ref_fields['datasource'].as_doc()
-            study_id = study_son.get('$id')
-            with switch_db(Experiment, TEST_DB_ALIAS) as Exper:
-                ref_fields['study'] = Exper.objects.get(id=study_id)
-            ds_id = ds_son.get('$id')
-            with switch_db(DataSource, TEST_DB_ALIAS) as Dat:
-                ref_fields['datasource'] = Dat.objects.get(id=ds_id)
-
-        gen_dic = gen.to_mongo().to_dict()
-        row = []
-
-        for key in sorted_keys:
-            if key[0] != '_':
-                if key is "study" or key is "datasource":
-                    row.append(ref_fields[key].name)
-                elif key is 'obs':
-                    row.append('"' + print_ordered_dict(gen_dic[key]) + '"')
-                else:
-                    row.append(str(gen_dic[key]).strip())
-
-        row_string = ','.join(row)
-        rows.append(row_string)
-
-    return rows
-
-
-def print_ordered_dict(dictionary):
-    sorted_keys = sorted(dictionary.keys())
-    strings = []
-    for key in sorted_keys:
-        dict_entry_str = "'" + key + "':'" + dictionary[key] + "'"
-        strings.append(dict_entry_str)
-    return "{" + ','.join(strings) + "}"
-
-
-def write_header_row(genotype):
-    # Header row from Genotype document fields
-    header = []
-    head_dict = genotype[0].to_mongo().to_dict()
-    sorted_keys = sorted(head_dict.keys())
-    for key in sorted_keys:
-        if key[0] != '_':
-            if key is "study" or key is "datasource":
-                header.append(key + "__name")
-            else:
-                header.append(key)
-    header_row = ','.join(header)
-    return header_row, sorted_keys
 
 
 def query_genotype_by_experiment(experi_name):
