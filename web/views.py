@@ -1,45 +1,46 @@
+import csv
+import re
 
-from .http_data_download_response import *
-from core.connectors import *
-from core.data_provider import *
-from core.serializer import *
+from django.http import HttpResponse, StreamingHttpResponse
+from django.shortcuts import redirect, render
+from collections import OrderedDict
+from mongcore.data_provider import DataProvider
+from mongcore.models import DataSource, Experiment
 #from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 import tempfile
 #from django.http import JsonResponse
+from mongcore.query_set_helpers import query_to_csv_rows_list
+from mongcore.view_helpers import write_stream_response
 
 # Create your views here.
 
 #from django.shortcuts import render_to_response
 #from django.template import RequestContext
-from genotype.forms import *
-from genotype.tables import *
-from genotype.models import *
-from genotype.serializer import *
-from seafood.forms import *
-from seafood.tables import *
-from seafood.models import *
-from seafood.serializer import *
-from seafood.report import *
+# from mongenotype.forms import *
+# from mongenotype.tables import *
+from mongenotype.models import *
+# from mongenotype.serializer import *
+# from seafood.forms import *
+# from seafood.tables import *
+# from seafood.models import *
+# from seafood.serializer import *
+# from seafood.report import *
 # from sets import Set
 
-from gene_expression.models import *
-from gene_expression.tables import *
-from gene_expression.forms import *
-from gene_expression.serializer import *
 
 
 from django.core.urlresolvers import reverse_lazy
 
 from querystring_parser import parser
 
-REPORTS = {
-    'fish_datasource': FishDataSourceReport,
-    'fish_by_datasource': FishReport,
-    'fish_term': FishTermReport,
-}
+# REPORTS = {
+#     'fish_datasource': FishDataSourceReport,
+#     'fish_by_datasource': FishReport,
+#     'fish_term': FishTermReport,
+# }
 
 
 ###################################################
@@ -47,10 +48,10 @@ REPORTS = {
 ###################################################
 
 def get_queryset(request, report, conf=None):
-    if report in REPORTS:
-        cls = REPORTS[report]
-        obj = cls()
-        return obj.run(conf)
+    # if report in REPORTS:
+    #     cls = REPORTS[report]
+    #     obj = cls()
+    #     return obj.run(conf)
 
     term = None
     if('term' in conf):
@@ -63,6 +64,10 @@ def get_queryset(request, report, conf=None):
     nam = None
     if 'name' in conf:
         nam = conf['name']
+
+    exper = None
+    if 'experiment' in conf:
+        exper = conf['experiment']
 
     cls = get_model_class(report)
 
@@ -97,6 +102,11 @@ def get_queryset(request, report, conf=None):
         filtered = True
         ds = DataSource.objects.get(name__contains=ds)
         obs = obs.filter(datasource=ds)
+
+    if exper:
+        experiments = Experiment.objects(name__contains=exper)
+        obs = obs if obs else cls.objects
+        obs.filter(study__in=experiments)
 
     if not obs and not filtered:
         obs = cls.objects.all()
@@ -247,8 +257,6 @@ def restfully_manage_element(request, report, pk):
 ## user defined reports
 ###################################################
 
-from django.http import StreamingHttpResponse
-
 
 class Echo(object):
     """An object that implements just the write method of the file-like
@@ -288,8 +296,8 @@ def page_report5(request, report, fmt='csv', conf=None):
 #     return render_to_csv_response(qs)
 
 def page_report(request, report, fmt='csv', conf=None):
-    get_dict = parser.parse(request.GET.urlencode())
-    objs = get_queryset(request, report, get_dict)[:100]
+    # get_dict = parser.parse(request.GET.urlencode())
+    objs = get_queryset(request, report, request.GET)[:100]
     if objs.count()==0:
         return HttpResponse('No Data')
 
@@ -307,14 +315,15 @@ def page_report(request, report, fmt='csv', conf=None):
 #        elif cls.Meta.sequence:
 #            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
 
-    tf = tempfile.NamedTemporaryFile()
-    fn = tf.name
-    fp = open(fn, "w+")
-    DataProvider.WriteData(objs, fmt, fn)
-    fp.close()
-    response = StreamingHttpResponse(open(fn), content_type='text/csv') 
-    response['Content-Disposition'] = 'attachment; filename=' + report  + '.csv'
-    return response
+    # tf = tempfile.NamedTemporaryFile()
+    # fn = tf.name
+    # fp = open(fn, "w+")
+    # DataProvider.WriteData(objs, fmt, fn)
+    # fp.close()
+    # response = StreamingHttpResponse(open(fn), content_type='text/csv')
+    # response['Content-Disposition'] = 'attachment; filename=' + report  + '.csv'
+    # return response
     #return HttpDataDownloadResponse(data, report, fmt, False)
-
+    rows = query_to_csv_rows_list(objs)
+    return write_stream_response(rows, report)
 

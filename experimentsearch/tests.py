@@ -91,8 +91,8 @@ class ExperimentSearchTestCase(TestCase):
 
     def setUp(self):
         views.testing = True
-        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
-        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
+        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
+        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         self.test_models.extend(test_db_setup.set_up_test_db())
         self.client = Client()
 
@@ -188,7 +188,7 @@ class ExperimentSearchTestCase(TestCase):
         response = self.client.get('/experimentsearch/download/What is up/', {'from': from_url})
         self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
         self.assertEqual(response.context['from'], from_url)
-        
+
         # Tests the rendered html has the code for the redirection
         var_link = 'var link = "/experimentsearch/stream_experiment_csv/What%20is%20up/";'
         redirect_address = 'link = link + "?from=" + "' + from_url + '";'
