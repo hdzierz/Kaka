@@ -49,8 +49,17 @@ expected_table_experi = ExperimentForTable(
         2015, 11, 20, 11, 14, 40, round(386012, -2)
     )
 )
+unexpected_table_experi_1 = ExperimentForTable(
+    name='QUE PASSSAAA', primary_investigator="James James",
+    data_source='data_source/?name=QUE PASSSAAA',
+    download_link='download/QUE PASSSAAA/',
+    date_created=datetime.datetime(
+        2015, 11, 19, 11, 14, 40, round(386012, -2)
+    )
+)
 expected_experi_set = [expected_experi_model]
 experi_table_set = [expected_table_experi]
+experi_table_set_2 = [expected_table_experi, unexpected_table_experi_1]
 expected_ds_model = DataSource(
     name= 'What is up', supplier='Badi James', is_active=False,
     source='testgzpleaseignore.gz', comment='Hey man',
@@ -262,11 +271,11 @@ class ExperimentSearchTestCase(TestCase):
     def test_index_response_3(self):
         # Testing searching by primary investigator
         response = self.client.get(
-            '/experimentsearch/', {'search_pi': 'Badi James'}
+            '/experimentsearch/', {'search_pi': 'Badi'}
         )
         form = response.context['search_form']
         self.assertIsInstance(form, PISearchForm)
-        self.assertEqual(form.cleaned_data['search_pi'], 'Badi James')
+        self.assertEqual(form.cleaned_data['search_pi'], 'Badi')
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
@@ -315,6 +324,17 @@ class ExperimentSearchTestCase(TestCase):
         self.assertIsInstance(form, NameSearchForm)
         self.assertFalse(hasattr(form, 'cleaned_data'))
         self.assertNotIn('table', response.context.keys())
+
+    def test_index_response_9(self):
+        # Testing the '$or' operator
+        response = self.client.get('/experimentsearch/', {'search_name': "what que"})
+        self.assertTemplateUsed(response, 'experimentsearch/index.html')
+        form = response.context['search_form']
+        self.assertIsInstance(form, NameSearchForm)
+        self.assertEqual(form.cleaned_data['search_name'], 'what que')
+        expected_table = ExperimentTable(experi_table_set_2)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
 
     # -----------------------------------------------------------------------------
 

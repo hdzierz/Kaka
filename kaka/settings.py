@@ -78,7 +78,6 @@ INSTALLED_APPS = (
     'genotype',
     'gene_expression',
     #'nosql',
-    'cassy',
     'web',
     'inplaceeditform',
     'experimentsearch',

@@ -1,4 +1,5 @@
 import csv, urllib
+import re
 
 from django.shortcuts import render, redirect
 from django.http import StreamingHttpResponse, HttpResponse
@@ -69,9 +70,10 @@ class IndexHelper:
         self.form = my_forms.NameSearchForm(self.request.GET)
         #  Makes query
         self.search_term = self.request.GET['search_name'].strip()
+
         with switch_db(Experiment, self.db_alias) as db:
             self.search_list = db.objects(
-                name__contains=self.search_term
+                __raw__=self.raw_query_dict("name", self.search_term)
             )
 
     def search_by_pi(self):
@@ -81,12 +83,21 @@ class IndexHelper:
         self.search_term = self.request.GET['search_pi'].strip()
         with switch_db(Experiment, self.db_alias) as db:
             self.search_list = db.objects(
-                pi__contains=self.search_term
+                __raw__=self.raw_query_dict("pi", self.search_term)
             )
         # Updates 'Search by' dropdown
         self.type_select = my_forms.SearchTypeSelect(
             initial={'search_by': Experiment.field_names[1]}
         )
+
+    def raw_query_dict(self, field, search_term):
+        search_list = search_term.split(' ')
+        for i in range(0, len(search_list)):
+            search_list[i] = re.compile(r'\b' + search_list[i] + r'\b', re.IGNORECASE)
+        or_list = []
+        for term in search_list:
+            or_list.append({field: term})
+        return {"$or": or_list}
 
     def search_by_date(self):
         # Updates search form
