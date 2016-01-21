@@ -14,6 +14,8 @@ import tempfile
 #from django.http import JsonResponse
 from mongcore.query_set_helpers import query_to_csv_rows_list
 from mongcore.view_helpers import write_stream_response
+from kaka.settings import TEST_DB_ALIAS
+from mongoengine.context_managers import switch_db
 
 # Create your views here.
 
@@ -41,7 +43,7 @@ from querystring_parser import parser
 #     'fish_by_datasource': FishReport,
 #     'fish_term': FishTermReport,
 # }
-
+testing = False
 
 ###################################################
 ## Helpers
@@ -52,6 +54,8 @@ def get_queryset(request, report, conf=None):
     #     cls = REPORTS[report]
     #     obj = cls()
     #     return obj.run(conf)
+
+    db_alias = TEST_DB_ALIAS if testing else 'default'
 
     term = None
     if('term' in conf):
@@ -78,38 +82,51 @@ def get_queryset(request, report, conf=None):
     obs = None
     if term:
         if(hasattr(cls, 'obs')):
-            obs = cls.objects.filter(obs__contains=term)
+            with switch_db(cls, db_alias) as Class:
+                obs = Class.objects.filter(obs__contains=term)
             filtered = True
         elif(hasattr(cls, 'values')):
-            obs = cls.objects.filter(values__contains=term)
+            with switch_db(cls, db_alias) as Class:
+                obs = Class.objects.filter(values__contains=term)
             filtered = True
         else:
             filtered = True
-            obs = cls.objects.search(term)
+            with switch_db(cls, db_alias) as Class:
+                obs = Class.objects.search(term)
 
     if nam and not obs:
         filtered = True
-        obs = cls.objects.filter(name__contains=nam)
+        with switch_db(cls, db_alias) as Class:
+            obs = Class.objects.filter(name__contains=nam)
     if nam and obs:
         filtered = True
         obs = obs.filter(name__contains=nam)
 
     if ds and not obs:
         filtered = True
-        ds = DataSource.objects.get(name__contains=ds)
-        obs = cls.objects.filter(datasource=ds)
+        with switch_db(DataSource, db_alias) as Dat:
+            ds = Dat.objects.get(name__contains=ds)
+        with switch_db(cls, db_alias) as Class:
+            obs = Class.objects.filter(datasource=ds)
     if ds and obs:
         filtered = True
-        ds = DataSource.objects.get(name__contains=ds)
+        with switch_db(DataSource, db_alias) as Dat:
+            ds = Dat.objects.get(name__contains=ds)
         obs = obs.filter(datasource=ds)
 
     if exper:
-        experiments = Experiment.objects(name__contains=exper)
-        obs = obs if obs else cls.objects
-        obs.filter(study__in=experiments)
+        with switch_db(Experiment, db_alias) as Exper:
+            experiments = Exper.objects(name__contains=exper)
+        if obs:
+            obs = obs.filter(study__in=experiments)
+        else:
+            with switch_db(cls, db_alias) as Class:
+                obs = Class.objects.filter(study__in=experiments)
+        filtered = True
 
     if not obs and not filtered:
-        obs = cls.objects.all()
+        with switch_db(cls, db_alias) as Class:
+            obs = Class.objects.all()
     return obs[:100]
 
 
@@ -301,29 +318,6 @@ def page_report(request, report, fmt='csv', conf=None):
     if objs.count()==0:
         return HttpResponse('No Data')
 
-#    if(isinstance(objs, list)):
-#        conn = DictListConnector(objs, expand_obs=True)
-#    else:
-#        conn = DjangoQuerySetConnector(objs)
-
-#    if report in REPORTS:
-#        cls = REPORTS[report]
-#        if cls.Meta.fields:
-#            conn.header = cls.Meta.fields
-#        elif cls.Meta.exclude:
-#            conn.header = Set(conn.header) - Set(cls.Meta.exclude)
-#        elif cls.Meta.sequence:
-#            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
-
-    # tf = tempfile.NamedTemporaryFile()
-    # fn = tf.name
-    # fp = open(fn, "w+")
-    # DataProvider.WriteData(objs, fmt, fn)
-    # fp.close()
-    # response = StreamingHttpResponse(open(fn), content_type='text/csv')
-    # response['Content-Disposition'] = 'attachment; filename=' + report  + '.csv'
-    # return response
-    #return HttpDataDownloadResponse(data, report, fmt, False)
-    rows = query_to_csv_rows_list(objs)
+    rows = query_to_csv_rows_list(objs, testing=testing)
     return write_stream_response(rows, report)
 

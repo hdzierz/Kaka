@@ -1,22 +1,21 @@
+import datetime
 import os
 import pathlib
-import datetime
-import io
 import re
 
-from django.test.runner import DiscoverRunner
 from django.test import TestCase, Client
-from django.http import Http404
-from . import views, test_db_setup
-from .csv_to_doc import CsvToDocConverter
-from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
-from .csv_to_doc_strategy import ExperimentCsvToDoc
-from .errors import QueryError
-from .tables import ExperimentTable, DataSourceTable
-from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
 from mongoengine import register_connection
 from mongoengine.context_managers import switch_db
+from mongcore.csv_to_doc_strategy import ExperimentCsvToDoc
+from mongcore.errors import QueryError
+
+from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
+from mongcore.csv_to_doc import CsvToDocConverter
+from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
+from mongcore import test_db_setup
+from . import views
 from .forms import NameSearchForm, DateSearchForm, PISearchForm
+from .tables import ExperimentTable, DataSourceTable
 
 # WARNING: Tests rely on these globals matching the files in dir test_resources
 test_resources_path = '/test_resources/'
