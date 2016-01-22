@@ -90,14 +90,39 @@ class IndexHelper:
             initial={'search_by': Experiment.field_names[1]}
         )
 
-    def raw_query_dict(self, field, search_term):
-        search_list = search_term.split(' ')
-        for i in range(0, len(search_list)):
-            search_list[i] = re.compile(r'\b' + search_list[i] + r'\b', re.IGNORECASE)
+    @staticmethod
+    def raw_query_dict(field, search_term):
+        whitespace = re.compile('\s+')
+        search_list = re.split(whitespace, search_term)
         or_list = []
-        for term in search_list:
-            or_list.append({field: term})
+        for i in range(0, len(search_list)):
+            if '+' in search_list[i]:
+                tup = search_list[i].split('+')
+                and_list = []
+                for term in tup:
+                    term_re = IndexHelper.query_regex(term)
+                    and_list.append({field: term_re})
+                or_list.append({"$and": and_list})
+            else:
+                term_re = IndexHelper.query_regex(search_list[i])
+                or_list.append({field: term_re})
+
         return {"$or": or_list}
+
+    @staticmethod
+    def query_regex(term):
+        if term[0] is '%':
+            start_pat = r'.*'
+            term = term[1:]
+        else:
+            start_pat = r'(\b|(?<=_))'
+        if term[-1] is '%':
+            end_pat = r'.*'
+            term = term[:-1]
+        else:
+            end_pat = r'(\b|(?=_))'
+        term_re = re.compile(start_pat + term + end_pat, re.IGNORECASE)
+        return term_re
 
     def search_by_date(self):
         # Updates search form

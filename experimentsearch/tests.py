@@ -178,6 +178,32 @@ class ExperimentSearchTestCase(TestCase):
 
     # -------------------------------------------------------------------------------
 
+    def test_query_dict_1(self):
+        # Test the method in views.IndexHelper that makes the raw PyMongo query from a string
+        search_terms = 'cat+dog bird snake+green+jungle were% %saur% %man+spider'
+        field = "name"
+        terms = ['cat', 'dog', 'bird', 'snake', 'green', 'jungle', 'were', 'saur', 'man', 'spider']
+        pats = {}
+        for term in terms:
+            if term == 'were':
+                pats[term] = re.compile(r'(\b|(?<=_))' + term + r'.*', re.IGNORECASE)
+            elif term == 'saur':
+                pats[term] = re.compile(r'.*' + term + r'.*', re.IGNORECASE)
+            elif term == 'man':
+                pats[term] = re.compile(r'.*' + term + r'(\b|(?=_))', re.IGNORECASE)
+            else:
+                pats[term] = re.compile(r'(\b|(?<=_))' + term + r'(\b|(?=_))', re.IGNORECASE)
+        expected_query_dict = {
+            "$or": [
+                {"$and": [{field: pats['cat']}, {field: pats['dog']}]}, {field: pats['bird']},
+                {"$and": [{field: pats['snake']}, {field: pats['green']}, {field: pats['jungle']}]},
+                {field: pats['were']}, {field: pats['saur']},
+                {"$and": [{field: pats['man']}, {field: pats['spider']}]}
+            ]
+        }
+        actual_query_dict = views.IndexHelper.raw_query_dict(field, search_terms)
+        self.assertDictEqual(actual_query_dict, expected_query_dict)
+
     def test_download_1(self):
         """
         This test tests the sequence that gets triggered when the user clicks a Download link
@@ -333,6 +359,54 @@ class ExperimentSearchTestCase(TestCase):
         self.assertIsInstance(form, NameSearchForm)
         self.assertEqual(form.cleaned_data['search_name'], 'what que')
         expected_table = ExperimentTable(experi_table_set_2)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_index_response_10(self):
+        # Test it only matches whole words
+        response = self.client.get('/experimentsearch/', {'search_name': 'hat'})
+        form = response.context['search_form']
+        self.assertEqual(form.cleaned_data['search_name'], 'hat')
+        self.assertIsNone(response.context['table'])
+        self.assertIn('Search came up with no results', str(response.content))
+
+    def test_index_response_11(self):
+        # Test wildcard operator at front
+        response = self.client.get('/experimentsearch/', {'search_name': '%hat'})
+        form = response.context['search_form']
+        self.assertIsInstance(form, NameSearchForm)
+        self.assertEqual(form.cleaned_data['search_name'], '%hat')
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_index_response_12(self):
+        # Test wildcard operator at back
+        response = self.client.get('/experimentsearch/', {'search_name': 'i%'})
+        form = response.context['search_form']
+        self.assertIsInstance(form, NameSearchForm)
+        self.assertEqual(form.cleaned_data['search_name'], 'i%')
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_index_response_13(self):
+        # Test wildcard operator on both sides
+        response = self.client.get('/experimentsearch/', {'search_name': '%sss%'})
+        form = response.context['search_form']
+        self.assertIsInstance(form, NameSearchForm)
+        self.assertEqual(form.cleaned_data['search_name'], '%sss%')
+        expected_table = ExperimentTable([unexpected_table_experi_1])
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_index_response_14(self):
+        # Test $and operator
+        response = self.client.get('/experimentsearch/', {'search_pi': 'badi+james'})
+        form = response.context['search_form']
+        self.assertIsInstance(form, PISearchForm)
+        self.assertEqual(form.cleaned_data['search_pi'], 'badi+james')
+        expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
 
