@@ -51,7 +51,6 @@ class IndexHelper:
         if 'search_name' in self.request.GET and 'search_pi' in self.request.GET \
         and 'from_date_month' in self.request.GET:
             self.search_advanced()
-            print(str(self.search_list))
         elif 'search_name' in self.request.GET:
             self.search_by_name()
         elif 'search_pi' in self.request.GET:
@@ -79,7 +78,6 @@ class IndexHelper:
                 date_dic = {"createddate": comp_dic}
                 and_list.append(date_dic)
             query_dic = {"$and": and_list}
-            print(str(query_dic))
             if and_list:
                 with switch_db(Experiment, self.db_alias) as db:
                     self.search_list = db.objects(__raw__=query_dic)

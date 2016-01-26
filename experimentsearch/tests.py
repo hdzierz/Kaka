@@ -14,7 +14,7 @@ from mongcore.csv_to_doc import CsvToDocConverter
 from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
 from mongcore import test_db_setup
 from . import views
-from .forms import NameSearchForm, DateSearchForm, PISearchForm
+from .forms import NameSearchForm, DateSearchForm, PISearchForm, AdvancedSearchForm
 from .tables import ExperimentTable, DataSourceTable
 
 # WARNING: Tests rely on these globals matching the files in dir test_resources
@@ -41,6 +41,13 @@ unexpected_experi_model_2 = Experiment(
         2015, 11, 21, 11, 14, 40, round(386012, -2)
     )
 )
+unexpected_experi_model_3 = Experiment(
+    name='What is going on', pi="Jamerson", createdby='Badi James',
+    description='Hey man',
+    createddate=datetime.datetime(
+        2015, 11, 18, 11, 14, 40, round(386012, -2)
+    )
+)
 expected_table_experi = ExperimentForTable(
     name='What is up', primary_investigator='Badi James',
     data_source="data_source/?name=What is up",
@@ -57,9 +64,27 @@ unexpected_table_experi_1 = ExperimentForTable(
         2015, 11, 19, 11, 14, 40, round(386012, -2)
     )
 )
+unexpected_table_experi_2 = ExperimentForTable(
+    name='Whazzzup', primary_investigator="Not John McCallum",
+    data_source='data_source/?name=Whazzzup',
+    download_link='download/Whazzzup/',
+    date_created=datetime.datetime(
+        2015, 11, 21, 11, 14, 40, round(386012, -2)
+    )
+)
+unexpected_table_experi_3 = ExperimentForTable(
+    name='What is going on', primary_investigator="Jamerson",
+    data_source='data_source/?name=What is going on',
+    download_link='download/What is going on/',
+    date_created=datetime.datetime(
+        2015, 11, 18, 11, 14, 40, round(386012, -2)
+    )
+)
 expected_experi_set = [expected_experi_model]
 experi_table_set = [expected_table_experi]
 experi_table_set_2 = [expected_table_experi, unexpected_table_experi_1]
+experi_table_set_3 = [expected_table_experi, unexpected_table_experi_2]
+experi_table_set_4 = [expected_table_experi, unexpected_table_experi_1, unexpected_table_experi_3]
 expected_ds_model = DataSource(
     name= 'What is up', supplier='Badi James', is_active=False,
     source='testgzpleaseignore.gz', comment='Hey man',
@@ -109,6 +134,25 @@ class ExperimentSearchTestCase(TestCase):
             # model.switch_db(TEST_DB_ALIAS)
             model.delete()
 
+    # ---------------------Helper methods------------------------
+
+    def check_tables_equal(self, actual_table, expected_table):
+        self.assertIsNotNone(actual_table)
+        self.assertEqual(len(actual_table.rows), len(expected_table.rows))
+        for row in range(0, len(actual_table.rows)):
+            actual_row = actual_table.rows[row]
+            expected_row = expected_table.rows[row]
+            with self.subTest(row=row):
+                for col in range(0, len(ExperimentForTable.field_names)):
+                    field = ExperimentForTable.field_names[col]
+                    field = field.lower().replace(' ', '_')
+                    with self.subTest(col=col):
+                        self.assertEqual(
+                            actual_row[field], expected_row[field]
+                        )
+
+
+class CsvToDocTestCase(ExperimentSearchTestCase):
     # Tests that test the CsvToDocConverter class's methods
 
     def test_url_build_1(self):
@@ -178,31 +222,8 @@ class ExperimentSearchTestCase(TestCase):
 
     # -------------------------------------------------------------------------------
 
-    def test_query_dict_1(self):
-        # Test the method in views.IndexHelper that makes the raw PyMongo query from a string
-        search_terms = 'cat+dog bird snake+green+jungle were% %saur% %man+spider'
-        field = "name"
-        terms = ['cat', 'dog', 'bird', 'snake', 'green', 'jungle', 'were', 'saur', 'man', 'spider']
-        pats = {}
-        for term in terms:
-            if term == 'were':
-                pats[term] = re.compile(r'(\b|(?<=_))' + term + r'.*', re.IGNORECASE)
-            elif term == 'saur':
-                pats[term] = re.compile(r'.*' + term + r'.*', re.IGNORECASE)
-            elif term == 'man':
-                pats[term] = re.compile(r'.*' + term + r'(\b|(?=_))', re.IGNORECASE)
-            else:
-                pats[term] = re.compile(r'(\b|(?<=_))' + term + r'(\b|(?=_))', re.IGNORECASE)
-        expected_query_dict = {
-            "$or": [
-                {"$and": [{field: pats['cat']}, {field: pats['dog']}]}, {field: pats['bird']},
-                {"$and": [{field: pats['snake']}, {field: pats['green']}, {field: pats['jungle']}]},
-                {field: pats['were']}, {field: pats['saur']},
-                {"$and": [{field: pats['man']}, {field: pats['spider']}]}
-            ]
-        }
-        actual_query_dict = views.IndexHelper.raw_query_dict(field, search_terms)
-        self.assertDictEqual(actual_query_dict, expected_query_dict)
+
+class DownloadTestCase(ExperimentSearchTestCase):
 
     def test_download_1(self):
         """
@@ -271,17 +292,19 @@ class ExperimentSearchTestCase(TestCase):
         response = self.client.get('/experimentsearch/download_experiment/', {'from': from_url})
         self.assertRedirects(response, from_url)
 
+
+class IndexResponseTestCase(ExperimentSearchTestCase):
     # Tests that check that the index page creates the appropriate table from the results
     # of queries made using the 'get' data
 
     def test_index_response_1(self):
         # Testing searching by name
-        response = self.client.get('/experimentsearch/', {'search_name': 'What is up'})
+        response = self.client.get('/experimentsearch/', {'search_name': 'Whazzzup'})
         self.assertTemplateUsed(response, 'experimentsearch/index.html')
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
-        self.assertEqual(form.cleaned_data['search_name'], 'What is up')
-        expected_table = ExperimentTable(experi_table_set)
+        self.assertEqual(form.cleaned_data['search_name'], 'Whazzzup')
+        expected_table = ExperimentTable([unexpected_table_experi_2])
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
 
@@ -353,11 +376,11 @@ class ExperimentSearchTestCase(TestCase):
 
     def test_index_response_9(self):
         # Testing the '$or' operator
-        response = self.client.get('/experimentsearch/', {'search_name': "what que"})
+        response = self.client.get('/experimentsearch/', {'search_name': "up que"})
         self.assertTemplateUsed(response, 'experimentsearch/index.html')
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
-        self.assertEqual(form.cleaned_data['search_name'], 'what que')
+        self.assertEqual(form.cleaned_data['search_name'], 'up que')
         expected_table = ExperimentTable(experi_table_set_2)
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
@@ -372,20 +395,20 @@ class ExperimentSearchTestCase(TestCase):
 
     def test_index_response_11(self):
         # Test wildcard operator at front
-        response = self.client.get('/experimentsearch/', {'search_name': '%hat'})
+        response = self.client.get('/experimentsearch/', {'search_name': '%ing'})
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
-        self.assertEqual(form.cleaned_data['search_name'], '%hat')
-        expected_table = ExperimentTable(experi_table_set)
+        self.assertEqual(form.cleaned_data['search_name'], '%ing')
+        expected_table = ExperimentTable([unexpected_table_experi_3])
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
 
     def test_index_response_12(self):
         # Test wildcard operator at back
-        response = self.client.get('/experimentsearch/', {'search_name': 'i%'})
+        response = self.client.get('/experimentsearch/', {'search_name': 'u%'})
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
-        self.assertEqual(form.cleaned_data['search_name'], 'i%')
+        self.assertEqual(form.cleaned_data['search_name'], 'u%')
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
@@ -410,8 +433,6 @@ class ExperimentSearchTestCase(TestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
 
-    # -----------------------------------------------------------------------------
-
     def test_form_error_1(self):
         # Testing the DateSearchForm raises an error when the to_date precedes the from_date
         response = self.client.get(
@@ -423,6 +444,163 @@ class ExperimentSearchTestCase(TestCase):
         self.assertFormError(
             response, 'search_form', field=None, errors="Date to search from must precede date to search to"
         )
+
+    def test_query_dict_1(self):
+        # Test the method in views.IndexHelper that makes the raw PyMongo query from a string
+        search_terms = 'cat+dog bird snake+green+jungle were% %saur% %man+spider'
+        field = "name"
+        terms = ['cat', 'dog', 'bird', 'snake', 'green', 'jungle', 'were', 'saur', 'man', 'spider']
+        pats = {}
+        for term in terms:
+            if term == 'were':
+                pats[term] = re.compile(r'(\b|(?<=_))' + term + r'.*', re.IGNORECASE)
+            elif term == 'saur':
+                pats[term] = re.compile(r'.*' + term + r'.*', re.IGNORECASE)
+            elif term == 'man':
+                pats[term] = re.compile(r'.*' + term + r'(\b|(?=_))', re.IGNORECASE)
+            else:
+                pats[term] = re.compile(r'(\b|(?<=_))' + term + r'(\b|(?=_))', re.IGNORECASE)
+        expected_query_dict = {
+            "$or": [
+                {"$and": [{field: pats['cat']}, {field: pats['dog']}]}, {field: pats['bird']},
+                {"$and": [{field: pats['snake']}, {field: pats['green']}, {field: pats['jungle']}]},
+                {field: pats['were']}, {field: pats['saur']},
+                {"$and": [{field: pats['man']}, {field: pats['spider']}]}
+            ]
+        }
+        actual_query_dict = views.IndexHelper.raw_query_dict(field, search_terms)
+        self.assertDictEqual(actual_query_dict, expected_query_dict)
+
+
+class AdvancedSearchTestCase(ExperimentSearchTestCase):
+
+    def test_advanced_search_1(self):
+        # Test advanced search with no parameters
+        get_dic = {
+            'search_name': '', 'search_pi': '', 'from_date_year': '0',
+            'from_date_month': '0', 'from_date_day': '0',
+            'to_date_year': '0', 'to_date_month': '0', 'to_date_day': '0',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        form = response.context['search_form']
+        self.assertIsInstance(form, AdvancedSearchForm)
+        self.assertIsNone(response.context['table'])
+        self.assertIn('Search came up with no results', str(response.content))
+
+    def test_advanced_search_2(self):
+        # Test advanced search with only name
+        get_dic = {
+            'search_name': 'up', 'search_pi': '', 'from_date_year': '0',
+            'from_date_month': '0', 'from_date_day': '0',
+            'to_date_year': '0', 'to_date_month': '0', 'to_date_day': '0',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        form = response.context['search_form']
+        self.assertIsInstance(form, AdvancedSearchForm)
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_advanced_search_3(self):
+        # Test advanced search with only pi
+        get_dic = {
+            'search_name': '', 'search_pi': 'Badi', 'from_date_year': '0',
+            'from_date_month': '0', 'from_date_day': '0',
+            'to_date_year': '0', 'to_date_month': '0', 'to_date_day': '0',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        form = response.context['search_form']
+        self.assertIsInstance(form, AdvancedSearchForm)
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_advanced_search_4(self):
+        # Test advanced search with only from date
+        get_dic = {
+            'search_name': '', 'search_pi': '', 'from_date_year': '2015',
+            'from_date_month': '11', 'from_date_day': '20',
+            'to_date_year': '0', 'to_date_month': '0', 'to_date_day': '0',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        form = response.context['search_form']
+        self.assertIsInstance(form, AdvancedSearchForm)
+        expected_table = ExperimentTable(experi_table_set_3)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_advanced_search_5(self):
+        # Test advanced search with only to date
+        get_dic = {
+            'search_name': '', 'search_pi': '', 'from_date_year': '0',
+            'from_date_month': '0', 'from_date_day': '0',
+            'to_date_year': '2015', 'to_date_month': '11', 'to_date_day': '21',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        form = response.context['search_form']
+        self.assertIsInstance(form, AdvancedSearchForm)
+        expected_table = ExperimentTable(experi_table_set_4)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_advanced_search_6(self):
+        # Test advanced search with from date and to date
+        get_dic = {
+            'search_name': '', 'search_pi': '', 'from_date_year': '2015',
+            'from_date_month': '11', 'from_date_day': '20',
+            'to_date_year': '2015', 'to_date_month': '11', 'to_date_day': '21',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        form = response.context['search_form']
+        self.assertIsInstance(form, AdvancedSearchForm)
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_advanced_search_7(self):
+        # Test with name and pi
+        get_dic = {
+            'search_name': 'wha%', 'search_pi': 'james', 'from_date_year': '0',
+            'from_date_month': '0', 'from_date_day': '0',
+            'to_date_year': '0', 'to_date_month': '0', 'to_date_day': '0',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        form = response.context['search_form']
+        self.assertIsInstance(form, AdvancedSearchForm)
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_advanced_search_8(self):
+        # Test with all fields
+        get_dic = {
+            'search_name': 'wha%', 'search_pi': 'jame%', 'from_date_year': '2015',
+            'from_date_month': '11', 'from_date_day': '19',
+            'to_date_year': '2015', 'to_date_month': '11', 'to_date_day': '22',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        form = response.context['search_form']
+        self.assertIsInstance(form, AdvancedSearchForm)
+        expected_table = ExperimentTable(experi_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table)
+
+    def test_form_error_2(self):
+        # Test error raised when from_date > to_date
+        get_dic = {
+            'search_name': '', 'search_pi': '', 'from_date_year': '2015',
+            'from_date_month': '11', 'from_date_day': '21',
+            'to_date_year': '2015', 'to_date_month': '11', 'to_date_day': '20',
+        }
+        response = self.client.get('/experimentsearch/', get_dic)
+        self.assertFormError(
+            response, 'search_form', field=None, errors="Date to search from must precede date to search to"
+        )
+
+    # -----------------------------------------------------------------------------
+
+
+class DsResponseTestCase(ExperimentSearchTestCase):
 
     # Tests that check that the index page creates the appropriate table from the results
     # of queries made using the 'get' data
@@ -469,20 +647,3 @@ class ExperimentSearchTestCase(TestCase):
         self.assertNotIn('table', response.context.keys())
 
     # --------------------------------------------------------------
-
-    # ---------------------Helper methods------------------------
-
-    def check_tables_equal(self, actual_table, expected_table):
-        self.assertIsNotNone(actual_table)
-        self.assertEqual(len(actual_table.rows), len(expected_table.rows))
-        for row in range(0, len(actual_table.rows)):
-            actual_row = actual_table.rows[row]
-            expected_row = expected_table.rows[row]
-            with self.subTest(row=row):
-                for col in range(0, len(ExperimentForTable.field_names)):
-                    field = ExperimentForTable.field_names[col]
-                    field = field.lower().replace(' ', '_')
-                    with self.subTest(col=col):
-                        self.assertEqual(
-                            actual_row[field], expected_row[field]
-                        )
