@@ -13,3 +13,22 @@ h1, p, label, .clean_font {
     width: 100%;
 }
 
+div.search_field {
+    min-width: 593px;
+}
+
+input.search_input {
+    float: right;
+    width: 75%;
+}
+
+select.search_input {
+    float: right;
+}
+.search_input#id_from_date_month {
+    margin-right: 51.5%
+}
+.search_input#id_to_date_month {
+    margin-right: 51.5%
+}
+

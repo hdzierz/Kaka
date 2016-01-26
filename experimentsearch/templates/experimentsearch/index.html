@@ -34,8 +34,15 @@
         {{ search_select }}
     </form>
     <form>
-        {{ search_form }}
-        <input type="submit" value="Search">
+        {% if advanced %}
+            <div class="search_field">
+                {{ search_form.as_p }}
+                <input type="submit" value="Search">
+            </div>
+        {% else %}
+            {{ search_form }}
+            <input type="submit" value="Search">
+        {% endif %}
     </form>
 {% block results %}
     {% if table %}
