@@ -14,12 +14,16 @@ db_alias = 'default'
 
 def run():
     path = Path("data/")
+    look_for_config_dir(path)
+
+    
+def look_for_config_dir(path):
     for p in path.iterdir():
         if p.is_dir():
             try:
                 load_in_dir(p.path)
             except FileNotFoundError:
-                print("folder " + p.path + " has no config")
+                look_for_config_dir(p)
 
 
 def load_in_dir(path_str):

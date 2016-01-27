@@ -8,20 +8,17 @@ from platform import platform
 def get_files(path):
     if path[-1] is not '/':
         path = path + '/'
-    print('Path: ' + path)
+    # print('Path: ' + path)
 
     slash = '\\' if 'Windows' in platform() else '/'
-    # proxy = request.ProxyHandler({'http': 'http://proxy.pfr.co.nz:8080'})
-    # opener = request.build_opener(proxy)
-    # request.install_opener(opener)
     powerplant_address = 'http://storage.powerplant.pfr.co.nz/workspace/cfphxd/Kaka/data/'
     urlpath = request.urlopen(powerplant_address + path)
     string = urlpath.read().decode('utf-8')
     pattern = re.compile('(?<=href=")((\S+)((\.gz)|(\.csv)))(?=">)')
     cwd = os.getcwd()
-    print("Current working directory: " + cwd)
+    # print("Current working directory: " + cwd)
     cwdsplit = cwd.split(slash)
-    print("CWD split: " + str(cwdsplit))
+    # print("CWD split: " + str(cwdsplit))
     rebuild = []
     for dir in cwdsplit:
         rebuild.append(dir)
@@ -30,14 +27,14 @@ def get_files(path):
     rebuild.append('data')
     rebuild.append(path.replace('/', slash))
     savepath = slash.join(rebuild)
-    print("Save Path: " + savepath)
+    # print("Save Path: " + savepath)
     if not os.path.exists(savepath):
         os.makedirs(savepath)
     for match in pattern.finditer(string):
         address = powerplant_address + path + match.group(1)
-        print("Address: " + address)
+        # print("Address: " + address)
         save = savepath + match.group(1)
-        print("Save: " + save)
+        # print("Save: " + save)
         try:
             request.urlretrieve(address, save)
         except HTTPError as e:
