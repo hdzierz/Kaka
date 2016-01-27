@@ -1,4 +1,4 @@
-from urllib.request import urlopen, urlretrieve
+from urllib.request import urlopen, urlretrieve, ProxyHandler, build_opener, install_opener
 from urllib.error import HTTPError
 import re
 import os
@@ -6,6 +6,9 @@ from platform import platform
 
 
 def get_files(path):
+    proxy = ProxyHandler({'http': 'http://proxy.pfr.co.nz:8080'})
+    opener = build_opener(proxy)
+    install_opener(opener)
     powerplant_address = 'http://storage.powerplant.pfr.co.nz/workspace/cfphxd/Kaka/data/'
     urlpath = urlopen(powerplant_address + path)
     string = urlpath.read().decode('utf-8')
