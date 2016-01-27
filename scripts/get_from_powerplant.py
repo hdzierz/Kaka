@@ -41,8 +41,8 @@ def get_files(path):
         save = savepath + match.group(1)
         try:
             request.urlretrieve(address, save)
-        except HTTPError:
-            print("Could not retrieve: " + address)
+        except HTTPError as e:
+            print("Could not retrieve: " + address + ": " + e.msg)
 
 
 def run():
