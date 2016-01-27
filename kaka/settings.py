@@ -21,17 +21,17 @@ PRIMARY_DB_NAME = 'primary'
 PRIMARY_DB_ALIAS = 'primary'
 
 connected = False
-# connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
+connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
 # connect(PRIMARY_DB_NAME, host='mongodb://mongo', replicaSet='kaka1')
 # connect(PRIMARY_DB_NAME, host='mongodb://mongo')
 # MONGODB_HOST = os.environ.get('mongo_PORT_27017_TCP_ADDR', '127.0.0.1')
 # connect(host=MONGODB_HOST)
-while not connected:
-    try:
-        connect(PRIMARY_DB_NAME, host='mongodb://mongo')
-        connected = True
-    except ConnectionError:
-        pass
+# while not connected:
+#     try:
+#         connect(PRIMARY_DB_NAME, host='mongodb://mongo')
+#         connected = True
+#     except ConnectionError:
+#         pass
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -68,13 +68,12 @@ INSTALLED_APPS = (
     'rest_framework',
     'crispy_forms',
     'djorm_pgfulltext',
-    # 'django_cassandra_engine',
     'djgeojson',
     #'compressor',
     'async',
     'core',
     'mongcore',
-    'seafood',  # TODO: Uncomment once Mongo-ized
+    'seafood',
     'genotype',
     'gene_expression',
     #'nosql',

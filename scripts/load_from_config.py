@@ -12,7 +12,17 @@ testing = False
 db_alias = 'default'
 
 
-def run(path_str):
+def run():
+    path = Path("data/")
+    for p in path.iterdir():
+        if p.is_dir():
+            try:
+                load_in_dir(p.path)
+            except FileNotFoundError:
+                print("folder " + p.path + " has no config")
+
+
+def load_in_dir(path_str):
     global db_alias
     if testing:
         db_alias = TEST_DB_ALIAS
@@ -107,6 +117,17 @@ def config_dic_to_build_dic(config_dic):
 
 def get_config_parser(path):
 
+    config_path = config_in_dir(path)
+    if config_path:
+        return get_dic_from_path(str(config_path))
+    else:
+        raise FileNotFoundError(
+            "Could not find a 'config' file of .yml, .yaml or .json format in path: " + str(path)
+        )
+
+
+def config_in_dir(path):
+
     yaml_config_1 = path / "config.yaml"
     yaml_config_2 = path / "config.yml"
     json_config = path / "config.json"
@@ -118,9 +139,7 @@ def get_config_parser(path):
     elif json_config.exists():
         config_path = json_config
     else:
-        raise FileNotFoundError(
-            "Could not find a 'config' file of .yml, .yaml or .json format in path: " + str(path)
-        )
+        config_path = None
 
-    return get_dic_from_path(str(config_path))
+    return config_path
 

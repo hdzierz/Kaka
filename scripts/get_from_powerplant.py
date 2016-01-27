@@ -41,3 +41,8 @@ def get_files(path):
         except HTTPError:
             print("Could not retrieve: " + address)
 
+
+def run():
+    get_files('genotype/Ach')
+    get_files('genotype/East12')
+    get_files('genotype/GBS_Workshop_Maize')

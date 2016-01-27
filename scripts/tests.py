@@ -75,7 +75,7 @@ class ScriptsTestCase(TestCase):
             TestGen.objects.all().delete()
 
     def test_run_json(self):
-        load_from_config.run(path_string_json)
+        load_from_config.load_in_dir(path_string_json)
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
             query = TestEx.objects.all()
             self.assertEqual(len(query), 1)
@@ -90,7 +90,7 @@ class ScriptsTestCase(TestCase):
             self.document_compare(query.first(), expected_genotype_json)
 
     def test_run_yaml(self):
-        load_from_config.run(path_string_yaml)
+        load_from_config.load_in_dir(path_string_yaml)
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
             query = TestEx.objects.all()
             self.assertEqual(len(query), 1)
