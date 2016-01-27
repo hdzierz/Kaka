@@ -1,4 +1,4 @@
-from urllib.request import urlopen, urlretrieve, ProxyHandler, build_opener, install_opener
+from urllib import request
 from urllib.error import HTTPError
 import re
 import os
@@ -6,11 +6,11 @@ from platform import platform
 
 
 def get_files(path):
-    proxy = ProxyHandler({'http': 'http://proxy.pfr.co.nz:8080'})
-    opener = build_opener(proxy)
-    install_opener(opener)
+    proxy = request.ProxyHandler({'http': 'http://proxy.pfr.co.nz:8080'})
+    opener = request.build_opener(proxy)
+    request.install_opener(opener)
     powerplant_address = 'http://storage.powerplant.pfr.co.nz/workspace/cfphxd/Kaka/data/'
-    urlpath = urlopen(powerplant_address + path)
+    urlpath = request.urlopen(powerplant_address + path)
     string = urlpath.read().decode('utf-8')
     pattern = re.compile('(?<=href=")((\S+)((\.gz)|(\.csv)))(?=">)')
     cwd = os.getcwd()
@@ -40,7 +40,7 @@ def get_files(path):
         address = powerplant_address + path + match.group(1)
         save = savepath + match.group(1)
         try:
-            urlretrieve(address, save)
+            request.urlretrieve(address, save)
         except HTTPError:
             print("Could not retrieve: " + address)
 
