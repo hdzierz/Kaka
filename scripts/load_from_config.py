@@ -16,21 +16,23 @@ def run():
     path = Path("data/")
     look_for_config_dir(path)
 
-    
+
 def look_for_config_dir(path):
     for p in path.iterdir():
         if p.is_dir():
             try:
-                load_in_dir(p.path)
-            except FileNotFoundError:
+                load_in_dir(p)
+            except FileNotFoundError as e:
+                print(e.args)
                 look_for_config_dir(p)
 
 
-def load_in_dir(path_str):
+def load_in_dir(path):
     global db_alias
     if testing:
         db_alias = TEST_DB_ALIAS
-    path = Path(path_str)
+    if isinstance(path, str):
+        path = Path(path)
 
     config_dic = get_config_parser(path)
     build_dic = init_for_all(path, config_dic)
