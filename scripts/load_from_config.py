@@ -1,3 +1,9 @@
+"""
+Goes through the data directory finding folders with config files in the correct format.
+Loads the data in those folders to the database using the fields defined in the folder's
+config file
+"""
+
 from pathlib import Path
 from .configuration_parser import get_dic_from_path
 from mongcore.query_set_helpers import fetch_or_save
@@ -12,11 +18,30 @@ testing = False
 db_alias = 'default'
 
 
-def run(path_str):
+def run():
+    path = Path("data/")
+    look_for_config_dir(path)
+
+
+def look_for_config_dir(path):
+    # Iterates through the subdirectories of the given path.
+    # For each subdirectory, it either loads the contained data, or, if no config file was
+    # found, calls this method on the subdirectory
+    for p in path.iterdir():
+        if p.is_dir():
+            try:
+                load_in_dir(p)
+            except FileNotFoundError as e:
+                print(e.args)
+                look_for_config_dir(p)
+
+
+def load_in_dir(path):
     global db_alias
     if testing:
         db_alias = TEST_DB_ALIAS
-    path = Path(path_str)
+    if isinstance(path, str):
+        path = Path(path)
 
     config_dic = get_config_parser(path)
     build_dic = init_for_all(path, config_dic)
@@ -27,14 +52,19 @@ def run(path_str):
 
 
 def init_for_all(path, config_dic):
+    # Gets the name for the experiment and data_source documents from the directory name
     posix_path = path.as_posix()
     dir_list = posix_path.split("/")
     name = dir_list[-1]
+
+    # creates the dictionary to use for keyword args to fetch or save documents with
     build_dic = config_dic_to_build_dic(config_dic)
     build_dic['name'] = name
 
     with switch_db(Experiment, db_alias) as Exper:
         ex, created = fetch_or_save(Exper, db_alias=db_alias, **make_field_dic(Exper, build_dic))
+
+    # Sets the values common to all genotype docs made from the given path
     Import.study = ex
     Import.createddate = build_dic['createddate']
     Import.description = build_dic['description']
@@ -51,6 +81,8 @@ def init_file(file_path, build_dic):
 
 
 def make_field_dic(document, build_dic):
+    # Returns a copy of the given dictionary, but with only the keys that match the given
+    # document's field names
     field_dic = {}
     for key in build_dic:
         if key in document._fields_ordered:
@@ -90,6 +122,8 @@ def load(fn):
 
 
 def config_dic_to_build_dic(config_dic):
+    # Creates a copy of the given dictionary (usually parsed from a config file), with
+    # some key names changed to match the document fields
     build_dic = {}
     for key in config_dic:
         if key == "Experiment Description":
@@ -107,6 +141,17 @@ def config_dic_to_build_dic(config_dic):
 
 def get_config_parser(path):
 
+    config_path = config_in_dir(path)
+    if config_path:
+        return get_dic_from_path(str(config_path))
+    else:
+        raise FileNotFoundError(
+            "Could not find a 'config' file of .yml, .yaml or .json format in path: " + str(path)
+        )
+
+
+def config_in_dir(path):
+
     yaml_config_1 = path / "config.yaml"
     yaml_config_2 = path / "config.yml"
     json_config = path / "config.json"
@@ -118,9 +163,7 @@ def get_config_parser(path):
     elif json_config.exists():
         config_path = json_config
     else:
-        raise FileNotFoundError(
-            "Could not find a 'config' file of .yml, .yaml or .json format in path: " + str(path)
-        )
+        config_path = None
 
-    return get_dic_from_path(str(config_path))
+    return config_path
 

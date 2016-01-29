@@ -11,6 +11,8 @@ from datetime import datetime
 
 path_string_json = "test_resources/script_data/Foo"
 path_string_yaml = 'test_resources/script_data/Bar'
+bad_json_path = 'test_resources/script_data/bad_config.json'
+bad_yaml_path = 'test_resources/script_data/bad_config.yml'
 expected_experiment_json = Experiment(
     name='Foo', description="Test json configuration for kaka",
     pi="Badi James", createddate=datetime(2016, 1, 7)
@@ -21,11 +23,11 @@ expected_experiment_yaml = Experiment(
 )
 expected_datasource_json = DataSource(
     name='Foo', source=path_string_json + "/a_test_source.hmp.txt.gz",
-    supplieddate=datetime(2016, 1, 8),
+    supplieddate=datetime(2016, 1, 8, 11, 7, 33),
 )
 expected_datasource_yaml = DataSource(
     name='Bar', source=path_string_yaml + "/a_test_source.hmp.txt.gz",
-    supplieddate=datetime(2016, 1, 8),
+    supplieddate=datetime(2016, 1, 8, 11, 7, 33),
 )
 expected_genotype_json = Genotype(
     name='Test source', description="Test json configuration for kaka",
@@ -73,7 +75,7 @@ class ScriptsTestCase(TestCase):
             TestGen.objects.all().delete()
 
     def test_run_json(self):
-        load_from_config.run(path_string_json)
+        load_from_config.load_in_dir(path_string_json)
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
             query = TestEx.objects.all()
             self.assertEqual(len(query), 1)
@@ -88,7 +90,7 @@ class ScriptsTestCase(TestCase):
             self.document_compare(query.first(), expected_genotype_json)
 
     def test_run_yaml(self):
-        load_from_config.run(path_string_yaml)
+        load_from_config.load_in_dir(path_string_yaml)
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
             query = TestEx.objects.all()
             self.assertEqual(len(query), 1)
@@ -123,3 +125,13 @@ class ScriptsTestCase(TestCase):
                             self.fail("Unexpected reference field: " + key)
                     else:
                         self.assertEqual(doc1[key], doc2[key])
+
+    def test_catches_bad_date_1(self):
+        expected_message = "Incorrectly formatted datetime 'banana' for key: Experiment Date"
+        with self.assertRaisesMessage(ValueError, expected_message):
+            configuration_parser.get_dic_from_path(bad_json_path)
+
+    def test_catches_bad_date_2(self):
+        expected_message = "Incorrectly formatted datetime 'dt(16-01-08T11:07:33Z)' for key: Upload Date"
+        with self.assertRaisesMessage(ValueError, expected_message):
+            configuration_parser.get_dic_from_path(bad_yaml_path)

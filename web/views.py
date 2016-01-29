@@ -1,56 +1,61 @@
+import csv
+import re
 
-from .http_data_download_response import *
-from core.connectors import *
-from core.data_provider import *
-from core.serializer import *
+from django.http import HttpResponse, StreamingHttpResponse
+from django.shortcuts import redirect, render
+from collections import OrderedDict
+from mongcore.data_provider import DataProvider
+from mongcore.models import DataSource, Experiment
 #from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 import tempfile
 #from django.http import JsonResponse
+from mongcore.query_set_helpers import query_to_csv_rows_list
+from mongcore.view_helpers import write_stream_response
+from kaka.settings import TEST_DB_ALIAS
+from mongoengine.context_managers import switch_db
 
 # Create your views here.
 
 #from django.shortcuts import render_to_response
 #from django.template import RequestContext
-from genotype.forms import *
-from genotype.tables import *
-from genotype.models import *
-from genotype.serializer import *
-from seafood.forms import *
-from seafood.tables import *
-from seafood.models import *
-from seafood.serializer import *
-from seafood.report import *
+# from mongenotype.forms import *
+# from mongenotype.tables import *
+from mongenotype.models import *
+# from mongenotype.serializer import *
+# from seafood.forms import *
+# from seafood.tables import *
+# from seafood.models import *
+# from seafood.serializer import *
+# from seafood.report import *
 # from sets import Set
 
-from gene_expression.models import *
-from gene_expression.tables import *
-from gene_expression.forms import *
-from gene_expression.serializer import *
 
 
 from django.core.urlresolvers import reverse_lazy
 
 from querystring_parser import parser
 
-REPORTS = {
-    'fish_datasource': FishDataSourceReport,
-    'fish_by_datasource': FishReport,
-    'fish_term': FishTermReport,
-}
-
+# REPORTS = {
+#     'fish_datasource': FishDataSourceReport,
+#     'fish_by_datasource': FishReport,
+#     'fish_term': FishTermReport,
+# }
+testing = False
 
 ###################################################
 ## Helpers
 ###################################################
 
 def get_queryset(request, report, conf=None):
-    if report in REPORTS:
-        cls = REPORTS[report]
-        obj = cls()
-        return obj.run(conf)
+    # if report in REPORTS:
+    #     cls = REPORTS[report]
+    #     obj = cls()
+    #     return obj.run(conf)
+
+    db_alias = TEST_DB_ALIAS if testing else 'default'
 
     term = None
     if('term' in conf):
@@ -64,6 +69,10 @@ def get_queryset(request, report, conf=None):
     if 'name' in conf:
         nam = conf['name']
 
+    exper = None
+    if 'experiment' in conf:
+        exper = conf['experiment']
+
     cls = get_model_class(report)
 
     if not cls:
@@ -73,33 +82,51 @@ def get_queryset(request, report, conf=None):
     obs = None
     if term:
         if(hasattr(cls, 'obs')):
-            obs = cls.objects.filter(obs__contains=term)
+            with switch_db(cls, db_alias) as Class:
+                obs = Class.objects.filter(obs__contains=term)
             filtered = True
         elif(hasattr(cls, 'values')):
-            obs = cls.objects.filter(values__contains=term)
+            with switch_db(cls, db_alias) as Class:
+                obs = Class.objects.filter(values__contains=term)
             filtered = True
         else:
             filtered = True
-            obs = cls.objects.search(term)
+            with switch_db(cls, db_alias) as Class:
+                obs = Class.objects.search(term)
 
     if nam and not obs:
         filtered = True
-        obs = cls.objects.filter(name__contains=nam)
+        with switch_db(cls, db_alias) as Class:
+            obs = Class.objects.filter(name__contains=nam)
     if nam and obs:
         filtered = True
         obs = obs.filter(name__contains=nam)
 
     if ds and not obs:
         filtered = True
-        ds = DataSource.objects.get(name__contains=ds)
-        obs = cls.objects.filter(datasource=ds)
+        with switch_db(DataSource, db_alias) as Dat:
+            ds = Dat.objects.get(name__contains=ds)
+        with switch_db(cls, db_alias) as Class:
+            obs = Class.objects.filter(datasource=ds)
     if ds and obs:
         filtered = True
-        ds = DataSource.objects.get(name__contains=ds)
+        with switch_db(DataSource, db_alias) as Dat:
+            ds = Dat.objects.get(name__contains=ds)
         obs = obs.filter(datasource=ds)
 
+    if exper:
+        with switch_db(Experiment, db_alias) as Exper:
+            experiments = Exper.objects(name__contains=exper)
+        if obs:
+            obs = obs.filter(study__in=experiments)
+        else:
+            with switch_db(cls, db_alias) as Class:
+                obs = Class.objects.filter(study__in=experiments)
+        filtered = True
+
     if not obs and not filtered:
-        obs = cls.objects.all()
+        with switch_db(cls, db_alias) as Class:
+            obs = Class.objects.all()
     return obs[:100]
 
 
@@ -247,8 +274,6 @@ def restfully_manage_element(request, report, pk):
 ## user defined reports
 ###################################################
 
-from django.http import StreamingHttpResponse
-
 
 class Echo(object):
     """An object that implements just the write method of the file-like
@@ -288,33 +313,11 @@ def page_report5(request, report, fmt='csv', conf=None):
 #     return render_to_csv_response(qs)
 
 def page_report(request, report, fmt='csv', conf=None):
-    get_dict = parser.parse(request.GET.urlencode())
-    objs = get_queryset(request, report, get_dict)[:100]
+    # get_dict = parser.parse(request.GET.urlencode())
+    objs = get_queryset(request, report, request.GET)[:100]
     if objs.count()==0:
         return HttpResponse('No Data')
 
-#    if(isinstance(objs, list)):
-#        conn = DictListConnector(objs, expand_obs=True)
-#    else:
-#        conn = DjangoQuerySetConnector(objs)
-
-#    if report in REPORTS:
-#        cls = REPORTS[report]
-#        if cls.Meta.fields:
-#            conn.header = cls.Meta.fields
-#        elif cls.Meta.exclude:
-#            conn.header = Set(conn.header) - Set(cls.Meta.exclude)
-#        elif cls.Meta.sequence:
-#            conn.header = Set(cls.Meta.sequence) | Set(conn.header)
-
-    tf = tempfile.NamedTemporaryFile()
-    fn = tf.name
-    fp = open(fn, "w+")
-    DataProvider.WriteData(objs, fmt, fn)
-    fp.close()
-    response = StreamingHttpResponse(open(fn), content_type='text/csv') 
-    response['Content-Disposition'] = 'attachment; filename=' + report  + '.csv'
-    return response
-    #return HttpDataDownloadResponse(data, report, fmt, False)
-
+    rows = query_to_csv_rows_list(objs, testing=testing)
+    return write_stream_response(rows, report)
 

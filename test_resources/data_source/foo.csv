@@ -1,2 +1,2 @@
-comment,name,search_index,is_active,source,supplier,typ,id,supplieddate
-Hey Man,What is up,'no':3 'I':2 'dea':1,False,testgzpleaseignore.gz,Badi James,CSV,1,2015-11-18
+comment,is_active,name,search_index,source,supplieddate,supplier,typ
+Hey Man,False,What is up,'no':3 'I':2 'dea':1,testgzpleaseignore.gz,2015-11-18,Badi James,CSV

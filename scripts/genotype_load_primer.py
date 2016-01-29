@@ -28,7 +28,7 @@ class ImportPrimers:
         f_primer, created = PrimerType.objects.get_or_create(name='F_primer')
         r_primer, created = PrimerType.objects.get_or_create(name='R_primer')
         n_primer, created = PrimerType.objects.get_or_create(name='None')
-    	primer_id = line['primer_id']
+        primer_id = line['primer_id']
 
         pob = PrimerOb()
 

@@ -11,12 +11,12 @@ Kaka has three major aims:
 ## Techniques
 
 Kaka has been developed using 
-- Python 2.7 
+- Python 3.5
 - The web framework Django 1.8. 
 - Travis
 - Docker
 - PostGreSQL
-- Cassandra
+- MongoDB
 
 ## How to run it
 

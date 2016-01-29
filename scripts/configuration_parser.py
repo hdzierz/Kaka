@@ -4,32 +4,56 @@ import re
 import datetime
 
 
+datetime_pat = re.compile(
+    'dt\((\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2})Z)?\)'
+)
+
+
 def datetime_parse(d):
     """
-    Method to be used as the object_hook kwarg in json.load
+    (Method to be used as the object_hook kwarg in json.load)
 
-    Gets given a dictionary from a JSON file/string and returns a copy with the
-    string values for dates replaced with datetime objects
-    :param d: Dictionary read from JSON file/string
+    Returns a copy of the given dictionary with the string values for dates
+    replaced with datetime objects, provided they match the formats
+    "dt(%Y-%m-%d)" or "dt(%Y-%m-%dT%H:%M:%SZ)"
+    :param d: Dictionary read from parsed config file
     :return: Copy of d with datetime objects replacing strings of dates
     """
-    datetime_pat = re.compile(
-        'dt\((\d{4})-(\d{2})-(\d{2})(T(\d{2}):(\d{2}):(\d{2})Z)?\)'
-    )
-
     dict_with_datetime = d.copy()
+    almost_datetime_pat = re.compile('^(dt\().*\)$')
 
     for key in d:
         if isinstance(d[key], str):
             dt_match = datetime_pat.match(d[key])
+            almost_dt_match = almost_datetime_pat.match(d[key])
+            if almost_dt_match and not dt_match:
+                raise ValueError("Incorrectly formatted datetime '%s' for key: %s" % (d[key], key))
+            if (key == 'Upload Date' or key == 'Experiment Date') and not dt_match:
+                raise ValueError("Incorrectly formatted datetime '%s' for key: %s" % (d[key], key))
             if dt_match:
-                try:
-                    dt = datetime.datetime.strptime(d[key], "dt(%Y-%m-%d)")
-                except ValueError:
-                    dt = datetime.datetime.strptime(d[key], "dt(%Y-%m-%dT%H:%M:%SZ)")
+                dt = datetime_from_str(d[key])
                 dict_with_datetime[key] = dt
 
     return dict_with_datetime
+
+
+def datetime_from_str(string):
+    try:
+        return datetime.datetime.strptime(string, "dt(%Y-%m-%d)")
+    except ValueError:
+        return datetime.datetime.strptime(string, "dt(%Y-%m-%dT%H:%M:%SZ)")
+
+
+# Methods for yaml for recognising datetimes in the format used in the config files
+def datetime_representer(dumper, data):
+    date_string = data.strftime("dt(%Y-%m-%dT%H:%M:%SZ)")
+    return dumper.represent_scalar(u'!datetime', u'%s' % date_string)
+
+
+def datetime_constructor(loader, node):
+    value = loader.construct_scalar(node)
+    return datetime_from_str(value)
+# -----------------------------------------------------------------------------
 
 
 class DateTimeJSONEncoder(json.JSONEncoder):
@@ -64,7 +88,14 @@ class YamlConfigParser:
 
     def read(self):
         config_file = open(self.config_file_path, 'r')
-        return yaml.load(config_file)
+        # # Add the methods to yaml for recognising datetimes
+        # yaml.add_representer(datetime.datetime, datetime_representer)
+        # yaml.add_constructor(u'!datetime', datetime_constructor)
+        # yaml.add_implicit_resolver(u'!datetime', datetime_pat)
+        #
+        # return yaml.load(config_file)
+        raw_dict = yaml.safe_load(config_file)
+        return datetime_parse(raw_dict)
 
     def get_json_string(self):
         yaml_dict = self.read()

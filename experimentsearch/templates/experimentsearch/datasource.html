@@ -6,8 +6,8 @@
     <link rel="stylesheet" type="text/css" href="{% static "css/screen.css" %}"/>
 {% endblock %}
 {% block content %}
-    {% if from %}
-        <input type="button" onclick="location.href='{{ from }}';" value="<< Back to Search" />
+    {% if from_dic %}
+        <input type="button" onclick="location.href='{% url 'experimentsearch:index' %}?{{ from_dic|safe }}';" value="<< Back to Search" />
     {% else %}
         <input type="button" onclick="location.href='{% url 'experimentsearch:index' %}';" value="<< Back to Search" />
     {% endif %}
@@ -20,8 +20,8 @@
         {% endif %}
     {% endif %}
     <br>
-    {% if from %}
-        <input type="button" onclick="location.href='{{ from }}';" value="<< Back to Search" />
+    {% if from_dic %}
+        <input type="button" onclick="location.href='{% url 'experimentsearch:index' %}?{{ from_dic|safe }}';" value="<< Back to Search" />
     {% else %}
         <input type="button" onclick="location.href='{% url 'experimentsearch:index' %}';" value="<< Back to Search" />
     {% endif %}

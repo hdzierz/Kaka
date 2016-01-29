@@ -124,7 +124,7 @@ class Experiment(mongoengine.Document):
 
 class ExperimentForTable(models.Model):
 
-    data_source_url = "data_source/?name="
+    data_source_url = "data_source/"
     download_url = "download/"
 
     field_names = [
@@ -144,7 +144,7 @@ class ExperimentForTable(models.Model):
 
 def make_table_experiment(experiment):
     name = experiment.name
-    data_source = ExperimentForTable.data_source_url + name
+    data_source = ExperimentForTable.data_source_url + name + "/"
     download_link = ExperimentForTable.download_url + name + "/"
 
     return ExperimentForTable(

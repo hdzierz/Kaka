@@ -14,7 +14,7 @@ except ImportError:
     try:
         from django.utils.encoding import smart_unicode
     except ImportError:
-        from django.forms.util import smart_unicode
+        from django.forms.utils import smart_unicode
 from django.utils.text import capfirst
 
 from mongoengine import ReferenceField as MongoReferenceField, EmbeddedDocumentField as MongoEmbeddedDocumentField, \

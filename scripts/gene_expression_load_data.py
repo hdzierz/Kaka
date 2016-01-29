@@ -1,6 +1,6 @@
-from api.connectors import *
+from core.connectors import *
 from seafood.models import *
-from api.imports import *
+from core.imports import *
 import time
 import datetime
 from gene_expression.models import *
@@ -87,7 +87,7 @@ def run():
     init(fn)
     sheets = ExcelConnector.GetSheets(fn)
     for sheet in sheets:
-        print "Processing Sheet: " + sheet
+        print("Processing Sheet: " + sheet)
         Import.sheet = sheet
         load(fn, sheet)
 

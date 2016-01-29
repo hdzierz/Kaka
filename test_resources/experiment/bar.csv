@@ -1,4 +1,5 @@
-description,search_index,createdby,createddate,pi,id,name
-Hey man,'no':2 'idea':1,Badi James,2015-11-20 11:14:40.386012+00:00,Badi James,1,What is up
-Hey man,'no':2 'idea':1,Badi James,2015-11-21 11:14:40.386012+00:00,Not John McCallum,1,Whazzzup
-Hey man,'no':2 'idea':1,Badi James,2015-11-19 11:14:40.386012+00:00,James James,1,QUE PASSSAAA
+createdby,createddate,description,name,pi,search_index
+Badi James,2015-11-20 11:14:40.386012+00:00,Hey man,What is up,Badi James,'no':2 'idea':1
+Badi James,2015-11-21 11:14:40.386012+00:00,Hey man,Whazzzup,Not John McCallum,'no':2 'idea':1
+Badi James,2015-11-19 11:14:40.386012+00:00,Hey man,QUE PASSSAAA,James James,'no':2 'idea':1
+Badi James,2015-11-18 11:14:40.386012+00:00,Hey man,What is going on,Jamerson,'no':2 'idea':1
