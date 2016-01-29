@@ -50,7 +50,7 @@ unexpected_experi_model_3 = Experiment(
 )
 expected_table_experi = ExperimentForTable(
     name='What is up', primary_investigator='Badi James',
-    data_source="data_source/?name=What is up",
+    data_source="data_source/What is up/",
     download_link='download/What is up/',
     date_created=datetime.datetime(
         2015, 11, 20, 11, 14, 40, round(386012, -2)
@@ -58,7 +58,7 @@ expected_table_experi = ExperimentForTable(
 )
 unexpected_table_experi_1 = ExperimentForTable(
     name='QUE PASSSAAA', primary_investigator="James James",
-    data_source='data_source/?name=QUE PASSSAAA',
+    data_source='data_source/QUE PASSSAAA/',
     download_link='download/QUE PASSSAAA/',
     date_created=datetime.datetime(
         2015, 11, 19, 11, 14, 40, round(386012, -2)
@@ -66,7 +66,7 @@ unexpected_table_experi_1 = ExperimentForTable(
 )
 unexpected_table_experi_2 = ExperimentForTable(
     name='Whazzzup', primary_investigator="Not John McCallum",
-    data_source='data_source/?name=Whazzzup',
+    data_source='data_source/Whazzzup/',
     download_link='download/Whazzzup/',
     date_created=datetime.datetime(
         2015, 11, 21, 11, 14, 40, round(386012, -2)
@@ -74,7 +74,7 @@ unexpected_table_experi_2 = ExperimentForTable(
 )
 unexpected_table_experi_3 = ExperimentForTable(
     name='What is going on', primary_investigator="Jamerson",
-    data_source='data_source/?name=What is going on',
+    data_source='data_source/What is going on/',
     download_link='download/What is going on/',
     date_created=datetime.datetime(
         2015, 11, 18, 11, 14, 40, round(386012, -2)
@@ -133,6 +133,7 @@ class ExperimentSearchTestCase(TestCase):
         for model in self.test_models:
             # model.switch_db(TEST_DB_ALIAS)
             model.delete()
+        views.csv_response = None
 
     # ---------------------Helper methods------------------------
 
@@ -236,24 +237,24 @@ class DownloadTestCase(ExperimentSearchTestCase):
         # (NOTE: has to remove white space from the download stream to pass. For some reason
         # the stream has \r characters that the resulting file doesn't have)
 
-        from_url = 'http://testserver/experimentsearch/?search_name=What+is+up'
+        from_url = 'search_name=What%2Bis%2Bup'
 
         # Checks that the download page for an experiment goes to the
         # 'preparing your download' page
-        response = self.client.get('/experimentsearch/download/What is up/', {'from': from_url})
+        response = self.client.get('/experimentsearch/download/What is up/', {'search_name': "What+is+up"})
         self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
         self.assertEqual(response.context['from'], from_url)
 
         # Tests the rendered html has the code for the redirection
         var_link = 'var link = "/experimentsearch/stream_experiment_csv/What%20is%20up/";'
-        redirect_address = 'link = link + "?from=" + "' + from_url + '";'
+        redirect_address = 'link = link + "?" + "' + from_url + '";'
         self.assertIn(redirect_address, str(response.content))
         self.assertIn(var_link, str(response.content))
 
         # Checks that the stream experiment page makes the csv response, then redirects to
         # the index. Checks that the views module now has a stored csv response
-        response = self.client.get('/experimentsearch/stream_experiment_csv/What is up/', {'from': from_url})
-        self.assertRedirects(response, '/experimentsearch/?search_name=What+is+up')
+        response = self.client.get('/experimentsearch/stream_experiment_csv/What is up/', {'search_name': "What+is+up"})
+        self.assertRedirects(response, '/experimentsearch/?search_name=What%2Bis%2Bup')
         self.assertIsNotNone(views.csv_response)
 
         # Checks that the download_experiment page returns the csv response made by
@@ -608,10 +609,10 @@ class DsResponseTestCase(ExperimentSearchTestCase):
     def test_ds_response_1(self):
         # testing the appropriate data source table gets displayed, with data that matches
         # results of the data source query by name
-        from_url = 'http://testserver/experimentsearch/?search_name=What+is+up'
+        from_url = '/experimentsearch/?search_name=What%2Bis%2Bup'
 
         response = self.client.get(
-            '/experimentsearch/data_source/', {'name': 'What is up', 'from': from_url}
+            '/experimentsearch/data_source/What is up/', {'search_name': "What+is+up"}
         )
         self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
         back_button_html = "input type=\"button\" onclick=\"location.href=\\'" + from_url
@@ -635,15 +636,9 @@ class DsResponseTestCase(ExperimentSearchTestCase):
     def test_ds_response_2(self):
         # Tests that no table gets displayed when no query results found
         response = self.client.get(
-            '/experimentsearch/data_source/', {'name': 'found+nothing.csv'}
+            '/experimentsearch/data_source/found+nothing.csv/'
         )
         self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
         self.assertIsNone(response.context['table'])
-
-    def test_ds_response_3(self):
-        # Test no table gets rendered with no query
-        response = self.client.post('/experimentsearch/data_source/')
-        self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
-        self.assertNotIn('table', response.context.keys())
 
     # --------------------------------------------------------------

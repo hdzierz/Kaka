@@ -1,3 +1,9 @@
+"""
+Goes through the data directory finding folders with config files in the correct format.
+Loads the data in those folders to the database using the fields defined in the folder's
+config file
+"""
+
 from pathlib import Path
 from .configuration_parser import get_dic_from_path
 from mongcore.query_set_helpers import fetch_or_save
@@ -18,6 +24,9 @@ def run():
 
 
 def look_for_config_dir(path):
+    # Iterates through the subdirectories of the given path.
+    # For each subdirectory, it either loads the contained data, or, if no config file was
+    # found, calls this method on the subdirectory
     for p in path.iterdir():
         if p.is_dir():
             try:
@@ -43,14 +52,19 @@ def load_in_dir(path):
 
 
 def init_for_all(path, config_dic):
+    # Gets the name for the experiment and data_source documents from the directory name
     posix_path = path.as_posix()
     dir_list = posix_path.split("/")
     name = dir_list[-1]
+
+    # creates the dictionary to use for keyword args to fetch or save documents with
     build_dic = config_dic_to_build_dic(config_dic)
     build_dic['name'] = name
 
     with switch_db(Experiment, db_alias) as Exper:
         ex, created = fetch_or_save(Exper, db_alias=db_alias, **make_field_dic(Exper, build_dic))
+
+    # Sets the values common to all genotype docs made from the given path
     Import.study = ex
     Import.createddate = build_dic['createddate']
     Import.description = build_dic['description']
@@ -67,6 +81,8 @@ def init_file(file_path, build_dic):
 
 
 def make_field_dic(document, build_dic):
+    # Returns a copy of the given dictionary, but with only the keys that match the given
+    # document's field names
     field_dic = {}
     for key in build_dic:
         if key in document._fields_ordered:
@@ -106,6 +122,8 @@ def load(fn):
 
 
 def config_dic_to_build_dic(config_dic):
+    # Creates a copy of the given dictionary (usually parsed from a config file), with
+    # some key names changed to match the document fields
     build_dic = {}
     for key in config_dic:
         if key == "Experiment Description":

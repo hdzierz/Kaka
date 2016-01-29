@@ -7,5 +7,5 @@
 {% block content %}
     <img id="no_download" src="{% static "images/Sad Kiwifruit.jpg" %}">
     <p>No data for this experiment found</p>
-    <a class="clean_font" href="{{ from_url }}">Back to search</a>
+    <a class="clean_font" href="{{ from_url|safe }}">Back to search</a>
 {% endblock %}

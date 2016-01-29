@@ -40,7 +40,7 @@ def index(request):
         )
 
 
-def datasource(request):
+def datasource(request, experi_name):
     """
     Renders a data source table page according to the datasource.html template
 
@@ -52,33 +52,33 @@ def datasource(request):
     :param request:
     :return:
     """
-    if request.method == 'GET':
-        if 'from' in request.GET:
-            from_page = request.GET['from']
-        else:
-            from_page = None
-        if 'name' in request.GET:
-            ds_name = request.GET['name']
-            # TODO: Query by related experiments, whatever that means...
-            if testing:
-                with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
-                    ds_list = test_db.objects(name__contains=ds_name)
-            else:
-                ds_list = DataSource.objects(name__contains=ds_name)
+    ds_name = experi_name
+    # TODO: Query by related experiments, whatever that means...
+    if testing:
+        with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
+            ds_list = test_db.objects(name__contains=ds_name)
+    else:
+        ds_list = DataSource.objects(name__contains=ds_name)
 
-            if len(ds_list) == 0:
-                table = None
-            else:
-                table_list = []
-                for doc in ds_list:
-                    table_list.append(make_table_datasource(doc))
-                table = DataSourceTable(table_list)
-                RequestConfig(request, paginate={"per_page": 25}).configure(table)
-            return render(
-                request, 'experimentsearch/datasource.html',
-                {'table': table, 'ds_name': ds_name, 'from': from_page}
-            )
-    return render(request, 'experimentsearch/datasource.html', {})
+    if len(ds_list) == 0:
+        table = None
+    else:
+        table_list = []
+        for doc in ds_list:
+            table_list.append(make_table_datasource(doc))
+        table = DataSourceTable(table_list)
+        RequestConfig(request, paginate={"per_page": 25}).configure(table)
+    if request.method == 'GET':
+        from_dic = request.GET.copy()
+        if 'page' in from_dic:
+            del from_dic['page']
+        from_dic = from_dic.urlencode()
+    else:
+        from_dic = None
+    return render(
+        request, 'experimentsearch/datasource.html',
+        {'table': table, 'ds_name': ds_name, 'from_dic': from_dic}
+    )
 
 
 def download_message(request, experi_name):
@@ -90,8 +90,8 @@ def download_message(request, experi_name):
     :param experi_name:
     :return:
     """
-    if request.method == 'GET' and 'from' in request.GET:
-        from_page = request.GET['from']
+    if request.method == 'GET':
+        from_page = request.GET.urlencode()
         return render(
             request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_name': experi_name})
     else:
@@ -113,13 +113,13 @@ def stream_experiment_csv(request, experi_name):
     :return: Redirect to index
     """
     global csv_response
-    redirect_address, from_url = get_redirect_address(request)
+    redirect_address = get_redirect_address(request)
     genotype = query_genotype_by_experiment(experi_name)
 
     if len(genotype) == 0:
         # No data found so go to the no_download page
         return render(
-            request, "experimentsearch/no_download.html", {"from_url": from_url}
+            request, "experimentsearch/no_download.html", {"from_url": redirect_address}
         )
 
     rows = query_to_csv_rows_list(genotype, testing=testing)
@@ -146,14 +146,10 @@ def query_genotype_by_experiment(experi_name):
 
 
 def get_redirect_address(request):
-    if request.method == 'GET' and 'from' in request.GET:
-        redirect_address = request.GET['from']
-        from_url = request.GET['from']
+    if request.method == 'GET':
+        return '/experimentsearch/?' + request.GET.urlencode()
     else:
-        redirect_address = 'experimentsearch:index'
-        from_url = ""
-
-    return redirect_address, from_url
+        return '/experimentsearch/'
 
 
 def download_experiment(request):

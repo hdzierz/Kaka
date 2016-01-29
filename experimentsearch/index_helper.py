@@ -126,7 +126,7 @@ class IndexHelper:
     def search_by_pi(self):
         # Updates search form
         self.form = my_forms.PISearchForm(self.request.GET)
-        self.query_by_pi() # Makes Query
+        self.query_by_pi()  # Makes Query
         # Updates 'Search by' dropdown
         self.type_select = my_forms.SearchTypeSelect(
             initial={'search_by': Experiment.field_names[1]}
@@ -243,10 +243,11 @@ class IndexHelper:
         #  if request was from a redirect from a download preparation page
         download = views.csv_response is not None
         advanced = isinstance(self.form, my_forms.AdvancedSearchForm)
+        from_dic = self.request.GET.urlencode()
         return {
             'search_form': self.form, 'search_term': self.search_term,
             'table': table, 'search_select': self.type_select, 'download': download,
-            'advanced': advanced
+            'advanced': advanced, 'from_dic': from_dic,
         }
 
 

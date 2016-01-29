@@ -121,37 +121,6 @@ DATABASES = {
 #        'PASSWORD': 'inkl67z',
 #        'HOST': '10.1.8.154',
 #    },
-
-      # MySQL-python no longer supported in python 3
-
-#     'kiwi_marker': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'kiwi_marker',
-#         'USER': 'kiwi',
-#         'PORT': '3306',
-#         'PASSWORD': 'inkl67z',
-#         'HOST': 'localhost',
-#     },
-
-
-#    'mongodb' : {
-#      'ENGINE' : 'django_mongodb_engine',
-#      'NAME' : 'kaka',
-#      'HOST': '10.1.8.167',
-#      'PORT': '27018',
-#   },
-#    'cassandra': {
-#        'ENGINE': 'django_cassandra_engine',
-#        'NAME': 'kaka_nosql',
-#        #'TEST_NAME': 'kaka_db',
-#        'HOST': 'cassandra',
-#        'OPTIONS': {
-#            'replication': {
-#               'strategy_class': 'SimpleStrategy',
-#                'replication_factor': 1
-#            }
-#        }
-#    },
 #    'test': {
 #        'ENGINE': 'django.db.backends.sqlite3',
 #        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
