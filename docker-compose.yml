@@ -87,7 +87,9 @@ mongosetup:
   image: mongo
   links:
     - mongo
-  entrypoint: [ "setup.sh" ]
+  volumes:
+    - .:/code
+  entrypoint: [ "/code/setup.sh" ]
 #cassandra:
 #  image: cassandra
 #  environment:
