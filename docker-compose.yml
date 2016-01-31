@@ -83,13 +83,14 @@ web:
 #     - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
 mongo:
   image: mongo
+  entrypoint: [ "/usr/bin/mongod", "--replSet", "rs"]
 mongosetup:
   image: mongo
   links:
     - mongo
   volumes:
-    - .:/code
-  entrypoint: [ "/code/setup.sh" ]
+    - ./scripts:/scripts
+  entrypoint: [ "/scripts/setup.sh" ]
 #cassandra:
 #  image: cassandra
 #  environment:

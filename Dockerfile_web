@@ -16,6 +16,5 @@ WORKDIR /code
 ADD requirements_pinf.txt /code/requirements.txt
 
 RUN pip install -r requirements.txt
-RUN chmod +x /code/setup.sh
 ADD ./ ./ 
 

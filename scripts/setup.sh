@@ -11,3 +11,6 @@ mongo --host ${MONGODB}:27017 <<EOF
             }
         ]
    };
+   rs.initiate(cfg, { force: true });
+   rs.reconfig(cfg, { force: true });
+EOF
