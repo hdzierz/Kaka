@@ -91,7 +91,7 @@ mongosetup:
     - mongo
   volumes:
     - ./scripts:/scripts
-  entrypoint: [ "chmod +x /setup.sh && /setup.sh" ]
+  entrypoint: [ "chmod +x /scripts/setup.sh && /scripts/setup.sh" ]
 #cassandra:
 #  image: cassandra
 #  environment:
