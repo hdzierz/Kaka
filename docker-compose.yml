@@ -50,7 +50,6 @@ web:
   links:
     - db
     - mongo
-    - mongosetup
   environment:
      - dummy:dummy
      - http_proxy:http://proxy.pfr.co.nz:8080
