@@ -89,6 +89,11 @@ mongosetup:
   dockerfile: Dockerfile_mongosetup
   links:
     - mongo
+  environment:
+    - dummy:dummy
+    - http_proxy:http://proxy.pfr.co.nz:8080
+    - https_proxy:http://proxy.pfr.co.nz:8080
+    - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
 #cassandra:
 #  image: cassandra
 #  environment:

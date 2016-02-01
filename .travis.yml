@@ -11,9 +11,11 @@ before_install:
  - cp docker-compose.yml docker-compose_tmpl.yml
  - cp Dockerfile_web Dockerfile_web_tmpl
  - cp Dockerfile_shinyr Dockerfile_shinyr_tmpl
+ - cp Dockerfile_mongosetup Dockerfile_mongosetup_tmpl 
  - grep -vi proxy docker-compose_tmpl.yml > docker-compose.yml
  - grep -vi proxy Dockerfile_web_tmpl > Dockerfile_web
  - grep -vi proxy Dockerfile_shinyr_tmpl > Dockerfile_shinyr
+ - grep -vi proxy Dockerfile_mongosetup_tmpl > Dockerfile_mongosetup
 
 script:
   - docker-compose build
