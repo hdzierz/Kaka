@@ -85,12 +85,13 @@ mongo:
   image: mongo
   entrypoint: [ "/usr/bin/mongod", "--replSet", "rs"]
 mongosetup:
-  image: mongo
+  build: .
+  dockerfile: Dockerfile_mongosetup
   links:
     - mongo
   volumes:
     - ./scripts:/scripts
-  entrypoint: [ "chmod +x /scripts/setup.sh && /scripts/setup.sh" ]
+  entrypoint: [ "chmod +x /setup.sh && /setup.sh" ]
 #cassandra:
 #  image: cassandra
 #  environment:

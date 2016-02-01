@@ -28,7 +28,7 @@ connected = False
 # connect(host=MONGODB_HOST)
 while not connected:
     try:
-        connect(PRIMARY_DB_NAME, host='mongodb://mongo')
+        connect(PRIMARY_DB_NAME, host='mongodb://mongo', replicaSet='rs')
         connected = True
     except ConnectionError:
         pass
