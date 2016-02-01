@@ -85,7 +85,8 @@ mongo:
   image: mongo
   entrypoint: [ "/usr/bin/mongod", "--replSet", "rs"]
 mongosetup:
-  image: mongo
+  build: .
+  dockerfile: Dockerfile_mongosetup
   links:
     - mongo
 #cassandra:
