@@ -15,14 +15,14 @@ echo "Started.."
 
 echo SETUP.sh time now: `date +"%T"`
 
-master= true
-primary= false
+master=true
+primary=false
 
 read -p "Is this a primary set up? (y/n): "
-[ "$REPLY" != "y" ] || master= "$primary"
+[ "$REPLY" != "y" ] || master= $primary
 
-if [ "$master" ] ;  then
-   mongo --host ${MONGODB}:27017 <<EOF
+if [ "$master" = true ] ;  then
+    mongo --host ${MONGODB}:27017 <<- EOF
        var cfg = {
             "_id": "rs",
             "version": 1,
@@ -36,12 +36,12 @@ if [ "$master" ] ;  then
        };
        rs.initiate(cfg, { force: true });
        rs.reconfig(cfg, { force: true });
-    EOF
+EOF
 else
     echo "Please enter the host of Kaka's database primary: "
     read PRIMARY
 
-    mongo --host ${PRIMARY}:27017 <<EOF
+    mongo --host ${PRIMARY}:27017 <<- EOF
        rs.add("${MONGODB}:27017");
-    EOF
+EOF
 fi
