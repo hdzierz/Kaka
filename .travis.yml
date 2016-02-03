@@ -17,7 +17,7 @@ before_install:
  - grep -vi proxy Dockerfile_web_tmpl > Dockerfile_web
  - grep -vi proxy Dockerfile_shinyr_tmpl > Dockerfile_shinyr
  - grep -vi proxy Dockerfile_mongosetup_tmpl > Dockerfile_mongosetup
- - grep -vi primary setup_tmpl.sh > setup.sh
+ - grep -v primary setup_tmpl.sh > setup.sh
 
 script:
   - docker-compose build
