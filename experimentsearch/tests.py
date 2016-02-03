@@ -586,6 +586,8 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
 
+
+
     def test_form_error_2(self):
         # Test error raised when from_date > to_date
         get_dic = {
@@ -632,6 +634,10 @@ class DsResponseTestCase(ExperimentSearchTestCase):
                         self.assertEqual(
                             actual_row[field], expected_row[field]
                         )
+
+    def test_ds_response_3(self):
+        # Testing that it works with get data from an advanced search
+        from_url = '/exeperimentsearch/?search_name=&search_pi=&from_date_year='
 
     def test_ds_response_2(self):
         # Tests that no table gets displayed when no query results found
