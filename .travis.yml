@@ -12,16 +12,16 @@ before_install:
  - cp Dockerfile_web Dockerfile_web_tmpl
  - cp Dockerfile_shinyr Dockerfile_shinyr_tmpl
  - cp Dockerfile_mongosetup Dockerfile_mongosetup_tmpl
- - cp setup.sh setup_tmpl.sh
  - grep -vi proxy docker-compose_tmpl.yml > docker-compose.yml
  - grep -vi proxy Dockerfile_web_tmpl > Dockerfile_web
  - grep -vi proxy Dockerfile_shinyr_tmpl > Dockerfile_shinyr
  - grep -vi proxy Dockerfile_mongosetup_tmpl > Dockerfile_mongosetup
- - grep -v primary setup_tmpl.sh > setup.sh
 
 script:
+  - bash env_setup.sh true
   - docker-compose build
   - docker-compose up -d
+  - docker-compose logs mongosetup
   - docker-compose ps
   - docker exec kaka_web_1 python manage.py test
   # - docker-compose logs web

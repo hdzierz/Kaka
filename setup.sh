@@ -14,14 +14,12 @@ echo curl http://${MONGODB}:28017/serverStatus\?text\=1 2>&1 | grep uptime | hea
 echo "Started.."
 
 echo SETUP.sh time now: `date +"%T"`
+master=$1
+PRIMARY=$2
+echo "master is ${master}"
+echo "PRIMARY is ${PRIMARY}"
 
-master=true
-primary=false
-
-read -p "Is this a primary set up? (y/n): "
-[ "$REPLY" != "y" ] || master= $primary
-
-if [ "$master" = true ] ;  then
+if [ "${master}" == true ] ;  then
     mongo --host ${MONGODB}:27017 <<- EOF
        var cfg = {
             "_id": "rs",
@@ -38,9 +36,6 @@ if [ "$master" = true ] ;  then
        rs.reconfig(cfg, { force: true });
 EOF
 else
-    echo "Please enter the host of Kaka's database primary: "
-    read PRIMARY
-
     mongo --host ${PRIMARY}:27017 <<- EOF
        rs.add("${MONGODB}:27017");
 EOF
