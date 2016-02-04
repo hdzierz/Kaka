@@ -41,6 +41,7 @@ To set up a replica:
 
 ```
 bash env_setup.sh false [host address of primary to connect to]
+docker-compose build
 docker-compose up -d
 ```
 
