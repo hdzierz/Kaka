@@ -29,7 +29,7 @@ def index(request):
     """
     template = 'experimentsearch/index.html'
     if request.method == 'GET':
-        index_helper = IndexHelper(request)
+        index_helper = IndexHelper(request, testing=testing)
         context = index_helper.handle_request()
         return render(request, template, context)
     else:

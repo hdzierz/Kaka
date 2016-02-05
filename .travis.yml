@@ -21,7 +21,6 @@ script:
   - bash env_setup.sh true
   - docker-compose build
   - docker-compose up -d
-  - docker-compose logs mongosetup
   - docker-compose ps
   - docker exec kaka_web_1 python manage.py test
   # - docker-compose logs web

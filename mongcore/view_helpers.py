@@ -22,3 +22,14 @@ def write_stream_response(rows, experi_name):
     content = 'attachment; filename="' + experi_name + '.csv"'
     response['Content-Disposition'] = content
     return response
+
+
+def write_stream_response_json(rows, experi_name):
+    writer = csv.writer(Echo())
+    reader = csv.reader(rows)
+    # Write query results to csv response
+    response = StreamingHttpResponse((writer.writerow(r) for r in reader),
+                                     content_type="text/json")
+    content = 'attachment; filename="' + experi_name + '.json"'
+    response['Content-Disposition'] = content
+    return response

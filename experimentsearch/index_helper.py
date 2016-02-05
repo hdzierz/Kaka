@@ -16,14 +16,14 @@ class IndexHelper:
     GET data
     """
 
-    def __init__(self, request):
+    def __init__(self, request, testing=False):
         #  Defaults
         self.form = my_forms.NameSearchForm()
         self.type_select = my_forms.SearchTypeSelect()
         self.search_list = None
         self.search_term = None
         self.request = request
-        if views.testing:
+        if testing:
             self.db_alias = TEST_DB_ALIAS
         else:
             self.db_alias = 'default'
@@ -32,6 +32,18 @@ class IndexHelper:
         self.select_search_type()
         self.make_search()
         return self.build_context()
+
+    def query_for_api(self):
+        if 'search_name' in self.request.GET and 'search_pi' in self.request.GET \
+        and 'from_date_month' in self.request.GET:
+            self.search_advanced()
+        elif 'search_name' in self.request.GET:
+            self.query_by_name()
+        elif 'search_pi' in self.request.GET:
+            self.query_by_pi()
+        elif 'from_date_month' in self.request.GET:
+            self.query_by_date()
+        return self.search_list
 
     def select_search_type(self):
         """
@@ -51,6 +63,11 @@ class IndexHelper:
         if 'search_name' in self.request.GET and 'search_pi' in self.request.GET \
         and 'from_date_month' in self.request.GET:
             self.search_advanced()
+            # Updates the search select dropdown
+            self.type_select = my_forms.SearchTypeSelect(
+                initial={'search_by': 'Advanced Search'}
+            )
+            self.search_term = 'not none'  # To get template to show "search no results"
         elif 'search_name' in self.request.GET:
             self.search_by_name()
         elif 'search_pi' in self.request.GET:
@@ -102,12 +119,6 @@ class IndexHelper:
                 #  Sets self.search_list to the query set obtained with the query dictionary
                 with switch_db(Experiment, self.db_alias) as db:
                     self.search_list = db.objects(__raw__=query_dic)
-
-            # Updates the search select dropdown
-            self.type_select = my_forms.SearchTypeSelect(
-                initial={'search_by': 'Advanced Search'}
-            )
-            self.search_term = 'not none'  # To get template to show "search no results"
 
     def search_by_name(self):
         #  Updates search form
