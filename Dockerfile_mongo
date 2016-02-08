@@ -1,4 +1,4 @@
-FROM mongo:3.2
+FROM mongo
 
 ENV http_proxy http://proxy.pfr.co.nz:8080
 ENV https_proxy http://proxy.pfr.co.nz:8080
