@@ -6,7 +6,11 @@
     <script type="text/javascript" src="{% static "jslibraries/jquery-1.11.3.min.js" %}"></script>
     <script>
         $(document).ready(function(){
-            var link = "{% url 'experimentsearch:stream_experiment_csv' experi_name %}";
+            {% if big %}
+                var link = "{% url 'experimentsearch:stream_result_data' %}";
+            {% else %}
+                var link = "{% url 'experimentsearch:stream_experiment_csv' experi_name %}";
+            {% endif %}
             link = link + "?" + "{{ from|safe }}";
             window.location.href = link;
         });

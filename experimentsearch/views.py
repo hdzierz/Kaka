@@ -11,6 +11,7 @@ from mongoengine.context_managers import switch_db
 from mongenotype.models import Genotype
 from kaka.settings import TEST_DB_ALIAS
 from .index_helper import IndexHelper
+from web.views import genotype_report
 
 testing = False
 csv_response = None
@@ -96,9 +97,26 @@ def download_message(request, experi_name):
     if request.method == 'GET':
         from_page = request.GET.urlencode()
         return render(
-            request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_name': experi_name})
+            request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_name': experi_name}
+        )
     else:
         return render(request, 'experimentsearch/download_message.html', {'experi_name': experi_name})
+
+
+def big_download(request):
+    if request.method == 'GET':
+        from_page = request.GET.urlencode()
+        return render(
+            request, 'experimentsearch/download_message.html', {'from': from_page, 'big': True}
+        )
+    else:
+        raise Http404("No experiments queried")
+
+
+def stream_result_data(request):
+    global csv_response
+    csv_response = genotype_report(request)
+    return redirect(get_redirect_address(request))
 
 
 def stream_experiment_csv(request, experi_name):

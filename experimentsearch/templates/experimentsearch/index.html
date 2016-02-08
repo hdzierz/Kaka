@@ -47,6 +47,7 @@
 {% block results %}
     {% if table %}
         {% render_table table %}
+        <p><a href="{% url 'experimentsearch:big_download' %}?{{ from_dic|safe }}">Download data for all results</a></p>
     {% elif search_term %}
         <p>Search came up with no results</p>
     {% endif %}
