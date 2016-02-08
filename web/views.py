@@ -333,16 +333,23 @@ def genotype_report(request):
     if len(experiments) == 1:
         with switch_db(Genotype, db_alias) as Gen:
             obs = Gen.objects.filter(study=experiments[0])
+        if len(obs) == 0:
+            return HttpResponse('No Data')
         rows = query_to_csv_rows_list(obs, testing=testing)
         return write_stream_response(rows, "Genotype")
     else:
+        no_data = True
         json_list = ["{"]
         for exper in experiments:
             json_list.append(exper.name + " : [")
             with switch_db(Genotype, db_alias) as Gen:
                 obs = Gen.objects.filter(study=exper)
+            if no_data:
+                no_data = len(obs) == 0
             for gen in obs:
                 json_list.append(str(build_dict(gen, testing)))
             json_list.append("] ,")
+        if no_data:
+            return HttpResponse('No Data')
         json_list.append("}")
         return write_stream_response_json(json_list, "Genotype")

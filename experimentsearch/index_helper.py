@@ -1,6 +1,5 @@
 import re
 
-from . import views
 from kaka.settings import TEST_DB_ALIAS
 from . import forms as my_forms
 from mongcore.models import Experiment, make_table_experiment
@@ -251,14 +250,12 @@ class IndexHelper:
                 table_list.append(make_table_experiment(experiment))
             table = ExperimentTable(table_list)
             RequestConfig(self.request, paginate={"per_page": 25}).configure(table)
-        #  if request was from a redirect from a download preparation page
-        download = views.csv_response is not None
         advanced = isinstance(self.form, my_forms.AdvancedSearchForm)
         from_dic = self.request.GET.urlencode()
         return {
             'search_form': self.form, 'search_term': self.search_term,
-            'table': table, 'search_select': self.type_select, 'download': download,
-            'advanced': advanced, 'from_dic': from_dic,
+            'table': table, 'search_select': self.type_select, 'advanced': advanced,
+            'from_dic': from_dic,
         }
 
 

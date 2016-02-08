@@ -45,7 +45,7 @@ class ReportTestCase(TestCase):
             TestGen.objects.all().delete()
 
     def test_report_experiment(self):
-        response = self.client.get("/report/experiment/csv/")
+        response = self.client.get("/api/experiment/csv/")
         # Checks that the csv response's attachment matches the expected csv file
         actual_bytes = b"".join(response.streaming_content).strip()  # is this dodgy?
         pat = re.compile(b'[\s+]')
@@ -56,7 +56,7 @@ class ReportTestCase(TestCase):
         self.assertEqual(actual_bytes, expected_bytes)
 
     def test_report_datasource(self):
-        response = self.client.get("/report/data_source/csv/")
+        response = self.client.get("/api/data_source/csv/")
         # Checks that the csv response's attachment matches the expected csv file
         actual_bytes = b"".join(response.streaming_content).strip()  # is this dodgy?
         pat = re.compile(b'[\s+]')
@@ -67,7 +67,7 @@ class ReportTestCase(TestCase):
         self.assertEqual(actual_bytes, expected_bytes)
 
     def test_report_genotype(self):
-        response = self.client.get("/report/genotype/csv/?experiment=What is up")
+        response = self.client.get("/api/genotype/", {"search_name": "What+is+up"})
         # Checks that the csv response's attachment matches the expected csv file
         actual_bytes = b"".join(response.streaming_content).strip()  # is this dodgy?
         pat = re.compile(b'[\s+]')
@@ -79,12 +79,12 @@ class ReportTestCase(TestCase):
 
     def test_report_no_data_1(self):
         # Test with experiment that has not genotype data referencing it
-        response = self.client.get("/report/genotype/csv/?experiment=Whazzzup")
+        response = self.client.get("/api/genotype/?search_name=Whazzzup")
         self.assertFalse(hasattr(response, 'streaming_content'))
         self.assertContains(response, "No Data")
 
     def test_report_no_data_2(self):
         # Test with non existent experiment
-        response = self.client.get("/report/genotype/csv/?experiment=Banana")
+        response = self.client.get("/api/genotype/?search_name=Banana")
         self.assertFalse(hasattr(response, 'streaming_content'))
         self.assertContains(response, "No Data")

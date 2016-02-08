@@ -31,6 +31,9 @@ def index(request):
     if request.method == 'GET':
         index_helper = IndexHelper(request, testing=testing)
         context = index_helper.handle_request()
+        #  if request was from a redirect from a download preparation page
+        download = csv_response is not None
+        context.update({'download': download})
         return render(request, template, context)
     else:
         return render(
