@@ -1,5 +1,6 @@
 import csv
 from django.http import StreamingHttpResponse
+from platform import platform
 
 
 class Echo(object):
@@ -14,7 +15,10 @@ class Echo(object):
 
 
 def write_stream_response(rows, experi_name):
-    writer = csv.writer(Echo())
+    if 'Windows' in platform():
+        writer = csv.writer(Echo())
+    else:
+        writer = csv.writer(Echo(), dialect=csv.unix_dialect)
     reader = csv.reader(rows)
     # Write query results to csv response
     response = StreamingHttpResponse((writer.writerow(r) for r in reader),
