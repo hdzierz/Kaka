@@ -18,7 +18,7 @@ def write_stream_response(rows, experi_name):
     if 'Windows' in platform():
         writer = csv.writer(Echo())
     else:
-        unix_dialect = csv.Dialect()
+        unix_dialect = csv.excel()
         unix_dialect.lineterminator = '\n'
         writer = csv.writer(Echo(), dialect=unix_dialect)
     reader = csv.reader(rows)
