@@ -18,7 +18,9 @@ def write_stream_response(rows, experi_name):
     if 'Windows' in platform():
         writer = csv.writer(Echo())
     else:
-        writer = csv.writer(Echo(), dialect=csv.unix_dialect)
+        unix_dialect = csv.Dialect()
+        unix_dialect.lineterminator = '\n'
+        writer = csv.writer(Echo(), dialect=unix_dialect)
     reader = csv.reader(rows)
     # Write query results to csv response
     response = StreamingHttpResponse((writer.writerow(r) for r in reader),
