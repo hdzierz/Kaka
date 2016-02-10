@@ -36,7 +36,7 @@ def build_dict(document, testing=False):
         if key[0] == '_':
             pass
         elif key is "study" or key is "datasource":
-            to_return.update({key: ref_fields[key].name})
+            to_return.update({key + "__name": ref_fields[key].name})
         else:
             to_return.update({key: object_dict[key]})
     # print("Trimmed to " + str(to_return))

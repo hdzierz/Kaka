@@ -263,13 +263,11 @@ class DownloadTestCase(ExperimentSearchTestCase):
         self.assertIsNone(views.csv_response)
 
         # Checks that the csv response's attachment matches the expected csv file
-        actual_bytes = b"".join(response.streaming_content).strip()  # is this dodgy?
-        pat = re.compile(b'[\s+]')
-        actual_bytes = re.sub(pat, b'', actual_bytes)  # this is dodgy
-        expected_file = open('test_resources/genotype/baz.csv', 'rb')
-        expected_bytes = expected_file.read().strip()
-        expected_bytes = re.sub(pat, b'', expected_bytes)  # so is this
-        self.assertEqual(actual_bytes, expected_bytes)
+        actual_bytes = b"".join(response.streaming_content)
+        actual_file_string = actual_bytes.decode("utf-8")
+        expected_file = open('test_resources/genotype/baz_report.csv', 'rb')
+        expected_string = expected_file.read().decode("utf-8")
+        self.assertEqual(actual_file_string, expected_string)
 
     def test_download_2(self):
         # test renders no download template when query finds nothing

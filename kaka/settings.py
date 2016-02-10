@@ -22,8 +22,6 @@ PRIMARY_DB_ALIAS = 'primary'
 
 connected = False
 # connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
-# connect(PRIMARY_DB_NAME, host='mongodb://mongo', replicaSet='kaka1')
-# connect(PRIMARY_DB_NAME, host='mongodb://mongo')
 # MONGODB_HOST = os.environ.get('mongo_PORT_27017_TCP_ADDR', '127.0.0.1')
 # connect(host=MONGODB_HOST)
 while not connected:
