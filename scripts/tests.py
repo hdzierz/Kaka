@@ -65,6 +65,7 @@ class ScriptsTestCase(TestCase):
         # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
         register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         self.client = Client()
+        self.maxDiff = None
 
     def tearDown(self):
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:

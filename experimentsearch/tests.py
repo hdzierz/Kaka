@@ -128,6 +128,7 @@ class ExperimentSearchTestCase(TestCase):
         register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         self.test_models.extend(test_db_setup.set_up_test_db())
         self.client = Client()
+        self.maxDiff = None
 
     def tearDown(self):
         for model in self.test_models:

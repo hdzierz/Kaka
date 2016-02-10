@@ -38,6 +38,7 @@ class ReportTestCase(TestCase):
         register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         test_db_setup.set_up_test_db()
         self.client = Client()
+        self.maxDiff = None
 
     def tearDown(self):
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
