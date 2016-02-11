@@ -104,6 +104,13 @@ def download_message(request, experi_name):
 
 
 def big_download(request):
+    """
+    Method called when "download all results" link clicked. Renders the template with the download
+    preparation message and the loading gif that, once loaded, tries to redirect to the url that
+    calls stream_result_data(), passing on the GET data
+    :param request:
+    :return:
+    """
     if request.method == 'GET':
         from_page = request.GET.urlencode()
         return render(
@@ -114,6 +121,15 @@ def big_download(request):
 
 
 def stream_result_data(request):
+    """
+    Used when "download all results" link clicked
+    Creates and stores an attachment that is data of Genotype documents who's study matches the
+    query built from the request's get data. Redirects to the index (which should then download
+    the attachment), passing on the GET data to display the search results that got us here in
+    the first place
+    :param request:
+    :return:
+    """
     global csv_response
     csv_response = genotype_report(request)
     return redirect(get_redirect_address(request))

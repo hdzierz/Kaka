@@ -41,7 +41,9 @@ class IndexHelper:
         elif 'search_pi' in self.request.GET:
             self.query_by_pi()
         elif 'from_date_month' in self.request.GET:
-            self.query_by_date()
+            self.form = my_forms.DateSearchForm(self.request.GET)
+            if self.form.is_valid():
+                self.query_by_date()
         return self.search_list
 
     def select_search_type(self):

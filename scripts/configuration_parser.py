@@ -62,6 +62,8 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     """
     def default(self, o):
         if isinstance(o, datetime.datetime):
+            if o.hour == 0 and o.minute == 0 and o.second == 0:
+                return o.strftime("dt(%Y-%m-%d)")
             return o.strftime("dt(%Y-%m-%dT%H:%M:%SZ)")
         else:
             return json.JSONEncoder.default(self, o)

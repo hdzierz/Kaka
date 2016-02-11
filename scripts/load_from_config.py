@@ -16,10 +16,11 @@ from mongoengine.context_managers import switch_db
 
 testing = False
 db_alias = 'default'
+path_string = "data/"
 
 
 def run():
-    path = Path("data/")
+    path = Path(path_string)
     look_for_config_dir(path)
 
 
