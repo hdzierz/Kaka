@@ -3,19 +3,19 @@ import os
 import pathlib
 import re
 
-from django.test import TestCase, Client
-from mongoengine import register_connection
 from mongoengine.context_managers import switch_db
-from mongcore.csv_to_doc_strategy import ExperimentCsvToDoc
+from mongcore.csv_to_doc_strategy import ExperimentCsvToDoc, AbstractCsvToDocStrategy
 from mongcore.errors import QueryError
+from mongcore.tests import MasterTestCase
 
-from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
+from kaka.settings import TEST_DB_ALIAS
 from mongcore.csv_to_doc import CsvToDocConverter
 from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
 from mongcore import test_db_setup
 from . import views
 from .forms import NameSearchForm, DateSearchForm, PISearchForm, AdvancedSearchForm
 from .tables import ExperimentTable, DataSourceTable
+from web import views as web_views
 
 # WARNING: Tests rely on these globals matching the files in dir test_resources
 test_resources_path = '/test_resources/'
@@ -98,59 +98,22 @@ expected_ds_set = [expected_ds_model]
 ds_table_set = [expected_table_ds]
 
 
-class ExperimentSearchTestCase(TestCase):
+class BadCsvToDocStrategy(AbstractCsvToDocStrategy):
 
-    def __init__(self, *args, **kwargs):
-        super(ExperimentSearchTestCase, self).__init__(*args, **kwargs)
-        self.test_models = []
-        self.experi_table_url = ''
+    file_name = "experiment.csv"
+    pass
 
-    @classmethod
-    def setUpClass(cls):
-        return
 
-    def _fixture_setup(self):
-        pass
-
-    def _fixture_teardown(self):
-        pass
-
-    def _post_teardown(self):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        return
+class ExperimentSearchTestCase(MasterTestCase):
 
     def setUp(self):
         views.testing = True
-        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
-        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
-        self.test_models.extend(test_db_setup.set_up_test_db())
-        self.client = Client()
+        super(ExperimentSearchTestCase, self).setUp()
+        test_db_setup.set_up_test_db()
 
     def tearDown(self):
-        for model in self.test_models:
-            # model.switch_db(TEST_DB_ALIAS)
-            model.delete()
+        super(ExperimentSearchTestCase, self).tearDown()
         views.csv_response = None
-
-    # ---------------------Helper methods------------------------
-
-    def check_tables_equal(self, actual_table, expected_table):
-        self.assertIsNotNone(actual_table)
-        self.assertEqual(len(actual_table.rows), len(expected_table.rows))
-        for row in range(0, len(actual_table.rows)):
-            actual_row = actual_table.rows[row]
-            expected_row = expected_table.rows[row]
-            with self.subTest(row=row):
-                for col in range(0, len(ExperimentForTable.field_names)):
-                    field = ExperimentForTable.field_names[col]
-                    field = field.lower().replace(' ', '_')
-                    with self.subTest(col=col):
-                        self.assertEqual(
-                            actual_row[field], expected_row[field]
-                        )
 
 
 class CsvToDocTestCase(ExperimentSearchTestCase):
@@ -223,6 +186,12 @@ class CsvToDocTestCase(ExperimentSearchTestCase):
 
     # -------------------------------------------------------------------------------
 
+    def test_bad_strategy(self):
+        querier = CsvToDocConverter(BadCsvToDocStrategy)
+
+        with self.assertRaises(NotImplementedError):
+            querier.convert_csv('', test_db_setup.gen_url)
+
 
 class DownloadTestCase(ExperimentSearchTestCase):
 
@@ -233,9 +202,6 @@ class DownloadTestCase(ExperimentSearchTestCase):
         redirecting to another page once the template is loaded, this has to be mimicked with
         calls of self.client.get([url jQuery code would have redirected to])
         """
-
-        # (NOTE: has to remove white space from the download stream to pass. For some reason
-        # the stream has \r characters that the resulting file doesn't have)
 
         from_url = 'search_name=What%2Bis%2Bup'
 
@@ -262,14 +228,7 @@ class DownloadTestCase(ExperimentSearchTestCase):
         response = self.client.get('/experimentsearch/download_experiment/')
         self.assertIsNone(views.csv_response)
 
-        # Checks that the csv response's attachment matches the expected csv file
-        actual_bytes = b"".join(response.streaming_content).strip()  # is this dodgy?
-        pat = re.compile(b'[\s+]')
-        actual_bytes = re.sub(pat, b'', actual_bytes)  # this is dodgy
-        expected_file = open('test_resources/genotype/baz.csv', 'rb')
-        expected_bytes = expected_file.read().strip()
-        expected_bytes = re.sub(pat, b'', expected_bytes)  # so is this
-        self.assertEqual(actual_bytes, expected_bytes)
+        self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_download_2(self):
         # test renders no download template when query finds nothing
@@ -292,6 +251,42 @@ class DownloadTestCase(ExperimentSearchTestCase):
         from_url = 'http://testserver/experimentsearch/?search_name=What+is+up'
         response = self.client.get('/experimentsearch/download_experiment/', {'from': from_url})
         self.assertRedirects(response, from_url)
+
+    def test_download_all(self):
+        """
+        This test tests the sequence that gets triggered when the user clicks the 'download all
+        results' link. As part of the sequence involves jQuery code in templates
+        redirecting to another page once the template is loaded, this has to be mimicked with
+        calls of self.client.get([url jQuery code would have redirected to])
+        """
+
+        from_url = 'search_name=What%2Bis%2Bup'
+        web_views.testing = True
+
+        # Checks that the download page for an experiment goes to the
+        # 'preparing your download' page
+        response = self.client.get('/experimentsearch/download/', {'search_name': "What+is+up"})
+        self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
+        self.assertEqual(response.context['from'], from_url)
+
+        # Tests the rendered html has the code for the redirection
+        var_link = 'var link = "/experimentsearch/stream_experiment_csv/";'
+        redirect_address = 'link = link + "?" + "' + from_url + '";'
+        self.assertIn(redirect_address, str(response.content))
+        self.assertIn(var_link, str(response.content))
+
+        # Checks that the stream experiment page makes the csv response, then redirects to
+        # the index. Checks that the views module now has a stored csv response
+        response = self.client.get('/experimentsearch/stream_experiment_csv/', {'search_name': "What+is+up"})
+        self.assertRedirects(response, '/experimentsearch/?search_name=What%2Bis%2Bup')
+        self.assertIsNotNone(views.csv_response)
+
+        # Checks that the download_experiment page returns the csv response made by
+        # stream_experiment_csv and removes it from storage in the views module.
+        response = self.client.get('/experimentsearch/download_experiment/')
+        self.assertIsNone(views.csv_response)
+
+        self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
 
 class IndexResponseTestCase(ExperimentSearchTestCase):
@@ -586,6 +581,8 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table)
 
+
+
     def test_form_error_2(self):
         # Test error raised when from_date > to_date
         get_dic = {
@@ -632,6 +629,10 @@ class DsResponseTestCase(ExperimentSearchTestCase):
                         self.assertEqual(
                             actual_row[field], expected_row[field]
                         )
+
+    def test_ds_response_3(self):
+        # Testing that it works with get data from an advanced search
+        from_url = '/exeperimentsearch/?search_name=&search_pi=&from_date_year='
 
     def test_ds_response_2(self):
         # Tests that no table gets displayed when no query results found

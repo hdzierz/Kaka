@@ -1,6 +1,5 @@
 import re
 
-from . import views
 from kaka.settings import TEST_DB_ALIAS
 from . import forms as my_forms
 from mongcore.models import Experiment, make_table_experiment
@@ -16,14 +15,14 @@ class IndexHelper:
     GET data
     """
 
-    def __init__(self, request):
+    def __init__(self, request, testing=False):
         #  Defaults
         self.form = my_forms.NameSearchForm()
         self.type_select = my_forms.SearchTypeSelect()
         self.search_list = None
         self.search_term = None
         self.request = request
-        if views.testing:
+        if testing:
             self.db_alias = TEST_DB_ALIAS
         else:
             self.db_alias = 'default'
@@ -32,6 +31,20 @@ class IndexHelper:
         self.select_search_type()
         self.make_search()
         return self.build_context()
+
+    def query_for_api(self):
+        if 'search_name' in self.request.GET and 'search_pi' in self.request.GET \
+        and 'from_date_month' in self.request.GET:
+            self.search_advanced()
+        elif 'search_name' in self.request.GET:
+            self.query_by_name()
+        elif 'search_pi' in self.request.GET:
+            self.query_by_pi()
+        elif 'from_date_month' in self.request.GET:
+            self.form = my_forms.DateSearchForm(self.request.GET)
+            if self.form.is_valid():
+                self.query_by_date()
+        return self.search_list
 
     def select_search_type(self):
         """
@@ -51,6 +64,11 @@ class IndexHelper:
         if 'search_name' in self.request.GET and 'search_pi' in self.request.GET \
         and 'from_date_month' in self.request.GET:
             self.search_advanced()
+            # Updates the search select dropdown
+            self.type_select = my_forms.SearchTypeSelect(
+                initial={'search_by': 'Advanced Search'}
+            )
+            self.search_term = 'not none'  # To get template to show "search no results"
         elif 'search_name' in self.request.GET:
             self.search_by_name()
         elif 'search_pi' in self.request.GET:
@@ -102,12 +120,6 @@ class IndexHelper:
                 #  Sets self.search_list to the query set obtained with the query dictionary
                 with switch_db(Experiment, self.db_alias) as db:
                     self.search_list = db.objects(__raw__=query_dic)
-
-            # Updates the search select dropdown
-            self.type_select = my_forms.SearchTypeSelect(
-                initial={'search_by': 'Advanced Search'}
-            )
-            self.search_term = 'not none'  # To get template to show "search no results"
 
     def search_by_name(self):
         #  Updates search form
@@ -240,14 +252,12 @@ class IndexHelper:
                 table_list.append(make_table_experiment(experiment))
             table = ExperimentTable(table_list)
             RequestConfig(self.request, paginate={"per_page": 25}).configure(table)
-        #  if request was from a redirect from a download preparation page
-        download = views.csv_response is not None
         advanced = isinstance(self.form, my_forms.AdvancedSearchForm)
         from_dic = self.request.GET.urlencode()
         return {
             'search_form': self.form, 'search_term': self.search_term,
-            'table': table, 'search_select': self.type_select, 'download': download,
-            'advanced': advanced, 'from_dic': from_dic,
+            'table': table, 'search_select': self.type_select, 'advanced': advanced,
+            'from_dic': from_dic,
         }
 
 

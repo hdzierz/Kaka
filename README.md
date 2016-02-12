@@ -25,6 +25,23 @@ Clone github repo from (GitHub)[https://github.com/hdzierz/Kaka]
 ```
 git clone https://github.com/hdzierz/Kaka
 cd Kaka
+```
+
+then, either set up a primary (master) or a replica (slave) to connect to a kaka primary
+
+To set up a primary:
+
+```
+bash env_setup.sh true
+docker-compose build
+docker-compose up -d
+```
+
+To set up a replica:
+
+```
+bash env_setup.sh false [host ip address of primary to connect to] [port of primary to connect to]
+docker-compose build
 docker-compose up -d
 ```
 

@@ -1,13 +1,11 @@
 #!/bin/bash
 
-mongo --host ${MONGODB}:27017 <<EOF
-   var cfg = {
-        "_id": "rs",
-        "version": 1,
-        "members": [
-            {
-                "_id": 0,
-                "host": "${MONGODB}:27017",
-            }
-        ]
-   };
+master=$1
+PRIMARY_HOST=$2
+PRIMARY_PORT=$3
+
+if [ "${master}" == true ] ;  then
+    mongod --master
+else
+    mongod --slave --source ${PRIMARY_HOST}:${PRIMARY_PORT}
+fi

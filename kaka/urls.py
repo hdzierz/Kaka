@@ -19,11 +19,10 @@ urlpatterns = [
     url(r'^gui/(?P<report>[0-9a-zA-Z_]*)/(?P<cmd>[a-z]*)/(?P<pk>[0-9]*)$', 'web.views.manage_by_gui' , name='marker-gui-element'),
     url(r'^accounts/login/$', 'django.contrib.auth.views.login'),
     url(r'^inplaceeditform/', include('inplaceeditform.urls')),
-    url(r'^api/(?P<report>[0-9a-zA-Z_]*)/(?P<pk>[0-9]+)$', 'web.views.restfully_manage_element'),
-    url(r'^api/(?P<report>[0-9a-zA-Z_]*)/(?P<qry>[0-9a-zA-Z_\.]*)$', 'web.views.restfully_manage_collection'),
-    url(r'^report/(?P<report>[0-9a-zA-Z_]*)/$', 'web.views.page_report'),
-    url(r'^report/(?P<report>[0-9a-zA-Z_]*)/(?P<fmt>[a-z]*)/$', 'web.views.page_report'),
-    url(r'^report/(?P<report>[0-9a-zA-Z_]*)/(?P<fmt>[a-z]*)/(?P<conf>.*)$', 'web.views.page_report'),
+    url(r'^api/genotype/$', 'web.views.genotype_report', name='genotype_report'),
+    url(r'^api/(?P<report>[0-9a-zA-Z_]*)/$', 'web.views.page_report' ),
+    url(r'^api/(?P<report>[0-9a-zA-Z_]*)/(?P<fmt>[a-z]*)/$', 'web.views.page_report'),
+    url(r'^api/(?P<report>[0-9a-zA-Z_]*)/(?P<fmt>[a-z]*)/(?P<conf>.*)$', 'web.views.page_report'),
     url(r'^experimentsearch/', include('experimentsearch.urls', namespace='experimentsearch')),
 ]
 

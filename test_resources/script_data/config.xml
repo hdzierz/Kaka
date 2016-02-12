@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<config>
+    <data_creator>Badi James</data_creator>
+    <description>Test xml configuration for kaka</description>
+    <experiment_code>123456</experiment_code>
+    <upload_date>
+        <year>2016</year>
+        <month>1</month>
+        <day>8</day>
+        <hour>11</hour>
+        <minute>7</minute>
+        <second>33</second>
+    </upload_date>
+    <experiment_date>
+        <year>2016</year>
+        <month>1</month>
+        <day>7</day>
+    </experiment_date>
+</config>

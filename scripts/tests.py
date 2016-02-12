@@ -1,18 +1,19 @@
-from django.test import TestCase, Client
 from . import load_from_config, configuration_parser
-from mongoengine import register_connection
-from bson import DBRef
-from kaka.settings import TEST_DB_ALIAS, TEST_DB_NAME
+from kaka.settings import TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
 from mongcore.models import Experiment, DataSource
 from mongenotype.models import Genotype
 from datetime import datetime
+from mongcore.tests import MasterTestCase
 
 
 path_string_json = "test_resources/script_data/Foo"
+path_string_json_full = path_string_json + "/config.json"
 path_string_yaml = 'test_resources/script_data/Bar'
+path_string_yaml_full = path_string_yaml + "/config.yml"
 bad_json_path = 'test_resources/script_data/bad_config.json'
 bad_yaml_path = 'test_resources/script_data/bad_config.yml'
+wrong_format_path = 'test_resources/script_data/config.xml'
 expected_experiment_json = Experiment(
     name='Foo', description="Test json configuration for kaka",
     pi="Badi James", createddate=datetime(2016, 1, 7)
@@ -41,38 +42,12 @@ expected_genotype_yaml = Genotype(
 )
 
 
-class ScriptsTestCase(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        return
-
-    def _fixture_setup(self):
-        pass
-
-    def _fixture_teardown(self):
-        pass
-
-    def _post_teardown(self):
-        pass
-
-    @classmethod
-    def tearDownClass(cls):
-        return
+class ScriptsTestCase(MasterTestCase):
 
     def setUp(self):
         load_from_config.testing = True
-        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
-        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
-        self.client = Client()
-
-    def tearDown(self):
-        with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
-            TestEx.objects.all().delete()
-        with switch_db(DataSource, TEST_DB_ALIAS) as TestDs:
-            TestDs.objects.all().delete()
-        with switch_db(Genotype, TEST_DB_ALIAS) as TestGen:
-            TestGen.objects.all().delete()
+        load_from_config.path_string = "test_resources/"
+        super(ScriptsTestCase, self).setUp()
 
     def test_run_json(self):
         load_from_config.load_in_dir(path_string_json)
@@ -104,27 +79,49 @@ class ScriptsTestCase(TestCase):
             self.assertEqual(len(query), 1)
             self.document_compare(query.first(), expected_genotype_yaml)
 
-    def document_compare(self, doc1, doc2):
-        for key in doc1._fields_ordered:
-            # ignores metadata fields and datetime fields that default to datetime.now()
-            if key != 'id' and key[0] != '_' and key != 'dtt' and key != 'lastupdateddate':
-                with self.subTest(key=key):
-                    val = doc1[key]
-                    if isinstance(doc1[key], dict):
-                        self.assertDictEqual(doc1[key], doc2[key])
-                    elif isinstance(val, DBRef):
-                        if key == 'study':
-                            with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
-                                study = TestEx.objects.get(id=val.id)
-                                self.document_compare(study, doc2[key])
-                        elif key == 'datasource':
-                            with switch_db(DataSource, TEST_DB_ALIAS) as TestDs:
-                                ds = TestDs.objects.get(id=val.id)
-                                self.document_compare(ds, doc2[key])
-                        else:
-                            self.fail("Unexpected reference field: " + key)
-                    else:
-                        self.assertEqual(doc1[key], doc2[key])
+    def test_run_look_dir(self):
+        load_from_config.run()
+        with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
+            query = TestEx.objects.all()
+            self.assertEqual(len(query), 2)
+            self.document_compare(query.get(name='Foo'), expected_experiment_json)
+            self.document_compare(query.get(name='Bar'), expected_experiment_yaml)
+        with switch_db(DataSource, TEST_DB_ALIAS) as TestDs:
+            query = TestDs.objects.all()
+            self.assertEqual(len(query), 2)
+            self.document_compare(query.get(name='Foo'), expected_datasource_json)
+            self.document_compare(query.get(name='Bar'), expected_datasource_yaml)
+        with switch_db(Genotype, TEST_DB_ALIAS) as TestGen:
+            query = TestGen.objects.all()
+            self.assertEqual(len(query), 2)
+            json_desc = "Test json configuration for kaka"
+            yaml_desc = "Test experiment configuration for Kaka"
+            self.document_compare(query.get(description=json_desc), expected_genotype_json)
+            self.document_compare(query.get(description=yaml_desc), expected_genotype_yaml)
+
+    def test_config_parser_to_json_yaml(self):
+        yaml_parser = configuration_parser.YamlConfigParser(path_string_yaml_full)
+        expected_json = {
+            "Data Creator" : "Badi James",
+            "Experiment Description" : "Test experiment configuration for Kaka",
+            "Experiment Code" : 123456,
+            "Upload Date" : "dt(2016-01-08T11:07:33Z)",
+            "Experiment Date" : "dt(2016-01-07)"
+        }
+        actual_json = yaml_parser.get_json_string()
+        self.assertJSONEqual(actual_json, expected_json)
+
+    def test_config_parser_to_json_json(self):
+        json_parser = configuration_parser.JsonConfigParser(path_string_json_full)
+        expected_json = {
+            "Data Creator" : "Badi James",
+            "Experiment Description" : "Test json configuration for kaka",
+            "Experiment Code" : 123456,
+            "Upload Date" : "dt(2016-01-08T11:07:33Z)",
+            "Experiment Date" : "dt(2016-01-07)"
+        }
+        actual_json = json_parser.get_json_string()
+        self.assertJSONEqual(actual_json, expected_json)
 
     def test_catches_bad_date_1(self):
         expected_message = "Incorrectly formatted datetime 'banana' for key: Experiment Date"
@@ -135,3 +132,7 @@ class ScriptsTestCase(TestCase):
         expected_message = "Incorrectly formatted datetime 'dt(16-01-08T11:07:33Z)' for key: Upload Date"
         with self.assertRaisesMessage(ValueError, expected_message):
             configuration_parser.get_dic_from_path(bad_yaml_path)
+
+    def test_file_not_found(self):
+        with self.assertRaises(FileNotFoundError):
+            configuration_parser.get_dic_from_path(wrong_format_path)

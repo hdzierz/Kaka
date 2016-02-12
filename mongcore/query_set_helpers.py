@@ -27,12 +27,16 @@ def fetch_or_save(Document, db_alias='default', search_dict=None, **kwargs):
         return doc, False
 
 
-def build_dict(document):
+def build_dict(document, testing=False):
     object_dict = document.to_mongo().to_dict()
     to_return = {}
+    if isinstance(document, Feature):
+        ref_fields = get_ref_fields(document, testing)
     for key in object_dict:
         if key[0] == '_':
             pass
+        elif key is "study" or key is "datasource":
+            to_return.update({key + "__name": ref_fields[key].name})
         else:
             to_return.update({key: object_dict[key]})
     # print("Trimmed to " + str(to_return))
@@ -51,17 +55,7 @@ def rows_from_query(query, sorted_keys, testing=False):
     # csv row for each document
     for gen in query:
         if isinstance(gen, Feature):
-            ref_fields = {"study":gen.study, "datasource":gen.datasource}
-
-            if testing:
-                study_son = ref_fields['study'].as_doc()
-                ds_son = ref_fields['datasource'].as_doc()
-                study_id = study_son.get('$id')
-                with switch_db(Experiment, TEST_DB_ALIAS) as Exper:
-                    ref_fields['study'] = Exper.objects.get(id=study_id)
-                ds_id = ds_son.get('$id')
-                with switch_db(DataSource, TEST_DB_ALIAS) as Dat:
-                    ref_fields['datasource'] = Dat.objects.get(id=ds_id)
+            ref_fields = get_ref_fields(gen, testing)
 
         gen_dic = gen.to_mongo().to_dict()
         row = []
@@ -81,6 +75,20 @@ def rows_from_query(query, sorted_keys, testing=False):
         rows.append(row_string)
 
     return rows
+
+
+def get_ref_fields(gen, testing):
+    ref_fields = {"study": gen.study, "datasource": gen.datasource}
+    if testing:
+        study_son = ref_fields['study'].as_doc()
+        ds_son = ref_fields['datasource'].as_doc()
+        study_id = study_son.get('$id')
+        with switch_db(Experiment, TEST_DB_ALIAS) as Exper:
+            ref_fields['study'] = Exper.objects.get(id=study_id)
+        ds_id = ds_son.get('$id')
+        with switch_db(DataSource, TEST_DB_ALIAS) as Dat:
+            ref_fields['datasource'] = Dat.objects.get(id=ds_id)
+    return ref_fields
 
 
 def print_ordered_dict(dictionary):

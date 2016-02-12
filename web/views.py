@@ -1,5 +1,6 @@
 import csv
 import re
+import json
 
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render
@@ -12,10 +13,12 @@ from rest_framework.response import Response
 from rest_framework import status
 import tempfile
 #from django.http import JsonResponse
-from mongcore.query_set_helpers import query_to_csv_rows_list
+from mongcore.query_set_helpers import query_to_csv_rows_list, build_dict
 from mongcore.view_helpers import write_stream_response
 from kaka.settings import TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
+from experimentsearch.index_helper import IndexHelper
+from scripts.configuration_parser import DateTimeJSONEncoder
 
 # Create your views here.
 
@@ -321,3 +324,45 @@ def page_report(request, report, fmt='csv', conf=None):
     rows = query_to_csv_rows_list(objs, testing=testing)
     return write_stream_response(rows, report)
 
+
+def genotype_report(request):
+    db_alias = TEST_DB_ALIAS if testing else 'default'
+
+    index_helper = IndexHelper(request, testing=testing)
+    experiments = index_helper.query_for_api()
+    if len(experiments) == 0:
+        return HttpResponse('No Data')
+    if len(experiments) == 1:
+        with switch_db(Genotype, db_alias) as Gen:
+            obs = Gen.objects.filter(study=experiments[0])
+        if len(obs) == 0:
+            return HttpResponse('No Data')
+        rows = query_to_csv_rows_list(obs, testing=testing)
+        return write_stream_response(rows, "Genotype")
+    else:
+        no_data = True
+        json_list = ["{"]
+        outer_list = []
+        for exper in experiments:
+            name = "\"{0}\"".format(exper.name)
+            experi_string = "\t" + name + " : [\n\t\t"
+            with switch_db(Genotype, db_alias) as Gen:
+                obs = Gen.objects.filter(study=exper)
+            if no_data:
+                no_data = len(obs) == 0
+            inner_list = []
+            for gen in obs:
+                inner_list.append(json.dumps(build_dict(gen, testing), cls=DateTimeJSONEncoder))
+            experi_string += ',\n\t\t'.join(inner_list)
+            experi_string += "\n\t]"
+            outer_list.append(experi_string)
+        if no_data:
+            return HttpResponse('No Data')
+        experiments_string = ',\n'.join(outer_list)
+        json_list.append(experiments_string)
+        json_list.append("}")
+        file_content = "\n".join(json_list)
+        response = HttpResponse(file_content)
+        content = 'attachment; filename="Genotype.json"'
+        response['Content-Disposition'] = content
+        return response

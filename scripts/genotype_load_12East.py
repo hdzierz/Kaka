@@ -3,7 +3,7 @@
 import datetime
 from mongcore.connectors import CsvConnector
 from mongcore.imports import GenericImport
-from mongcore.query_set_helpers import fetch_or_save, build_dict
+from mongcore.query_set_helpers import fetch_or_save
 from mongcore.models import DataSource, Experiment, SaveKVs
 from mongenotype.models import Primer, Genotype
 from mongoengine import Document, QuerySet

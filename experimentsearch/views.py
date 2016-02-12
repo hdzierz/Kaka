@@ -11,6 +11,7 @@ from mongoengine.context_managers import switch_db
 from mongenotype.models import Genotype
 from kaka.settings import TEST_DB_ALIAS
 from .index_helper import IndexHelper
+from web.views import genotype_report
 
 testing = False
 csv_response = None
@@ -29,8 +30,11 @@ def index(request):
     """
     template = 'experimentsearch/index.html'
     if request.method == 'GET':
-        index_helper = IndexHelper(request)
+        index_helper = IndexHelper(request, testing=testing)
         context = index_helper.handle_request()
+        #  if request was from a redirect from a download preparation page
+        download = csv_response is not None
+        context.update({'download': download})
         return render(request, template, context)
     else:
         return render(
@@ -93,9 +97,42 @@ def download_message(request, experi_name):
     if request.method == 'GET':
         from_page = request.GET.urlencode()
         return render(
-            request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_name': experi_name})
+            request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_name': experi_name}
+        )
     else:
         return render(request, 'experimentsearch/download_message.html', {'experi_name': experi_name})
+
+
+def big_download(request):
+    """
+    Method called when "download all results" link clicked. Renders the template with the download
+    preparation message and the loading gif that, once loaded, tries to redirect to the url that
+    calls stream_result_data(), passing on the GET data
+    :param request:
+    :return:
+    """
+    if request.method == 'GET':
+        from_page = request.GET.urlencode()
+        return render(
+            request, 'experimentsearch/download_message.html', {'from': from_page, 'big': True}
+        )
+    else:
+        raise Http404("No experiments queried")
+
+
+def stream_result_data(request):
+    """
+    Used when "download all results" link clicked
+    Creates and stores an attachment that is data of Genotype documents who's study matches the
+    query built from the request's get data. Redirects to the index (which should then download
+    the attachment), passing on the GET data to display the search results that got us here in
+    the first place
+    :param request:
+    :return:
+    """
+    global csv_response
+    csv_response = genotype_report(request)
+    return redirect(get_redirect_address(request))
 
 
 def stream_experiment_csv(request, experi_name):

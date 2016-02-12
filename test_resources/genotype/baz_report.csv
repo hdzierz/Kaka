@@ -1,3 +1,2 @@
 alias,createddate,datasource__name,description,dtt,lastupdateddate,name,obs,statuscode,study__name
 unknown,2016-01-11 17:01:25.113000,What is up,,2016-01-11 17:39:27.211000,2016-01-11 17:01:25.113000,S1_8658,"{'GBp_01:AchCombine4Lanes:1:P1:A01':'Y','GBp_02:AchCombine4Lanes:1:P1:B01':'Y'}",1,What is up
-unknown,2016-01-11 18:01:25.113000,What is up,,2016-01-11 18:39:27.211000,2016-01-11 18:01:25.113000,S2_8659,"{'GBp_01:AchCombine4Lanes:1:P1:A01':'T','GBp_02:AchCombine4Lanes:1:P1:B01':'A'}",1,What is going on

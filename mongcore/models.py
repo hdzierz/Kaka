@@ -83,6 +83,10 @@ class DataSourceForTable(models.Model):
     supplier = models.CharField(max_length=200)
     supply_date = models.DateField()
 
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        raise NotImplementedError("DataSourceForTable model not intended for storage in database")
+
     class Meta:
         app_label = 'experimentsearch'
 
@@ -137,6 +141,10 @@ class ExperimentForTable(models.Model):
     date_created = models.DateTimeField(field_names[2])  # When
     data_source = models.CharField(field_names[3], max_length=200)
     download_link = models.CharField(field_names[4], max_length=200)
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        raise NotImplementedError("ExperimentForTable model not intended for storage in database")
 
     class Meta:
         app_label = 'experimentsearch'
