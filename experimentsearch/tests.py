@@ -1,32 +1,18 @@
 import datetime
-import os
-import pathlib
 import re
 
-from mongoengine.context_managers import switch_db
-from mongcore.csv_to_doc_strategy import ExperimentCsvToDoc, AbstractCsvToDocStrategy
-from mongcore.errors import QueryError
-from mongcore.tests import MasterTestCase
-
-from kaka.settings import TEST_DB_ALIAS
-from mongcore.csv_to_doc import CsvToDocConverter
+from mongcore.tests import MasterTestCase, expected_ds_model, expected_experi_model
 from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
 from mongcore import test_db_setup
 from . import views
 from .forms import NameSearchForm, DateSearchForm, PISearchForm, AdvancedSearchForm
 from .tables import ExperimentTable, DataSourceTable
 from web import views as web_views
+from django.http.request import QueryDict
 
 # WARNING: Tests rely on these globals matching the files in dir test_resources
 test_resources_path = '/test_resources/'
-expected_experi_model = Experiment(
-    name='What is up', pi='Badi James', createdby='Badi James',
-    description='Hey man',
-    # mongoengine rounds microseconds to milliseconds
-    createddate=datetime.datetime(
-        2015, 11, 20, 11, 14, 40, round(386012, -2)
-    )
-)
+
 unexpected_experi_model_1 = Experiment(
     name='QUE PASSSAAA', pi="James James", createdby='Badi James',
     description='Hey man',
@@ -85,23 +71,13 @@ experi_table_set = [expected_table_experi]
 experi_table_set_2 = [expected_table_experi, unexpected_table_experi_1]
 experi_table_set_3 = [expected_table_experi, unexpected_table_experi_2]
 experi_table_set_4 = [expected_table_experi, unexpected_table_experi_1, unexpected_table_experi_3]
-expected_ds_model = DataSource(
-    name= 'What is up', supplier='Badi James', is_active=False,
-    source='testgzpleaseignore.gz', comment='Hey man',
-    supplieddate=datetime.datetime(2015, 11, 18), typ='CSV'
-)
+
 expected_table_ds = DataSourceForTable(
     name= 'What is up', supplier='Badi James', is_active='False',
     source='testgzpleaseignore.gz', supply_date=datetime.date(2015, 11, 18),
 )
 expected_ds_set = [expected_ds_model]
 ds_table_set = [expected_table_ds]
-
-
-class BadCsvToDocStrategy(AbstractCsvToDocStrategy):
-
-    file_name = "experiment.csv"
-    pass
 
 
 class ExperimentSearchTestCase(MasterTestCase):
@@ -114,83 +90,6 @@ class ExperimentSearchTestCase(MasterTestCase):
     def tearDown(self):
         super(ExperimentSearchTestCase, self).tearDown()
         views.csv_response = None
-
-
-class CsvToDocTestCase(ExperimentSearchTestCase):
-    # Tests that test the CsvToDocConverter class's methods
-
-    def test_url_build_1(self):
-        url = 'www.foo.bar/?baz='
-        search = "banana"
-        expected = 'www.foo.bar/?baz=banana'
-        actual = CsvToDocConverter._make_query_url(url, search)
-        self.assertEqual(expected, actual)
-
-    def test_url_build_2(self):
-        url = 'www.foo.bar/?baz='
-        search = "banana cake"
-        expected = 'www.foo.bar/?baz=banana+cake'
-        actual = CsvToDocConverter._make_query_url(url, search)
-        self.assertEqual(expected, actual)
-
-    def test_url_build_3(self):
-        url = 'file://C:/foo bar/'
-        search = "banana cake"
-        expected = 'file://C:/foo bar/banana+cake'
-        actual = CsvToDocConverter._make_query_url(url, search)
-        self.assertEqual(expected, actual)
-
-    def test_bad_url_2(self):
-        querier = CsvToDocConverter(ExperimentCsvToDoc)
-        bad_url = pathlib.Path(os.getcwd() + "/nonexistentdir/").as_uri()
-        with self.assertRaises(QueryError):
-            querier.convert_csv('bar.csv', bad_url)
-
-    # ------------------------------------------------------------
-
-    # Query tests that essentially check the csv_to_doc and csv_to_doc_strategy modules
-    # populated the test database correctly from the given csv files
-
-    def test_experiment_query_1(self):
-        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
-            actual_model = test_db.objects.get(name="What is up")
-        self.assertEqual(expected_experi_model.name, actual_model.name)
-        self.assertEqual(expected_experi_model.pi, actual_model.pi)
-        self.assertEqual(expected_experi_model.createddate, actual_model.createddate)
-        self.assertEqual(expected_experi_model.description, actual_model.description)
-        self.assertEqual(expected_experi_model.createdby, actual_model.createdby)
-
-    def test_experiment_query_2(self):
-        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
-            with self.assertRaises(test_db.DoesNotExist):
-                test_db.objects.get(name="Wort is up")
-
-    def test_experiment_query_3(self):
-        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
-            with self.assertRaises(test_db.MultipleObjectsReturned):
-                test_db.objects.get(description="Hey man")
-
-    def test_data_source_query_1(self):
-        with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
-            actual_model = test_db.objects.get(name="What is up")
-        self.assertEqual(expected_ds_model.name, actual_model.name)
-        self.assertEqual(expected_ds_model.source, actual_model.source)
-        self.assertEqual(expected_ds_model.supplier, actual_model.supplier)
-        self.assertEqual(expected_ds_model.supplieddate, actual_model.supplieddate)
-        self.assertEqual(expected_ds_model.is_active, actual_model.is_active)
-
-    def test_data_source_query_2(self):
-        with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
-            with self.assertRaises(test_db.DoesNotExist):
-                test_db.objects.get(name="Wort is up")
-
-    # -------------------------------------------------------------------------------
-
-    def test_bad_strategy(self):
-        querier = CsvToDocConverter(BadCsvToDocStrategy)
-
-        with self.assertRaises(NotImplementedError):
-            querier.convert_csv('', test_db_setup.gen_url)
 
 
 class DownloadTestCase(ExperimentSearchTestCase):
@@ -302,7 +201,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertEqual(form.cleaned_data['search_name'], 'Whazzzup')
         expected_table = ExperimentTable([unexpected_table_experi_2])
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_2(self):
         # Testing that no table gets rendered when no results are found
@@ -323,7 +222,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertEqual(form.cleaned_data['search_pi'], 'Badi')
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_4(self):
         # Testing searching by date
@@ -341,7 +240,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertEqual(form.cleaned_data['to_date'], to_date)
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_5(self):
         # test has the right search form
@@ -379,7 +278,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertEqual(form.cleaned_data['search_name'], 'up que')
         expected_table = ExperimentTable(experi_table_set_2)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_10(self):
         # Test it only matches whole words
@@ -397,7 +296,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertEqual(form.cleaned_data['search_name'], '%ing')
         expected_table = ExperimentTable([unexpected_table_experi_3])
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_12(self):
         # Test wildcard operator at back
@@ -407,7 +306,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertEqual(form.cleaned_data['search_name'], 'u%')
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_13(self):
         # Test wildcard operator on both sides
@@ -417,7 +316,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertEqual(form.cleaned_data['search_name'], '%sss%')
         expected_table = ExperimentTable([unexpected_table_experi_1])
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_14(self):
         # Test $and operator
@@ -427,7 +326,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertEqual(form.cleaned_data['search_pi'], 'badi+james')
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_form_error_1(self):
         # Testing the DateSearchForm raises an error when the to_date precedes the from_date
@@ -495,7 +394,7 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.assertIsInstance(form, AdvancedSearchForm)
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_3(self):
         # Test advanced search with only pi
@@ -509,7 +408,7 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.assertIsInstance(form, AdvancedSearchForm)
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_4(self):
         # Test advanced search with only from date
@@ -523,7 +422,7 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.assertIsInstance(form, AdvancedSearchForm)
         expected_table = ExperimentTable(experi_table_set_3)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_5(self):
         # Test advanced search with only to date
@@ -537,7 +436,7 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.assertIsInstance(form, AdvancedSearchForm)
         expected_table = ExperimentTable(experi_table_set_4)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_6(self):
         # Test advanced search with from date and to date
@@ -551,7 +450,7 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.assertIsInstance(form, AdvancedSearchForm)
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_7(self):
         # Test with name and pi
@@ -565,7 +464,7 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.assertIsInstance(form, AdvancedSearchForm)
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_8(self):
         # Test with all fields
@@ -579,9 +478,7 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.assertIsInstance(form, AdvancedSearchForm)
         expected_table = ExperimentTable(experi_table_set)
         actual_table = response.context['table']
-        self.check_tables_equal(actual_table, expected_table)
-
-
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_form_error_2(self):
         # Test error raised when from_date > to_date
@@ -616,23 +513,25 @@ class DsResponseTestCase(ExperimentSearchTestCase):
         self.assertIn(back_button_html, str(response.content))
         expected_table = DataSourceTable(ds_table_set)
         actual_table = response.context['table']
-        self.assertIsNotNone(actual_table)
-        self.assertEqual(len(actual_table.rows), len(expected_table.rows))
-        for row in range(0, len(actual_table.rows)):
-            actual_row = actual_table.rows[row]
-            expected_row = expected_table.rows[row]
-            with self.subTest(row=row):
-                for col in range(0, len(DataSourceForTable.field_names)):
-                    field = DataSourceForTable.field_names[col]
-                    field = field.lower().replace(' ', '_')
-                    with self.subTest(col=col):
-                        self.assertEqual(
-                            actual_row[field], expected_row[field]
-                        )
+        self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
 
     def test_ds_response_3(self):
         # Testing that it works with get data from an advanced search
-        from_url = '/exeperimentsearch/?search_name=&search_pi=&from_date_year='
+        get_dic = {
+            'search_name': 'wha%', 'search_pi': 'jame%', 'from_date_year': '2015',
+            'from_date_month': '11', 'from_date_day': '19',
+            'to_date_year': '2015', 'to_date_month': '11', 'to_date_day': '22',
+        }
+        response = self.client.get(
+            '/experimentsearch/data_source/What is up/', get_dic
+        )
+        from_get = QueryDict(mutable=True)
+        from_get.update(get_dic)
+        self.assertEqual(QueryDict(query_string=response.context['from_dic']), from_get)
+        self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
+        expected_table = DataSourceTable(ds_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
 
     def test_ds_response_2(self):
         # Tests that no table gets displayed when no query results found

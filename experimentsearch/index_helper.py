@@ -33,6 +33,12 @@ class IndexHelper:
         return self.build_context()
 
     def query_for_api(self):
+        """
+        Used by web.views.genotype_report(). Builds a query from the request's
+        GET data, queries models.Ezperiments with it, then returns the query set
+        obtained
+        :return:
+        """
         if 'search_name' in self.request.GET and 'search_pi' in self.request.GET \
         and 'from_date_month' in self.request.GET:
             self.search_advanced()
