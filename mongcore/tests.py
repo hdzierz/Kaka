@@ -54,8 +54,8 @@ class MasterTestCase(TestCase):
         return
 
     def setUp(self):
-        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
-        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
+        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
+        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         self.client = Client()
         self.maxDiff = None
 
