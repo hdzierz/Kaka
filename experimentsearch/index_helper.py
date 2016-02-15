@@ -3,6 +3,7 @@ import re
 from kaka.settings import TEST_DB_ALIAS
 from . import forms as my_forms
 from mongcore.models import Experiment, make_table_experiment
+from mongcore.errors import QueryBadKeysError, QueryBadDateError
 from mongoengine.context_managers import switch_db
 from .tables import ExperimentTable
 from django_tables2 import RequestConfig
@@ -33,18 +34,88 @@ class IndexHelper:
         return self.build_context()
 
     def query_for_api(self):
-        if 'search_name' in self.request.GET and 'search_pi' in self.request.GET \
-        and 'from_date_month' in self.request.GET:
+        """
+        Used by web.views.genotype_report(). Builds a query from the request's
+        GET data, queries models.Ezperiments with it, then returns the query set
+        obtained
+        :return:
+        """
+        if self.get_has_both_dates_part() and not self.get_has_both_dates_whole():
+            raise QueryBadDateError(self.request.GET.urlencode())
+        if self.get_has_to_date_part() and not self.get_has_to_date_whole():
+            raise QueryBadDateError(self.request.GET.urlencode())
+        if self.get_has_from_date_part() and not self.get_has_from_date_whole():
+            raise QueryBadDateError(self.request.GET.urlencode())
+
+        if self.get_is_advanced_search():
             self.search_advanced()
         elif 'search_name' in self.request.GET:
             self.query_by_name()
         elif 'search_pi' in self.request.GET:
             self.query_by_pi()
-        elif 'from_date_month' in self.request.GET:
+        elif self.get_has_either_date():
             self.form = my_forms.DateSearchForm(self.request.GET)
             if self.form.is_valid():
                 self.query_by_date()
+            else:
+                raise QueryBadDateError(self.request.GET.urlencode())
+        else:
+            raise QueryBadKeysError(self.request.GET.urlencode())
         return self.search_list
+
+    def get_is_advanced_search(self):
+        if self.get_has_from_date_whole():
+            if self.get_has_to_date_whole():
+                return len(self.request.GET) > 6
+            else:
+                return len(self.request.GET) > 3
+        elif self.get_has_to_date_whole():
+            return len(self.request.GET) > 3
+        else:
+            return len(self.request.GET) > 1
+
+    def get_has_from_date_part(self):
+        return 'from_date_month' in self.request.GET or 'from_date_day' in self.request.GET \
+        or 'from_date_year' in self.request.GET
+
+    def get_has_to_date_part(self):
+        return 'to_date_month' in self.request.GET or 'to_date_day' in self.request.GET \
+        or 'to_date_year' in self.request.GET
+
+    def get_has_from_date_whole(self):
+        return 'from_date_month' in self.request.GET and 'from_date_day' in self.request.GET \
+        and 'from_date_year' in self.request.GET and self.get_from_date_nothing_empty()
+
+    def get_has_to_date_whole(self):
+        return 'to_date_month' in self.request.GET and 'to_date_day' in self.request.GET \
+        and 'to_date_year' in self.request.GET and self.get_to_date_nothing_empty()
+
+    def get_from_date_nothing_empty(self):
+        get_dic = self.request.GET
+        bool_list = [
+            get_dic['from_date_month'] != '0', get_dic['from_date_month'] != '',
+            get_dic['from_date_day'] != '0', get_dic['from_date_day'] != '',
+            get_dic['from_date_year'] != '0', get_dic['from_date_year'] != '',
+        ]
+        return False not in bool_list
+
+    def get_to_date_nothing_empty(self):
+        get_dic = self.request.GET
+        bool_list = [
+            get_dic['to_date_month'] != '0', get_dic['to_date_month'] != '',
+            get_dic['to_date_day'] != '0', get_dic['to_date_day'] != '',
+            get_dic['to_date_year'] != '0', get_dic['to_date_year'] != '',
+        ]
+        return False not in bool_list
+
+    def get_has_both_dates_part(self):
+        return self.get_has_from_date_part() and self.get_has_to_date_part()
+
+    def get_has_both_dates_whole(self):
+        return self.get_has_from_date_whole() and self.get_has_to_date_whole()
+
+    def get_has_either_date(self):
+        return self.get_has_from_date_whole() or self.get_has_to_date_whole()
 
     def select_search_type(self):
         """
@@ -61,8 +132,7 @@ class IndexHelper:
         Sets self.search_list to a QuerySet of models.Experiment obtained
         with a filter constructed from the request's get data
         """
-        if 'search_name' in self.request.GET and 'search_pi' in self.request.GET \
-        and 'from_date_month' in self.request.GET:
+        if self.get_is_advanced_search():
             self.search_advanced()
             # Updates the search select dropdown
             self.type_select = my_forms.SearchTypeSelect(
@@ -73,7 +143,7 @@ class IndexHelper:
             self.search_by_name()
         elif 'search_pi' in self.request.GET:
             self.search_by_pi()
-        elif 'from_date_month' in self.request.GET:
+        elif self.get_has_either_date():
             self.search_by_date()
 
     def search_advanced(self):
@@ -87,19 +157,21 @@ class IndexHelper:
         if self.form.is_valid():
             and_list = []  # list of filters for each field
 
-            name = self.request.GET['search_name'].strip()
-            # Checks that search_name in request's get data is not an empty string
-            # (if the 'Name' field in the AdvancedSearchForm was not empty)
-            if len(name) > 0:
-                # Builds the name filter dictionary and adds it to the list
-                and_list = [self.raw_query_dict("name", name)]
+            if 'search_name' in self.request.GET:
+                name = self.request.GET['search_name'].strip()
+                # Checks that search_name in request's get data is not an empty string
+                # (if the 'Name' field in the AdvancedSearchForm was not empty)
+                if len(name) > 0:
+                    # Builds the name filter dictionary and adds it to the list
+                    and_list = [self.raw_query_dict("name", name)]
 
-            pi = self.request.GET['search_pi'].strip()
-            # Checks that search_pi in request's get data is not an empty string
-            # (if the 'Primary Investigator' field in the AdvancedSearchForm was not empty)
-            if len(pi) > 0:
-                # Builds the pi filter dictionary and adds it to the list
-                and_list.append(self.raw_query_dict("pi", pi))
+            if 'search_pi' in self.request.GET:
+                pi = self.request.GET['search_pi'].strip()
+                # Checks that search_pi in request's get data is not an empty string
+                # (if the 'Primary Investigator' field in the AdvancedSearchForm was not empty)
+                if len(pi) > 0:
+                    # Builds the pi filter dictionary and adds it to the list
+                    and_list.append(self.raw_query_dict("pi", pi))
 
             # Checks for any dates in the form's data
             dates = self.form.cleaned_data
@@ -124,7 +196,8 @@ class IndexHelper:
     def search_by_name(self):
         #  Updates search form
         self.form = my_forms.NameSearchForm(self.request.GET)
-        self.query_by_name()  # Makes query
+        if self.form.is_valid():
+            self.query_by_name()  # Makes query
 
     def query_by_name(self):
         self.search_term = self.request.GET['search_name'].strip()
@@ -138,7 +211,8 @@ class IndexHelper:
     def search_by_pi(self):
         # Updates search form
         self.form = my_forms.PISearchForm(self.request.GET)
-        self.query_by_pi()  # Makes Query
+        if self.form.is_valid():
+            self.query_by_pi()  # Makes Query
         # Updates 'Search by' dropdown
         self.type_select = my_forms.SearchTypeSelect(
             initial={'search_by': Experiment.field_names[1]}
@@ -202,6 +276,8 @@ class IndexHelper:
         :param term: Term to build regex pattern from
         :return: Regex pattern built from given term to use for querying
         """
+        if term == '%':
+            return re.compile(r'.*')
         if term[0] is '%':  # if wildcard at start of term
             start_pat = r'.*'  # prefix pattern will match any length of anything
             term = term[1:]  # trim the wildcard character from the term
@@ -220,22 +296,24 @@ class IndexHelper:
         self.form = my_forms.DateSearchForm(self.request.GET)
         if self.form.is_valid():
             self.query_by_date()
-            # Updates 'Search by' dropdown
-            self.type_select = my_forms.SearchTypeSelect(
-                initial={'search_by': Experiment.field_names[2]}
-            )
             self.search_term = 'not none'  # To get template to show "search no results"
+        # Updates 'Search by' dropdown
+        self.type_select = my_forms.SearchTypeSelect(
+            initial={'search_by': Experiment.field_names[2]}
+        )
 
     def query_by_date(self):
         # Queries for experiments with created dates in between the
         # 'from' and 'to' dates
         dates = self.form.cleaned_data
+        query_dic = {}
+        if dates['from_date']:
+            query_dic.update({'createddate__gt': dates['from_date']})
+        if dates['to_date']:
+            query_dic.update({'createddate__lt': dates['to_date']})
         with switch_db(Experiment, self.db_alias) as db:
             query = db.objects if self.search_list is None else self.search_list
-            self.search_list = query.filter(
-                createddate__gt=dates['from_date'],
-                createddate__lt=dates['to_date']
-            )
+            self.search_list = query.filter(**query_dic)
 
     def build_context(self):
         """

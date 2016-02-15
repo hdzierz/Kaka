@@ -152,8 +152,9 @@ class ExperimentForTable(models.Model):
 
 def make_table_experiment(experiment):
     name = experiment.name
+    id = str(experiment.id)
     data_source = ExperimentForTable.data_source_url + name + "/"
-    download_link = ExperimentForTable.download_url + name + "/"
+    download_link = ExperimentForTable.download_url + id + "/"
 
     return ExperimentForTable(
         name=name, primary_investigator=experiment.pi,

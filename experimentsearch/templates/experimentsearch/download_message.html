@@ -9,7 +9,7 @@
             {% if big %}
                 var link = "{% url 'experimentsearch:stream_result_data' %}";
             {% else %}
-                var link = "{% url 'experimentsearch:stream_experiment_csv' experi_name %}";
+                var link = "{% url 'experimentsearch:stream_experiment_csv' experi_id %}";
             {% endif %}
             link = link + "?" + "{{ from|safe }}";
             window.location.href = link;

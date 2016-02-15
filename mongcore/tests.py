@@ -1,12 +1,32 @@
+import os
+import pathlib
+import datetime
+
 from django.test import TestCase, Client
 from mongoengine import register_connection
 from kaka.settings import TEST_DB_NAME, TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
-from .models import Experiment, DataSource, ExperimentForTable
+from .models import Experiment, DataSource, ExperimentForTable, DataSourceForTable
 from mongenotype.models import Genotype
 from bson import DBRef
+from . import test_db_setup
+from .csv_to_doc_strategy import ExperimentCsvToDoc, AbstractCsvToDocStrategy
+from .csv_to_doc import CsvToDocConverter
+from .errors import CsvFindError
 
-# Create your tests here.
+expected_experi_model = Experiment(
+    name='What is up', pi='Badi James', createdby='Badi James',
+    description='Hey man',
+    # mongoengine rounds microseconds to milliseconds
+    createddate=datetime.datetime(
+        2015, 11, 20, 11, 14, 40, round(386012, -2)
+    )
+)
+expected_ds_model = DataSource(
+    name= 'What is up', supplier='Badi James', is_active=False,
+    source='testgzpleaseignore.gz', comment='Hey man',
+    supplieddate=datetime.datetime(2015, 11, 18), typ='CSV'
+)
 
 
 class MasterTestCase(TestCase):
@@ -49,15 +69,16 @@ class MasterTestCase(TestCase):
 
     # ---------------------Helper methods------------------------
 
-    def check_tables_equal(self, actual_table, expected_table):
+    def check_tables_equal(self, actual_table, expected_table, TableModel):
+        # TODO: Write a version of this method that doesn't care about table sort order
         self.assertIsNotNone(actual_table)
         self.assertEqual(len(actual_table.rows), len(expected_table.rows))
         for row in range(0, len(actual_table.rows)):
             actual_row = actual_table.rows[row]
             expected_row = expected_table.rows[row]
             with self.subTest(row=row):
-                for col in range(0, len(ExperimentForTable.field_names)):
-                    field = ExperimentForTable.field_names[col]
+                for col in range(0, len(TableModel.field_names)):
+                    field = TableModel.field_names[col]
                     field = field.lower().replace(' ', '_')
                     with self.subTest(col=col):
                         self.assertEqual(
@@ -93,3 +114,117 @@ class MasterTestCase(TestCase):
                             self.fail("Unexpected reference field: " + key)
                     else:
                         self.assertEqual(doc1[key], doc2[key])
+
+
+class BadCsvToDocStrategy(AbstractCsvToDocStrategy):
+
+    file_name = "experiment.csv"
+    pass
+
+
+class CsvToDocTestCase(MasterTestCase):
+    # Tests that test the CsvToDocConverter class's methods
+
+    def setUp(self):
+        super(CsvToDocTestCase, self).setUp()
+        test_db_setup.set_up_test_db()
+
+    def test_url_build_1(self):
+        url = 'www.foo.bar/?baz='
+        search = "banana"
+        expected = 'www.foo.bar/?baz=banana'
+        actual = CsvToDocConverter._make_query_url(url, search)
+        self.assertEqual(expected, actual)
+
+    def test_url_build_2(self):
+        url = 'www.foo.bar/?baz='
+        search = "banana cake"
+        expected = 'www.foo.bar/?baz=banana+cake'
+        actual = CsvToDocConverter._make_query_url(url, search)
+        self.assertEqual(expected, actual)
+
+    def test_url_build_3(self):
+        url = 'file://C:/foo bar/'
+        search = "banana cake"
+        expected = 'file://C:/foo bar/banana+cake'
+        actual = CsvToDocConverter._make_query_url(url, search)
+        self.assertEqual(expected, actual)
+
+    def test_bad_url_2(self):
+        querier = CsvToDocConverter(ExperimentCsvToDoc)
+        bad_url = pathlib.Path(os.getcwd() + "/nonexistentdir/").as_uri()
+        with self.assertRaises(CsvFindError):
+            querier.convert_csv('bar.csv', bad_url)
+
+    # ------------------------------------------------------------
+
+    # Query tests that essentially check the csv_to_doc and csv_to_doc_strategy modules
+    # populated the test database correctly from the given csv files
+
+    def test_experiment_query_1(self):
+        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
+            actual_model = test_db.objects.get(name="What is up")
+        self.assertEqual(expected_experi_model.name, actual_model.name)
+        self.assertEqual(expected_experi_model.pi, actual_model.pi)
+        self.assertEqual(expected_experi_model.createddate, actual_model.createddate)
+        self.assertEqual(expected_experi_model.description, actual_model.description)
+        self.assertEqual(expected_experi_model.createdby, actual_model.createdby)
+
+    def test_experiment_query_2(self):
+        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
+            with self.assertRaises(test_db.DoesNotExist):
+                test_db.objects.get(name="Wort is up")
+
+    def test_experiment_query_3(self):
+        with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
+            with self.assertRaises(test_db.MultipleObjectsReturned):
+                test_db.objects.get(description="Hey man")
+
+    def test_data_source_query_1(self):
+        with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
+            actual_model = test_db.objects.get(name="What is up")
+        self.assertEqual(expected_ds_model.name, actual_model.name)
+        self.assertEqual(expected_ds_model.source, actual_model.source)
+        self.assertEqual(expected_ds_model.supplier, actual_model.supplier)
+        self.assertEqual(expected_ds_model.supplieddate, actual_model.supplieddate)
+        self.assertEqual(expected_ds_model.is_active, actual_model.is_active)
+
+    def test_data_source_query_2(self):
+        with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
+            with self.assertRaises(test_db.DoesNotExist):
+                test_db.objects.get(name="Wort is up")
+
+    # -------------------------------------------------------------------------------
+
+    def test_bad_strategy(self):
+        # Tests that An error is thrown when a sub class of CsvToDocStrategy is used that
+        # doesn't have create_document() implemented
+        querier = CsvToDocConverter(BadCsvToDocStrategy)
+
+        with self.assertRaises(NotImplementedError):
+            querier.convert_csv('', test_db_setup.gen_url)
+
+
+class ModelsTestCase(MasterTestCase):
+
+    def test_experiment_table_model_dont_save(self):
+        # Tests an exception gets raised when save() called on a models.ExperimentForTable
+        dummy = ExperimentForTable(
+            name='What is up', primary_investigator='Badi James',
+            data_source="data_source/What is up/",
+            download_link='download/What is up/',
+            date_created=datetime.datetime(
+                2015, 11, 20, 11, 14, 40, round(386012, -2)
+            )
+        )
+        with self.assertRaises(NotImplementedError):
+            dummy.save()
+
+    def test_data_source_table_model_dont_save(self):
+        # Tests an exception gets raised when save() called on a models.DataSourceForTable
+        dummy = DataSourceForTable(
+            name= 'What is up', supplier='Badi James', is_active='False',
+            source='testgzpleaseignore.gz', supply_date=datetime.date(2015, 11, 18),
+        )
+        with self.assertRaises(NotImplementedError):
+            dummy.save()

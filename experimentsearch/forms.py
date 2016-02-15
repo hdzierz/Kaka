@@ -20,14 +20,14 @@ class SearchTypeSelect(forms.Form):
 
 class NameSearchForm(forms.Form):
     search_name = forms.CharField(
-        max_length=200, label='',
+        max_length=200, label='', required=True,
         widget=forms.TextInput(attrs={"class": "search_field"})
     )
 
 
 class PISearchForm(forms.Form):
     search_pi = forms.CharField(
-        max_length=200, label='',
+        max_length=200, label='', required=True,
         widget=forms.TextInput(attrs={"class": "search_field"})
     )
 
@@ -38,15 +38,21 @@ class DateSearchForm(forms.Form):
     for year in range(2013, current_year+1):
         years.append(year)
     from_date = forms.DateTimeField(
-        label='From ', widget=SelectDateWidget(years=years),
+        label='From ', widget=SelectDateWidget(years=years), required=False
     )
     to_date = forms.DateTimeField(
-        label=' To ', widget=SelectDateWidget(years=years),
+        label=' To ', widget=SelectDateWidget(years=years), required=False
     )
 
     def clean(self):
         cleaned_data = super(DateSearchForm, self).clean()
-        if cleaned_data.get('to_date') < cleaned_data.get('from_date'):
+        todate = cleaned_data.get('to_date')
+        fromdate = cleaned_data.get('from_date')
+        if not todate and not fromdate:
+            raise forms.ValidationError(
+                "Form must have at least one complete date"
+            )
+        if todate and fromdate and todate < fromdate:
             raise forms.ValidationError(
                 "Date to search from must precede date to search to"
             )

@@ -1,5 +1,5 @@
 import urllib, csv
-from .errors import QueryError
+from .errors import CsvFindError
 
 
 class CsvToDocConverter:
@@ -27,7 +27,7 @@ class CsvToDocConverter:
         try:
             urllib.request.urlretrieve(search_table, self.file_name)
         except urllib.error.URLError as e:
-            raise QueryError(search_term, table_url, e)
+            raise CsvFindError(search_term, table_url, e)
         query_csv = open(self.file_name, 'r')
         # Check if query returned anything
         if "No Data" in query_csv.readline():
