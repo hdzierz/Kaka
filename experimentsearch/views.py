@@ -85,22 +85,22 @@ def datasource(request, experi_name):
     )
 
 
-def download_message(request, experi_name):
+def download_message(request, experi_id):
     """
     Renders the template with the download preparation message and the loading gif that,
     once loaded, tries to redirect to the url that calls the stream_experiment_csv() view
     with the given experiment name
     :param request:
-    :param experi_name:
+    :param experi_id:
     :return:
     """
     if request.method == 'GET':
         from_page = request.GET.urlencode()
         return render(
-            request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_name': experi_name}
+            request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_id': experi_id}
         )
     else:
-        return render(request, 'experimentsearch/download_message.html', {'experi_name': experi_name})
+        return render(request, 'experimentsearch/download_message.html', {'experi_id': experi_id})
 
 
 def big_download(request):
@@ -112,6 +112,8 @@ def big_download(request):
     :return:
     """
     if request.method == 'GET':
+        if len(request.GET) == 0:
+            raise Http404("No experiments queried")
         from_page = request.GET.urlencode()
         return render(
             request, 'experimentsearch/download_message.html', {'from': from_page, 'big': True}
@@ -135,9 +137,9 @@ def stream_result_data(request):
     return redirect(get_redirect_address(request))
 
 
-def stream_experiment_csv(request, experi_name):
+def stream_experiment_csv(request, experi_id):
     """
-    Queries the genotype collection with the experiment that matches experi_name
+    Queries the genotype collection with the experiment that matches experi_id
     as a filter on 'study'. Creates a csv representation of the query set.
 
     Writes a http response which downloads the csv file for the client. This response
@@ -146,12 +148,12 @@ def stream_experiment_csv(request, experi_name):
     which this view returns
 
     :param request:
-    :param experi_name: name of experiment to query for associations
+    :param experi_id: name of experiment to query for associations
     :return: Redirect to index
     """
     global csv_response
     redirect_address = get_redirect_address(request)
-    genotype = query_genotype_by_experiment(experi_name)
+    genotype, experi = query_genotype_by_experiment(experi_id)
 
     if len(genotype) == 0:
         # No data found so go to the no_download page
@@ -161,25 +163,21 @@ def stream_experiment_csv(request, experi_name):
 
     rows = query_to_csv_rows_list(genotype, testing=testing)
 
-    csv_response = write_stream_response(rows, experi_name)
+    csv_response = write_stream_response(rows, experi.name)
     return redirect(redirect_address)
 
 
-def query_genotype_by_experiment(experi_name):
+def query_genotype_by_experiment(experi_id):
     db_alias = TEST_DB_ALIAS if testing else 'default'
     # Make query
     try:
         with switch_db(Experiment, db_alias) as Exper:
-            ex = Exper.objects.get(name=experi_name)
-    except Experiment.MultipleObjectsReturned:
-        # TODO: Decide on the proper way of handling this
-        with switch_db(Experiment, db_alias) as Exper:
-            ex = Exper.objects.filter(name=experi_name).first()
+            ex = Exper.objects.get(id=experi_id)
     except Experiment.DoesNotExist:
         raise Http404("Experiment does not exist")
     with switch_db(Genotype, db_alias) as Gen:
         genotype = Gen.objects(study=ex)
-    return genotype
+    return genotype, ex
 
 
 def get_redirect_address(request):

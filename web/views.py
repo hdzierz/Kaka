@@ -7,6 +7,7 @@ from django.shortcuts import redirect, render
 from collections import OrderedDict
 from mongcore.data_provider import DataProvider
 from mongcore.models import DataSource, Experiment
+from mongcore.errors import ExperiSearchError
 #from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -329,7 +330,10 @@ def genotype_report(request):
     db_alias = TEST_DB_ALIAS if testing else 'default'
 
     index_helper = IndexHelper(request, testing=testing)
-    experiments = index_helper.query_for_api()
+    try:
+        experiments = index_helper.query_for_api()
+    except ExperiSearchError as e:
+        return HttpResponse(str(e))
     if len(experiments) == 0:
         return HttpResponse('No Data')
     if len(experiments) == 1:

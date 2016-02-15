@@ -12,7 +12,7 @@ from bson import DBRef
 from . import test_db_setup
 from .csv_to_doc_strategy import ExperimentCsvToDoc, AbstractCsvToDocStrategy
 from .csv_to_doc import CsvToDocConverter
-from .errors import QueryError
+from .errors import CsvFindError
 
 expected_experi_model = Experiment(
     name='What is up', pi='Badi James', createdby='Badi James',
@@ -54,8 +54,8 @@ class MasterTestCase(TestCase):
         return
 
     def setUp(self):
-        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
-        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
+        register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
+        # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         self.client = Client()
         self.maxDiff = None
 
@@ -70,6 +70,7 @@ class MasterTestCase(TestCase):
     # ---------------------Helper methods------------------------
 
     def check_tables_equal(self, actual_table, expected_table, TableModel):
+        # TODO: Write a version of this method that doesn't care about table sort order
         self.assertIsNotNone(actual_table)
         self.assertEqual(len(actual_table.rows), len(expected_table.rows))
         for row in range(0, len(actual_table.rows)):
@@ -152,7 +153,7 @@ class CsvToDocTestCase(MasterTestCase):
     def test_bad_url_2(self):
         querier = CsvToDocConverter(ExperimentCsvToDoc)
         bad_url = pathlib.Path(os.getcwd() + "/nonexistentdir/").as_uri()
-        with self.assertRaises(QueryError):
+        with self.assertRaises(CsvFindError):
             querier.convert_csv('bar.csv', bad_url)
 
     # ------------------------------------------------------------

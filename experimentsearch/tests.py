@@ -4,11 +4,13 @@ import re
 from mongcore.tests import MasterTestCase, expected_ds_model, expected_experi_model
 from mongcore.models import ExperimentForTable, Experiment, DataSource, DataSourceForTable
 from mongcore import test_db_setup
+from mongoengine.context_managers import switch_db
 from . import views
 from .forms import NameSearchForm, DateSearchForm, PISearchForm, AdvancedSearchForm
 from .tables import ExperimentTable, DataSourceTable
 from web import views as web_views
 from django.http.request import QueryDict
+from kaka.settings import TEST_DB_ALIAS
 
 # WARNING: Tests rely on these globals matching the files in dir test_resources
 test_resources_path = '/test_resources/'
@@ -37,7 +39,6 @@ unexpected_experi_model_3 = Experiment(
 expected_table_experi = ExperimentForTable(
     name='What is up', primary_investigator='Badi James',
     data_source="data_source/What is up/",
-    download_link='download/What is up/',
     date_created=datetime.datetime(
         2015, 11, 20, 11, 14, 40, round(386012, -2)
     )
@@ -45,7 +46,6 @@ expected_table_experi = ExperimentForTable(
 unexpected_table_experi_1 = ExperimentForTable(
     name='QUE PASSSAAA', primary_investigator="James James",
     data_source='data_source/QUE PASSSAAA/',
-    download_link='download/QUE PASSSAAA/',
     date_created=datetime.datetime(
         2015, 11, 19, 11, 14, 40, round(386012, -2)
     )
@@ -53,7 +53,6 @@ unexpected_table_experi_1 = ExperimentForTable(
 unexpected_table_experi_2 = ExperimentForTable(
     name='Whazzzup', primary_investigator="Not John McCallum",
     data_source='data_source/Whazzzup/',
-    download_link='download/Whazzzup/',
     date_created=datetime.datetime(
         2015, 11, 21, 11, 14, 40, round(386012, -2)
     )
@@ -61,7 +60,6 @@ unexpected_table_experi_2 = ExperimentForTable(
 unexpected_table_experi_3 = ExperimentForTable(
     name='What is going on', primary_investigator="Jamerson",
     data_source='data_source/What is going on/',
-    download_link='download/What is going on/',
     date_created=datetime.datetime(
         2015, 11, 18, 11, 14, 40, round(386012, -2)
     )
@@ -71,6 +69,9 @@ experi_table_set = [expected_table_experi]
 experi_table_set_2 = [expected_table_experi, unexpected_table_experi_1]
 experi_table_set_3 = [expected_table_experi, unexpected_table_experi_2]
 experi_table_set_4 = [expected_table_experi, unexpected_table_experi_1, unexpected_table_experi_3]
+experi_table_set_5 = [
+    expected_table_experi, unexpected_table_experi_2, unexpected_table_experi_1, unexpected_table_experi_3
+]
 
 expected_table_ds = DataSourceForTable(
     name= 'What is up', supplier='Badi James', is_active='False',
@@ -86,6 +87,19 @@ class ExperimentSearchTestCase(MasterTestCase):
         views.testing = True
         super(ExperimentSearchTestCase, self).setUp()
         test_db_setup.set_up_test_db()
+        with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
+            experi = TestEx.objects.get(name=expected_experi_model.name)
+            self.expected_experi_model_id = experi.id
+            expected_table_experi.download_link = "download/" + str(experi.id) + "/"
+            unexperi_1 = TestEx.objects.get(name=unexpected_experi_model_1.name)
+            self.unexpected_experi_model_1_id = unexperi_1.id
+            unexpected_table_experi_1.download_link = "download/" + str(unexperi_1.id) + "/"
+            unexperi_2 = TestEx.objects.get(name=unexpected_experi_model_2.name)
+            self.unexpected_experi_model_2_id = unexperi_2.id
+            unexpected_table_experi_2.download_link = "download/" + str(unexperi_2.id) + "/"
+            unexperi_3 = TestEx.objects.get(name=unexpected_experi_model_3.name)
+            self.unexpected_experi_model_3_id = unexperi_3.id
+            unexpected_table_experi_3.download_link = "download/" + str(unexperi_3.id) + "/"
 
     def tearDown(self):
         super(ExperimentSearchTestCase, self).tearDown()
@@ -106,19 +120,21 @@ class DownloadTestCase(ExperimentSearchTestCase):
 
         # Checks that the download page for an experiment goes to the
         # 'preparing your download' page
-        response = self.client.get('/experimentsearch/download/What is up/', {'search_name': "What+is+up"})
+        addr = '/experimentsearch/' + expected_table_experi.download_link
+        response = self.client.get(addr, {'search_name': "What+is+up"})
         self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
         self.assertEqual(response.context['from'], from_url)
 
         # Tests the rendered html has the code for the redirection
-        var_link = 'var link = "/experimentsearch/stream_experiment_csv/What%20is%20up/";'
+        stream_link = "/experimentsearch/stream_experiment_csv/" + str(self.expected_experi_model_id) + "/"
+        var_link = 'var link = "' + stream_link + '";'
         redirect_address = 'link = link + "?" + "' + from_url + '";'
         self.assertIn(redirect_address, str(response.content))
         self.assertIn(var_link, str(response.content))
 
         # Checks that the stream experiment page makes the csv response, then redirects to
         # the index. Checks that the views module now has a stored csv response
-        response = self.client.get('/experimentsearch/stream_experiment_csv/What is up/', {'search_name': "What+is+up"})
+        response = self.client.get(stream_link, {'search_name': "What+is+up"})
         self.assertRedirects(response, '/experimentsearch/?search_name=What%2Bis%2Bup')
         self.assertIsNotNone(views.csv_response)
 
@@ -131,13 +147,14 @@ class DownloadTestCase(ExperimentSearchTestCase):
 
     def test_download_2(self):
         # test renders no download template when query finds nothing
-        response = self.client.get('/experimentsearch/stream_experiment_csv/Whazzzup/')
+        addr = '/experimentsearch/stream_experiment_csv/' + str(self.unexpected_experi_model_2_id) + '/'
+        response = self.client.get(addr)
         self.assertTemplateUsed(response, 'experimentsearch/no_download.html')
         self.assertIsNone(views.csv_response)
 
     def test_download_3(self):
         # test raises 404 when downloading data for a non existent experiment attempted
-        response = self.client.get('/experimentsearch/stream_experiment_csv/Wort is up/')
+        response = self.client.get('/experimentsearch/stream_experiment_csv/08a28757e0eb18321bbc3d3e/')
         self.assertEqual(response.status_code, 404)
 
     def test_download_4(self):
@@ -150,6 +167,74 @@ class DownloadTestCase(ExperimentSearchTestCase):
         from_url = 'http://testserver/experimentsearch/?search_name=What+is+up'
         response = self.client.get('/experimentsearch/download_experiment/', {'from': from_url})
         self.assertRedirects(response, from_url)
+
+    def test_download_6(self):
+        """
+        This test tests the sequence that gets triggered when the download link gets requested with
+        empty GET data. As part of the sequence involves jQuery code in templates redirecting
+        to another page once the template is loaded, this has to be mimicked with calls of
+        self.client.get([url jQuery code would have redirected to])
+        """
+
+        # Checks that the download page for an experiment goes to the
+        # 'preparing your download' page
+        addr = '/experimentsearch/' + expected_table_experi.download_link
+        response = self.client.get(addr)
+        self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
+
+        # Tests the rendered html has the code for the redirection
+        stream_link = "/experimentsearch/stream_experiment_csv/" + str(self.expected_experi_model_id) + "/"
+        var_link = 'var link = "' + stream_link + '";'
+        redirect_address = 'link = link + "?" + "' + '";'
+        self.assertIn(redirect_address, str(response.content))
+        self.assertIn(var_link, str(response.content))
+
+        # Checks that the stream experiment page makes the csv response, then redirects to
+        # the index. Checks that the views module now has a stored csv response
+        response = self.client.get(stream_link)
+        self.assertRedirects(response, '/experimentsearch/')
+        self.assertIsNotNone(views.csv_response)
+
+        # Checks that the download_experiment page returns the csv response made by
+        # stream_experiment_csv and removes it from storage in the views module.
+        response = self.client.get('/experimentsearch/download_experiment/')
+        self.assertIsNone(views.csv_response)
+
+        self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
+
+    def test_download_7(self):
+        """
+        This test tests the sequence that gets triggered when the download link gets requested via
+        POST (ie when user goes directly to it). As part of the sequence involves jQuery
+        code in templates redirecting to another page once the template is loaded, this has to be
+        mimicked with calls of self.client.get([url jQuery code would have redirected to])
+        """
+
+        # Checks that the download page for an experiment goes to the
+        # 'preparing your download' page
+        addr = '/experimentsearch/' + expected_table_experi.download_link
+        response = self.client.post(addr)
+        self.assertTemplateUsed(response, 'experimentsearch/download_message.html')
+
+        # Tests the rendered html has the code for the redirection
+        stream_link = "/experimentsearch/stream_experiment_csv/" + str(self.expected_experi_model_id) + "/"
+        var_link = 'var link = "' + stream_link + '";'
+        redirect_address = 'link = link + "?" + "' + '";'
+        self.assertIn(redirect_address, str(response.content))
+        self.assertIn(var_link, str(response.content))
+
+        # Checks that the stream experiment page makes the csv response, then redirects to
+        # the index. Checks that the views module now has a stored csv response
+        response = self.client.post(stream_link)
+        self.assertRedirects(response, '/experimentsearch/')
+        self.assertIsNotNone(views.csv_response)
+
+        # Checks that the download_experiment page returns the csv response made by
+        # stream_experiment_csv and removes it from storage in the views module.
+        response = self.client.post('/experimentsearch/download_experiment/')
+        self.assertIsNone(views.csv_response)
+
+        self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_download_all(self):
         """
@@ -186,6 +271,18 @@ class DownloadTestCase(ExperimentSearchTestCase):
         self.assertIsNone(views.csv_response)
 
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
+
+    def test_download_all_empty_GET(self):
+        # Tests that going to the download link without an experiment id or any GET data
+        # raises a 404
+        response = self.client.get('/experimentsearch/download/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_download_all_POST(self):
+        # Tests that going to the download link without an experiment id and via POST
+        # raises a 404
+        response = self.client.post('/experimentsearch/download/')
+        self.assertEqual(response.status_code, 404)
 
 
 class IndexResponseTestCase(ExperimentSearchTestCase):
@@ -319,6 +416,16 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_14(self):
+        # Test wildcard operator alone
+        response = self.client.get('/experimentsearch/', {'search_name': '%'})
+        form = response.context['search_form']
+        self.assertIsInstance(form, NameSearchForm)
+        self.assertEqual(form.cleaned_data['search_name'], '%')
+        expected_table = ExperimentTable(experi_table_set_5)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
+
+    def test_index_response_15(self):
         # Test $and operator
         response = self.client.get('/experimentsearch/', {'search_pi': 'badi+james'})
         form = response.context['search_form']
@@ -529,6 +636,32 @@ class DsResponseTestCase(ExperimentSearchTestCase):
         from_get.update(get_dic)
         self.assertEqual(QueryDict(query_string=response.context['from_dic']), from_get)
         self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
+        expected_table = DataSourceTable(ds_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
+
+    def test_ds_response_4(self):
+        # testing the appropriate data source table gets displayed, with data that matches
+        # results of the data source query by name, from a response with no GET data
+        from_url = '/experimentsearch/'
+
+        response = self.client.get('/experimentsearch/data_source/What is up/')
+        self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
+        back_button_html = "input type=\"button\" onclick=\"location.href=\\'" + from_url
+        self.assertIn(back_button_html, str(response.content))
+        expected_table = DataSourceTable(ds_table_set)
+        actual_table = response.context['table']
+        self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
+
+    def test_ds_response_5(self):
+        # testing the appropriate data source table gets displayed, with data that matches
+        # results of the data source query by name, from a response via POST
+        from_url = '/experimentsearch/'
+
+        response = self.client.post('/experimentsearch/data_source/What is up/')
+        self.assertTemplateUsed(response, 'experimentsearch/datasource.html')
+        back_button_html = "input type=\"button\" onclick=\"location.href=\\'" + from_url
+        self.assertIn(back_button_html, str(response.content))
         expected_table = DataSourceTable(ds_table_set)
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
