@@ -10,6 +10,7 @@ from .models import Experiment, DataSource, ExperimentForTable, DataSourceForTab
 from mongenotype.models import Genotype
 from bson import DBRef
 from . import test_db_setup
+from .query_set_helpers import fetch_or_save, query_to_csv_rows_list
 from .csv_to_doc_strategy import ExperimentCsvToDoc, AbstractCsvToDocStrategy
 from .csv_to_doc import CsvToDocConverter
 from .errors import CsvFindError
@@ -228,3 +229,58 @@ class ModelsTestCase(MasterTestCase):
         )
         with self.assertRaises(NotImplementedError):
             dummy.save()
+
+
+class QuerySetHelpersTestCase(MasterTestCase):
+
+    def test_fetch_or_save_id(self):
+        # Tests fetch_or_save() fetches correctly when using db id
+        expected_experi_model.switch_db(TEST_DB_ALIAS)
+        expected_experi_model.save()
+        experi_id = expected_experi_model.id
+        with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
+            actual_experi = fetch_or_save(TestEx, TEST_DB_ALIAS, id=experi_id)
+        self.assertEqual((expected_experi_model, False), actual_experi)
+
+    def test_query_csv_to_rows_different_fields(self):
+        """
+        Tests that query_csv_to_rows creates the correct csv strings when given a query
+        set of Genotype models that have different fields to each other
+        """
+        expected_experi_model.switch_db(TEST_DB_ALIAS)
+        expected_experi_model.save()
+        expected_ds_model.switch_db(TEST_DB_ALIAS)
+        expected_ds_model.save()
+        date = datetime.datetime(2015, 11, 20, 11, 14, 40, round(386012, -2))
+        date_string = str(date)
+        xreflsid = "Helge what even is this field anyway?"
+        gen_1 = Genotype(
+            name="foo", statuscode=3, obs={"chicken": "pie"}, study=expected_experi_model,
+            datasource=expected_ds_model, xreflsid=xreflsid, createddate=date, dtt=date,
+            lastupdateddate=date
+        )
+        gen_1.switch_db(TEST_DB_ALIAS)
+        gen_1.save()
+        gen_2 = Genotype(
+            name="bar", description="baz", obs={"chicken": "snitchel"}, study=expected_experi_model,
+            datasource=expected_ds_model, lastupdatedby="Badi", createddate=date, dtt=date,
+            lastupdateddate=date
+        )
+        gen_2.switch_db(TEST_DB_ALIAS)
+        gen_2.save()
+        expected_rows = [
+            "alias,createddate,datasource__name,description,dtt,lastupdatedby,lastupdateddate,name,"
+            + "obs,statuscode,study__name,xreflsid",
+            str.format(
+                "unknown,{0},What is up,baz,{0},Badi,{0},bar,\"{{'chicken':'snitchel'}}\",1,What is up,",
+                date_string
+            ),
+            str.format(
+                "unknown,{0},What is up,,{0},,{0},foo,\"{{'chicken':'pie'}}\",3,What is up,{1}",
+                date_string, xreflsid
+            )
+        ]
+        with switch_db(Genotype, TEST_DB_ALIAS) as TestGen:
+            query = TestGen.objects.all()
+        actual_rows = query_to_csv_rows_list(query, testing=True)
+        self.assertListEqual(expected_rows, actual_rows)

@@ -104,12 +104,15 @@ def write_header_row(query_set):
     # Header row from Genotype document fields
     header = []
     head_dict = query_set[0].to_mongo().to_dict()
-    keys = head_dict.keys()
+    dict_keys = head_dict.keys()
+    keys = []
+    for key in dict_keys:
+        keys.append(key)
     for doc in query_set[1:]:
         doc_keys = doc.to_mongo().to_dict().keys()
         for key in doc_keys:
             if key not in keys:
-                keys.append[key]
+                keys.append(key)
     sorted_keys = sorted(keys)
     for key in sorted_keys:
         if key[0] != '_':
