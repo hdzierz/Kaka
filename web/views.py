@@ -370,3 +370,6 @@ def genotype_report(request):
         content = 'attachment; filename="Genotype.json"'
         response['Content-Disposition'] = content
         return response
+
+def page_main(request):
+    return redirect("/experimentsearch")
