@@ -11,6 +11,7 @@ from mongcore.models import DataSource, Experiment, SaveKVs
 from mongenotype.models import Genotype, Primer
 from mongcore.connectors import CsvConnector
 from mongcore.imports import GenericImport
+from mongcore.logger import Logger
 from kaka.settings import TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
 
@@ -33,7 +34,7 @@ def look_for_config_dir(path):
             try:
                 load_in_dir(p)
             except FileNotFoundError as e:
-                print(e.args)
+                Logger.Message(str(e))
                 look_for_config_dir(p)
 
 
@@ -47,7 +48,7 @@ def load_in_dir(path):
     config_dic = get_config_parser(path)
     build_dic = init_for_all(path, config_dic)
     for file_path in path.glob("*.gz"):
-        print("Processing: " + str(file_path))
+        Logger.Message("Processing: " + str(file_path))
         init_file(file_path, build_dic)
         load(str(file_path))
 
@@ -63,12 +64,17 @@ def init_for_all(path, config_dic):
     build_dic['name'] = name
 
     with switch_db(Experiment, db_alias) as Exper:
-        ex, created = fetch_or_save(Exper, db_alias=db_alias, **make_field_dic(Exper, build_dic))
+        try:
+            ex, created = fetch_or_save(Exper, db_alias=db_alias, **make_field_dic(Exper, build_dic))
+        except Exception as e:
+            Logger.Error(str(e))
+            raise e
 
     # Sets the values common to all genotype docs made from the given path
     Import.study = ex
     Import.createddate = build_dic['createddate']
     Import.description = build_dic['description']
+    Import.gen_col = build_dic['Genotype Column']
     return build_dic
 
 
@@ -77,7 +83,11 @@ def init_file(file_path, build_dic):
     build_dic['source'] = posix_path
 
     with switch_db(DataSource, db_alias) as DatS:
-        ds, created = fetch_or_save(DatS, db_alias=db_alias, **make_field_dic(DatS, build_dic))
+        try:
+            ds, created = fetch_or_save(DatS, db_alias=db_alias, **make_field_dic(DatS, build_dic))
+        except Exception as e:
+            Logger.Error(str(e))
+            raise e
     Import.ds = ds
 
 
@@ -96,11 +106,12 @@ class Import:
     study = None
     createddate = None
     description = None
+    gen_col = None
 
     @staticmethod
     def load_op(line, succ):
         pr = Genotype(
-            name=line['rs#'], study=Import.study, datasource=Import.ds,
+            name=line[Import.gen_col], study=Import.study, datasource=Import.ds,
             createddate=Import.createddate, description=Import.description,
         )
         SaveKVs(pr, line)

@@ -106,7 +106,8 @@ class ScriptsTestCase(MasterTestCase):
             "Experiment Description" : "Test experiment configuration for Kaka",
             "Experiment Code" : 123456,
             "Upload Date" : "dt(2016-01-08T11:07:33Z)",
-            "Experiment Date" : "dt(2016-01-07)"
+            "Experiment Date" : "dt(2016-01-07)",
+            "Genotype Column" : "rs#"
         }
         actual_json = yaml_parser.get_json_string()
         self.assertJSONEqual(actual_json, expected_json)
@@ -118,7 +119,8 @@ class ScriptsTestCase(MasterTestCase):
             "Experiment Description" : "Test json configuration for kaka",
             "Experiment Code" : 123456,
             "Upload Date" : "dt(2016-01-08T11:07:33Z)",
-            "Experiment Date" : "dt(2016-01-07)"
+            "Experiment Date" : "dt(2016-01-07)",
+            "Genotype Column" : "rs#"
         }
         actual_json = json_parser.get_json_string()
         self.assertJSONEqual(actual_json, expected_json)

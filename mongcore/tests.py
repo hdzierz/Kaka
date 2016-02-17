@@ -283,4 +283,9 @@ class QuerySetHelpersTestCase(MasterTestCase):
         with switch_db(Genotype, TEST_DB_ALIAS) as TestGen:
             query = TestGen.objects.all()
         actual_rows = query_to_csv_rows_list(query, testing=True)
-        self.assertListEqual(expected_rows, actual_rows)
+        self.assertEqual(len(expected_rows), len(actual_rows))
+        self.assertEqual(actual_rows[0], expected_rows[0])  # Checks header rows are equal
+        # Checks csv representations of genotype docs are in actual_rows
+        for row in expected_rows:
+            with self.subTest(row=row):
+                self.assertIn(row, actual_rows)
