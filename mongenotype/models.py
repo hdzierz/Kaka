@@ -15,7 +15,6 @@ class Chromosome(Feature):
     def GetName(self):
         return self.no
 
-
 class Genotype(Feature):
     ebrida_id = mongoengine.StringField(max_length=255)
     kea_id = mongoengine.StringField(max_length=255)

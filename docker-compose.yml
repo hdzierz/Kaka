@@ -41,7 +41,7 @@ web:
     #- /output:/output
     #- /workspace:/workspace
   ports:
-    - "8000:80"
+    - "8001:80"
   links:
     - db
     - mongo
