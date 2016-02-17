@@ -105,6 +105,13 @@ class YamlConfigParser:
 
 
 def get_dic_from_path(path):
+    """
+    Searches for a config file of a supported format in the given path. Creates the
+    appropriate ConfigParser for the file and returns the dictionary built by the
+    ConfigParser
+    :param path: Path to look for config file in
+    :return: Dictionary of the config values
+    """
 
     if '.yaml' == path[-5:] or '.yml' == path[-4:]:
         parser = YamlConfigParser(path)

@@ -87,6 +87,8 @@ class ExperimentSearchTestCase(MasterTestCase):
         views.testing = True
         super(ExperimentSearchTestCase, self).setUp()
         test_db_setup.set_up_test_db()
+
+        # Finds the experiment document db ids to build the ExperimentForTables' download links
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
             experi = TestEx.objects.get(name=expected_experi_model.name)
             self.expected_experi_model_id = experi.id
@@ -448,7 +450,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         )
 
     def test_query_dict_1(self):
-        # Test the method in views.IndexHelper that makes the raw PyMongo query from a string
+        # Test the method in views.QueryRequestHandler that makes the raw PyMongo query from a string
         search_terms = 'cat+dog bird snake+green+jungle were% %saur% %man+spider'
         field = "name"
         terms = ['cat', 'dog', 'bird', 'snake', 'green', 'jungle', 'were', 'saur', 'man', 'spider']
@@ -470,7 +472,7 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
                 {"$and": [{field: pats['man']}, {field: pats['spider']}]}
             ]
         }
-        actual_query_dict = views.IndexHelper.raw_query_dict(field, search_terms)
+        actual_query_dict = views.QueryRequestHandler.raw_query_dict(field, search_terms)
         self.assertDictEqual(actual_query_dict, expected_query_dict)
 
 

@@ -47,7 +47,7 @@ class ExperimentCsvToDoc(AbstractCsvToDocStrategy):
 
     @staticmethod
     def create_document(row, test=False):
-        # Creates and returns an experiment model from the values in the row
+        # Creates and returns an experiment document from the values in the row
         name = row['name']
         pi = row['pi']
         creator = row['createdby']
@@ -68,6 +68,7 @@ class DataSourceCsvToDoc(AbstractCsvToDocStrategy):
 
     @staticmethod
     def create_document(row, test=False):
+        # Creates and returns a Datasource document from the values in the row
         supplieddate = datetime.strptime(row['supplieddate'], "%Y-%m-%d").date()
         name = row['name']
         typ = row['typ']
@@ -91,11 +92,15 @@ class GenotypeCsvToDoc(AbstractCsvToDocStrategy):
 
     @staticmethod
     def create_document(row, test=False):
+        # Creates and returns a Genotype document from the values in the row
         db_alias = TEST_DB_ALIAS if test else 'default'
         build_dic = {}
         for key in row:
             if 'date' == key[-4:] or key == 'dtt':
+                # Assumes values ending in 'date' are for date fields
                 build_dic[key] = datetime.strptime(row[key], "%Y-%m-%d %H:%M:%S.%f")
+
+            # Searches through the other collections for the reference field values
             elif 'datasource' in key:
                 with switch_db(DataSource, db_alias) as TestDat:
                     datasource, created = fetch_or_save(
@@ -108,7 +113,9 @@ class GenotypeCsvToDoc(AbstractCsvToDocStrategy):
                         TestEx, db_alias=db_alias, name=row[key]
                     )
                 build_dic['study'] = study
+
             elif key == 'obs':
+                # Extracts the dictionary from the obs field
                 build_dic[key] = ast.literal_eval(row[key])
             else:
                 build_dic[key] = row[key]

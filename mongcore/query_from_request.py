@@ -1,19 +1,19 @@
 import re
 
 from kaka.settings import TEST_DB_ALIAS
-from . import forms as my_forms
+from experimentsearch import forms as my_forms
 from mongcore.models import Experiment, make_table_experiment
 from mongcore.errors import QueryBadKeysError, QueryBadDateError
 from mongoengine.context_managers import switch_db
-from .tables import ExperimentTable
+from experimentsearch.tables import ExperimentTable
 from django_tables2 import RequestConfig
 
 
-class IndexHelper:
+class QueryRequestHandler:
     """
-    Class used by the views.index() method to build the context used to
-    render the page based on the request. Assumes the request has
-    GET data
+    Class used by either the views.index() method of experimentsearch to build the context used to
+    render the page based on the request, or by the views.genotype_report() method of web to obtain
+    a queryset of Experiments to query the Genotype collection with. Assumes the request has GET data
     """
 
     def __init__(self, request, testing=False):
@@ -38,8 +38,16 @@ class IndexHelper:
         Used by web.views.genotype_report(). Builds a query from the request's
         GET data, queries models.Ezperiments with it, then returns the query set
         obtained
+
+        Query parsed from GET data following these rules:
+
+        search_name=[string] : Queries experiments by name
+        search_pi=[string] : Queries experiments by primary investigator
+        from_date_day=[int]&from_date_month=[int]&from_date_year=[int] : Queries experiments by createddate > from_date
+        to_date_day=[int]&to_date_month=[int]&to_date_year=[int] : Queries experiments by createddate < to_date
         :return:
         """
+        # Checks that the data for dates in the GET dict are complete, if present
         if self.get_has_both_dates_part() and not self.get_has_both_dates_whole():
             raise QueryBadDateError(self.request.GET.urlencode())
         if self.get_has_to_date_part() and not self.get_has_to_date_whole():
@@ -47,6 +55,7 @@ class IndexHelper:
         if self.get_has_from_date_part() and not self.get_has_from_date_whole():
             raise QueryBadDateError(self.request.GET.urlencode())
 
+        # Decides on the query method from what is in the GET dict
         if self.get_is_advanced_search():
             self.search_advanced()
         elif 'search_name' in self.request.GET:
@@ -60,10 +69,18 @@ class IndexHelper:
             else:
                 raise QueryBadDateError(self.request.GET.urlencode())
         else:
+            # If this line is reached, means that there were none of the right fields in the
+            # GET dict to query the Experiment collection with
             raise QueryBadKeysError(self.request.GET.urlencode())
         return self.search_list
 
     def get_is_advanced_search(self):
+        """
+        Used to determine whether to use the GET dict for an advanced query. Returns true
+        if the GET dict has more than one field to query the Experiment collection by
+        (counting 'from' and 'to' date combined as one field: createddate)
+        :return:
+        """
         if self.get_has_from_date_whole():
             if self.get_has_to_date_whole():
                 return len(self.request.GET) > 6
@@ -73,6 +90,8 @@ class IndexHelper:
             return len(self.request.GET) > 3
         else:
             return len(self.request.GET) > 1
+
+    # Methods for looking for dates in the GET dict and checking that they are complete
 
     def get_has_from_date_part(self):
         return 'from_date_month' in self.request.GET or 'from_date_day' in self.request.GET \
@@ -116,6 +135,8 @@ class IndexHelper:
 
     def get_has_either_date(self):
         return self.get_has_from_date_whole() or self.get_has_to_date_whole()
+
+    # -----------------------------------------------------------------------------------
 
     def select_search_type(self):
         """
@@ -235,7 +256,7 @@ class IndexHelper:
         The operators are:
         -	Whitespace for OR
         -	+ for AND
-        -	% for wildcard (only at start and end of word, matches any length)
+        -	% for wildcard (At start or end of word, or alone. Matches any length)
 
         :param field: The document field the query is to use to filter
         :param search_term: the string entered into the search form's text field
@@ -253,12 +274,12 @@ class IndexHelper:
                 tup = search_list[i].split('+')
                 and_list = []
                 for term in tup:
-                    term_re = IndexHelper.query_regex(term)
+                    term_re = QueryRequestHandler.query_regex(term)
                     and_list.append({field: term_re})
                 or_list.append({"$and": and_list})  # adds to the filter list
             else:
                 # Builds filter from the word and adds it to the filter list
-                term_re = IndexHelper.query_regex(search_list[i])
+                term_re = QueryRequestHandler.query_regex(search_list[i])
                 or_list.append({field: term_re})
 
         return {"$or": or_list}  # Joins all the filters with an OR operator
@@ -319,7 +340,7 @@ class IndexHelper:
         """
         Creates a django table from self.search_list if it is a QuerySet that contains
         anything.
-        :return A dict of all the IndexHelper's instance variables (except the request)
+        :return A dict of all the QueryRequestHandler's instance variables (except the request)
                 plus the table, for use as a render context for views.index()
         """
         if self.search_list is None or len(self.search_list) == 0:
