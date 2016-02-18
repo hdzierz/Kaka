@@ -165,7 +165,7 @@ def make_table_experiment(experiment):
 
 """ Class that holds features with observations attached
 """
-class Feature(mongoengine.Document):
+class Feature(mongoengine.DynamicDocument):
     fmt = "csv"
 
     name = mongoengine.StringField(max_length=255, default="unknown")
@@ -215,7 +215,8 @@ class Feature(mongoengine.Document):
         return True
 
     meta = {
-        'allow_inheritance': True, 'abstract': True
+        'allow_inheritance': True, 
+        'abstract': True
     }
 
 
@@ -244,7 +245,7 @@ class Species(Feature):
         return self.name
 
 
-def SaveKV(ob, key, value, save=False):
+def SaveKV2(ob, key, value, save=False):
     key = key.replace(".", "-")
     if hasattr(ob, 'obs'):
         # As dictfields in mongoengine default to an empty dictionary, assumes ob.obs is a dictionary
@@ -257,6 +258,14 @@ def SaveKV(ob, key, value, save=False):
     if save:
         ob.save()
 
+import re
+def SaveKV(ob, key, value, save=False):
+    if key:
+        key = re.sub('[^0-9a-zA-Z_]+', '_', key)
+        setattr(ob, key, value)
+
+    if save:
+        ob.save()
 
 def SaveKVs(ob, lst, save=False):
     for key, value in list(lst.items()):

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from api.connectors import *
-from seafood.models import *
-from api.imports import *
+from mongcore.connectors import *
+from mongseafood.models import *
+from mongcore.imports import *
 from os import walk, path
 
 
@@ -14,13 +14,13 @@ class Import(ImportOp):
     def LoadDataOp(line, succ):
         sp, created = Species.objects.get_or_create(name=line['Species'])
 
-        if(isinstance(line['Trip Number'], (int, long, float, complex))):
+        if(isinstance(line['Trip Number'], (int, float, complex))):
             trip_name = 'Trip_%d' % line['Trip Number']
         else:
             trip_name = 'Trip_%s' % line['Trip Number']
         trip, created = Trip.objects.get_or_create(name=trip_name)
 
-        if(isinstance(line['Tow Number'], (int, long, float, complex))):
+        if(isinstance(line['Tow Number'], (int, float, complex))):
             tow_name = 'Tow_%d' % line['Tow Number']
         else:
             tow_name = 'Tow_%s' % line['Tow Number']
@@ -28,7 +28,7 @@ class Import(ImportOp):
 
         ob = Tow()
         ob.name = tow_name
-        ob.recordeddate = datetime.datetime.now()
+        ob.recordeddate = datetime.now()
         ob.trip = trip
         ob.datasource = Import.ds
         ob.study = Import.study
@@ -52,18 +52,16 @@ def load_tows(fn, sheet):
 
 
 def init(fn, sheet):
-    onto = Ontology.objects.get(name="Tow")
     path = os.path.dirname(fn)
-    dt = datetime.datetime.now()
+    dt = datetime.now()
     ds, created = DataSource.objects.get_or_create(
         name='Historical Tow Data',
         source=path,
         typ='XLSX',
-        ontology=onto,
         supplier='Seafood',
     )
 
-    st, created = Study.objects.get_or_create(
+    st, created = Experiment.objects.get_or_create(
         name='Tow Gear'
     )
 

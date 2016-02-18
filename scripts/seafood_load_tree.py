@@ -1,6 +1,6 @@
-from api.connectors import *
-from seafood.models import *
-from api.imports import *
+from mongcore.connectors import *
+from mongseafood.models import *
+from mongcore.imports import *
 import time
 import datetime
 from django.utils.timezone import get_current_timezone, make_aware
@@ -47,7 +47,7 @@ def init():
         supplier="Seafood",
     )
 
-    onto = Ontology.objects.get(name="Term")
+    onto = Ontology(name="Term")
     dt = datetime.datetime.now()
     ds_term, created = DataSource.objects.get_or_create(
         name='Seafood Import Term Tree',

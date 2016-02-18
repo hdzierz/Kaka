@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 
-from api.connectors import *
-from seafood.models import *
-from api.imports import *
+from mongcore.connectors import *
+from mongseafood.models import *
+from mongcore.imports import *
 import time
 import datetime
 from django.utils.timezone import get_current_timezone, make_aware
@@ -90,9 +90,8 @@ def init(fn, sheet):
         supplier='Seafood',
     )
 
-    st, created = Study.objects.get_or_create(
+    st, created = Experiment.objects.get_or_create(
         name='Tow Gear',
-	datasource=ds,
     )
 
     ImportFish.study = st

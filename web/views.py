@@ -421,3 +421,7 @@ def genotype_csv_report(db_alias, experiment):
         return HttpResponse('No Data')
     rows = query_to_csv_rows_list(obs, testing=testing)
     return write_stream_response(rows, "Genotype")
+
+
+def page_main(request):
+    return redirect("/experimentsearch")

@@ -7,6 +7,7 @@ from django_countries.fields import CountryField
 from django.db.models.base import *
 from jsonfield import JSONField
 
+import mongoengine
 from core.logger import *
 from core.django_ext import *
 from core.models import *
@@ -60,8 +61,6 @@ class Staff(Feature):
 
 class Tow(Feature):
     trip = models.ForeignKey(Trip)
-
-    values = JSONField()
 
 
 class Fish(Feature):
