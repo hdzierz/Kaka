@@ -1,3 +1,8 @@
+"""
+Populates the test database from csv files for each collection, stored in the test
+resources folder
+"""
+
 import pathlib, os
 
 from .csv_to_doc import CsvToDocConverter

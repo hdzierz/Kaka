@@ -93,3 +93,50 @@ web:
      - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
 ```
 
+## How to use it
+
+To use the web app: in a browser go to
+```
+[host address of kaka]/experimentsearch/
+```
+
+Logical operators that can be used in the text search fields are:
+- '%' : wildcard
+  - '%' : matches anything
+  - '%[text]' : matches anything that ends in [text]
+  - '[text]%' : matches anything that starts in [text]
+  - '%[text]%' : matches [text] with anything either side of text
+- whitespace : OR operator
+- '+' : AND operator
+
+To use the API to download a csv file listing all the experiments, go to
+```
+[host address of kaka]/api/experiments/csv/
+```
+
+To use the API to download a csv file listing all the data sources, go to
+```
+[host address of kaka]/api/data_source/csv/
+```
+
+To use the API to get experiment(s) data, go to
+```
+[host address of kaka]/api/genotype/?[GET query string]
+```
+The GET query string can contain the following queries:
+- search_name=[experiment's name] : Queries experiments by name
+- search_pi=[experiment's primary investigator] : Queries experiments by primary investigator
+- from_date_day=[day as integer]&from_date_month=[month as integer]&from_date_year=[year as integer] : Matches experiments whose date created follows from_date
+- to_date_day=[day as integer]&to_date_month=[month as integer]&to_date_year=[year as integer] : Matches experiments whose date created precedes to_date
+
+Queries can be joined together using the character '&'
+
+Logic operators (see above) can be used in the GET query string. Replace
+- '%' with '%25'
+- '+' with '%2B'
+- whitespace with '+'
+
+Example:
+```
+127.0.0.1:8000/api/genotype/?search_name=GBS+kiwi%25&search_pi=John%2BMcCallumn&from_date_month=1&from_date_day=1&from_date_year=2013&to_date_month=12&to_date_day=1&to_date_year=2016
+```

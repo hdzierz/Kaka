@@ -1,17 +1,17 @@
+from django.http import Http404
 from django.shortcuts import render, redirect
 from django_tables2 import RequestConfig
-from django.http import Http404
+from mongoengine.context_managers import switch_db
 
-from .tables import DataSourceTable
-from . import forms as my_forms
+from kaka.settings import TEST_DB_ALIAS
+from mongcore.query_from_request import QueryRequestHandler
 from mongcore.models import Experiment, DataSource, make_table_datasource
 from mongcore.query_set_helpers import query_to_csv_rows_list
 from mongcore.view_helpers import write_stream_response
-from mongoengine.context_managers import switch_db
 from mongenotype.models import Genotype
-from kaka.settings import TEST_DB_ALIAS
-from .index_helper import IndexHelper
 from web.views import genotype_report
+from . import forms as my_forms
+from .tables import DataSourceTable
 
 testing = False
 csv_response = None
@@ -23,14 +23,14 @@ def index(request):
     form.SearchForm as the search form.
 
     If the search form has any GET data, builds the appropriate context dict
-    for the render from the request using an IndexHelper
+    for the render from the request using an QueryRequestHandler
 
     :param request:
     :return:
     """
     template = 'experimentsearch/index.html'
     if request.method == 'GET':
-        index_helper = IndexHelper(request, testing=testing)
+        index_helper = QueryRequestHandler(request, testing=testing)
         context = index_helper.handle_request()
         #  if request was from a redirect from a download preparation page
         download = csv_response is not None
