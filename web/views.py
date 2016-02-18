@@ -423,5 +423,11 @@ def genotype_csv_report(db_alias, experiment):
     return write_stream_response(rows, "Genotype")
 
 
+def page_jsonqry(request, app, qry):
+    if app=="genotype":
+        obs = Genotype.objects(__raw__=qry)
+
+
+
 def page_main(request):
     return redirect("/experimentsearch")

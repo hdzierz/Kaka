@@ -165,7 +165,7 @@ def make_table_experiment(experiment):
 
 """ Class that holds features with observations attached
 """
-class Feature(mongoengine.DynamicDocument):
+class Feature(mongoengine.Document):
     fmt = "csv"
 
     name = mongoengine.StringField(max_length=255, default="unknown")
