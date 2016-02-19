@@ -32,7 +32,7 @@ expected_ds_model = DataSource(
 
 class MasterTestCase(TestCase):
     """
-    Super class of all Kaka test cases. As Mongoengine is not part of django, need to override
+    Super class of all Kaka test cases. As Mongoengine is not part of django, needed to override
     several methods of django.test.TestCase to get it to work. Also has helper methods useful for
     testing most apps
     """
@@ -55,12 +55,18 @@ class MasterTestCase(TestCase):
         return
 
     def setUp(self):
+        """
+        Connects to the test database.
+        """
         # register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host="10.1.8.102")
         register_connection(TEST_DB_ALIAS, name=TEST_DB_NAME, host='mongodb://mongo')
         self.client = Client()
         self.maxDiff = None
 
     def tearDown(self):
+        """
+        Clears the test database
+        """
         with switch_db(Experiment, TEST_DB_ALIAS) as TestEx:
             TestEx.objects.all().delete()
         with switch_db(DataSource, TEST_DB_ALIAS) as TestDs:
@@ -71,6 +77,12 @@ class MasterTestCase(TestCase):
     # ---------------------Helper methods------------------------
 
     def check_tables_equal(self, actual_table, expected_table, TableModel):
+        """
+        Asserts that the given django tables are equal, by comparing the values on each
+        row and column
+
+        :param TableModel: The model whose fields the django table displays
+        """
         # TODO: Write a version of this method that doesn't care about table sort order
         self.assertIsNotNone(actual_table)
         self.assertEqual(len(actual_table.rows), len(expected_table.rows))
@@ -87,7 +99,9 @@ class MasterTestCase(TestCase):
                         )
 
     def download_csv_comparison(self, response, expected_file_address):
-        # Checks that the csv response's attachment matches the expected csv file
+        """
+        Checks that the csv response's attachment matches the expected csv file at the given address
+        """
         actual_bytes = b"".join(response.streaming_content)
         actual_file_string = actual_bytes.decode("utf-8")
         expected_file = open(expected_file_address, 'rb')
@@ -95,6 +109,10 @@ class MasterTestCase(TestCase):
         self.assertEqual(actual_file_string, expected_string)
 
     def document_compare(self, doc1, doc2):
+        """
+        Asserts the two given mongoengine.documents are equal. Ignores metadata fields and fields such
+        as time stamps that default to datetime.now()
+        """
         for key in doc1._fields_ordered:
             # ignores metadata fields and datetime fields that default to datetime.now()
             if key != 'id' and key[0] != '_' and key != 'dtt' and key != 'lastupdateddate':
@@ -124,13 +142,18 @@ class BadCsvToDocStrategy(AbstractCsvToDocStrategy):
 
 
 class CsvToDocTestCase(MasterTestCase):
-    # Tests that test the CsvToDocConverter class's methods
+    """
+    Tests the csv file to mongoengine document converter
+    """
 
     def setUp(self):
         super(CsvToDocTestCase, self).setUp()
         test_db_setup.set_up_test_db()
 
     def test_url_build_1(self):
+        """
+        Tests the method helps build the addresses of the csv files
+        """
         url = 'www.foo.bar/?baz='
         search = "banana"
         expected = 'www.foo.bar/?baz=banana'
@@ -152,6 +175,9 @@ class CsvToDocTestCase(MasterTestCase):
         self.assertEqual(expected, actual)
 
     def test_bad_url_2(self):
+        """
+        Tests that an error gets raised when trying to receive a csv from a nonexistent address
+        """
         querier = CsvToDocConverter(ExperimentCsvToDoc)
         bad_url = pathlib.Path(os.getcwd() + "/nonexistentdir/").as_uri()
         with self.assertRaises(CsvFindError):
@@ -163,6 +189,9 @@ class CsvToDocTestCase(MasterTestCase):
     # populated the test database correctly from the given csv files
 
     def test_experiment_query_1(self):
+        """
+        Test csv of Experiment documents was correctly loaded into database
+        """
         with switch_db(Experiment, TEST_DB_ALIAS) as test_db:
             actual_model = test_db.objects.get(name="What is up")
         self.assertEqual(expected_experi_model.name, actual_model.name)
@@ -182,6 +211,9 @@ class CsvToDocTestCase(MasterTestCase):
                 test_db.objects.get(description="Hey man")
 
     def test_data_source_query_1(self):
+        """
+        Test csv of DataSource documents was correctly loaded into database
+        """
         with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
             actual_model = test_db.objects.get(name="What is up")
         self.assertEqual(expected_ds_model.name, actual_model.name)
@@ -198,8 +230,10 @@ class CsvToDocTestCase(MasterTestCase):
     # -------------------------------------------------------------------------------
 
     def test_bad_strategy(self):
-        # Tests that An error is thrown when a sub class of CsvToDocStrategy is used that
-        # doesn't have create_document() implemented
+        """
+        Tests that An error is thrown when a sub class of CsvToDocStrategy is used that
+        doesn't have create_document() implemented
+        """
         querier = CsvToDocConverter(BadCsvToDocStrategy)
 
         with self.assertRaises(NotImplementedError):
@@ -207,9 +241,14 @@ class CsvToDocTestCase(MasterTestCase):
 
 
 class ModelsTestCase(MasterTestCase):
+    """
+    Tests for Kaka's core mongoengine documents
+    """
 
     def test_experiment_table_model_dont_save(self):
-        # Tests an exception gets raised when save() called on a models.ExperimentForTable
+        """
+        Tests an exception gets raised when save() called on a models.ExperimentForTable
+        """
         dummy = ExperimentForTable(
             name='What is up', primary_investigator='Badi James',
             data_source="data_source/What is up/",
@@ -222,7 +261,9 @@ class ModelsTestCase(MasterTestCase):
             dummy.save()
 
     def test_data_source_table_model_dont_save(self):
-        # Tests an exception gets raised when save() called on a models.DataSourceForTable
+        """
+        Tests an exception gets raised when save() called on a models.DataSourceForTable
+        """
         dummy = DataSourceForTable(
             name= 'What is up', supplier='Badi James', is_active='False',
             source='testgzpleaseignore.gz', supply_date=datetime.date(2015, 11, 18),
@@ -232,9 +273,14 @@ class ModelsTestCase(MasterTestCase):
 
 
 class QuerySetHelpersTestCase(MasterTestCase):
+    """
+    Tests for the module query_set_helpers
+    """
 
     def test_fetch_or_save_id(self):
-        # Tests fetch_or_save() fetches correctly when using db id
+        """
+        Tests fetch_or_save() fetches correctly when using db id
+        """
         expected_experi_model.switch_db(TEST_DB_ALIAS)
         expected_experi_model.save()
         experi_id = expected_experi_model.id

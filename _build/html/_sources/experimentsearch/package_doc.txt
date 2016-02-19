@@ -19,8 +19,4 @@ views
 .. automodule:: experimentsearch.views
    :members:
 
-tests
------
 
-.. automodule:: experimentsearch.tests
-   :members:

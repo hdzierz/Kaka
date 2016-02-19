@@ -13,9 +13,5 @@ configuration_parser
 .. automodule:: scripts.configuration_parser
    :members:
 
-tests
------
 
-.. automodule:: scripts.tests
-   :members:
 

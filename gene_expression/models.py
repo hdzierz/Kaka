@@ -1,6 +1,6 @@
-from django.db import models
+import mongoengine
 
-from core.models import *
+from mongcore.models import Feature, Species
 
 
 from jsonfield import JSONField
@@ -8,15 +8,15 @@ from jsonfield import JSONField
 
 
 class Target(Feature):
-    species = models.ForeignKey(Species, default=1)
-    kea_id = models.CharField(max_length=255)
-    ebrida_id = models.CharField(max_length=255)
-    file_name = models.TextField()
-    column = models.CharField(max_length=255)
-    condition = models.CharField(max_length=255)   
-    lib_type = models.CharField(max_length=255)
+    species = mongoengine.ReferenceField(Species, default=1)
+    kea_id = mongoengine.StringField(max_length=255)
+    ebrida_id = mongoengine.StringField(max_length=255)
+    file_name = mongoengine.StringField()
+    column = mongoengine.StringField(max_length=255)
+    condition = mongoengine.StringField(max_length=255)
+    lib_type = mongoengine.StringField(max_length=255)
 
     
 class Gene(Feature):
-    gene_id = models.CharField(max_length=255)
-    length = models.IntegerField()
+    gene_id = mongoengine.StringField(max_length=255)
+    length = mongoengine.IntField()

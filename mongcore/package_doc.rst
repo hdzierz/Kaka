@@ -31,18 +31,6 @@ query_set_helpers
 .. automodule:: mongcore.query_set_helpers
    :members:
 
-test_db_setup
--------------
-
-.. automodule:: mongcore.test_db_setup
-   :members:
-
-tests
------
-
-.. automodule:: mongcore.tests
-   :members:
-
 view_helpers
 ------------
 

@@ -18,6 +18,7 @@ Contents:
    web/package_doc
    scripts/package_doc
    experimentsearch/package_doc
+   test_resources/test_doc
 
 
 

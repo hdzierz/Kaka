@@ -24,6 +24,8 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="Kaka 1.0 documentation" href="../index.html" />
+    <link rel="next" title="scripts" href="../scripts/package_doc.html" />
+    <link rel="prev" title="mongenotype" href="../mongenotype/package_doc.html" />
    
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
@@ -40,27 +42,26 @@
 <h1>web<a class="headerlink" href="#web" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-web.views">
 <span id="views"></span><h2>views<a class="headerlink" href="#module-web.views" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="web.views.Echo">
-<em class="property">class </em><code class="descclassname">web.views.</code><code class="descname">Echo</code><a class="headerlink" href="#web.views.Echo" title="Permalink to this definition">¶</a></dt>
-<dd><p>An object that implements just the write method of the file-like
-interface.</p>
-<dl class="method">
-<dt id="web.views.Echo.write">
-<code class="descname">write</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#web.views.Echo.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write the value by returning it, instead of storing in a buffer.</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="function">
 <dt id="web.views.genotype_csv_report">
 <code class="descclassname">web.views.</code><code class="descname">genotype_csv_report</code><span class="sig-paren">(</span><em>db_alias</em>, <em>experiment</em><span class="sig-paren">)</span><a class="headerlink" href="#web.views.genotype_csv_report" title="Permalink to this definition">¶</a></dt>
 <dd><p>Queries the Genotype collection for documents referencing the given Experiment, then returns
-a StreamingHttpResponse with a csv representation of the resulting queryset as an attachment
-:param db_alias: Alias of database to query
-:param experiment: Experiment use to query genotype by study
-:return: StreamingHttpResponse with csv representation of acquired queryset as an attachment</p>
+a StreamingHttpResponse with a csv representation of the resulting queryset as an attachment</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>db_alias</strong> &#8211; Alias of database to query</li>
+<li><strong>experiment</strong> &#8211; Experiment use to query genotype by study</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">StreamingHttpResponse with csv representation of acquired queryset as an attachment</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -69,10 +70,22 @@ a StreamingHttpResponse with a csv representation of the resulting queryset as a
 <dd><p>Creates a JSON file from the given query set of Experiments. Each experiment&#8217;s name is a key to a list
 of JSON doc representations of the Genotype documents that have the experiment as their study field
 value.</p>
-<p>Returns the JSON file as an attachment for an HttpResponse
-:param db_alias: Alias of database to search through
-:param experiments: Queryset of experiments to use to query the Genotype collection by study
-:return: HttpResponse with JSON representation of the query sets as an attachment</p>
+<p>Returns the JSON file as an attachment for an HttpResponse</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>db_alias</strong> &#8211; Alias of database to search through</li>
+<li><strong>experiments</strong> &#8211; Queryset of experiments to use to query the Genotype collection by study</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">HttpResponse with JSON representation of the query sets as an attachment</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -85,10 +98,12 @@ study field matches the Experiment. Constructs a file representation of the quer
 set(s) (csv format one experiment queried, json format for multiple experiments)
 and returns an HttpResponse with the file as an attachment</p>
 <p>Query parsed from GET data following these rules:</p>
-<p>search_name=[string] : Queries experiments by name
-search_pi=[string] : Queries experiments by primary investigator
-from_date_day=[int]&amp;from_date_month=[int]&amp;from_date_year=[int] : Queries experiments by createddate &gt; from_date
-to_date_day=[int]&amp;to_date_month=[int]&amp;to_date_year=[int] : Queries experiments by createddate &lt; to_date</p>
+<ul class="simple">
+<li>search_name=[string] : Queries experiments by name</li>
+<li>search_pi=[string] : Queries experiments by primary investigator</li>
+<li>from_date_day=[int]&amp;from_date_month=[int]&amp;from_date_year=[int] : Queries experiments by createddate &gt; from_date</li>
+<li>to_date_day=[int]&amp;to_date_month=[int]&amp;to_date_year=[int] : Queries experiments by createddate &lt; to_date</li>
+</ul>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -101,9 +116,27 @@ to_date_day=[int]&amp;to_date_month=[int]&amp;to_date_year=[int] : Queries exper
 </table>
 </dd></dl>
 
-</div>
-<div class="section" id="module-web.tests">
-<span id="tests"></span><h2>tests<a class="headerlink" href="#module-web.tests" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="web.views.page_report">
+<code class="descclassname">web.views.</code><code class="descname">page_report</code><span class="sig-paren">(</span><em>request</em>, <em>report</em>, <em>fmt='csv'</em>, <em>conf=None</em><span class="sig-paren">)</span><a class="headerlink" href="#web.views.page_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>For downloading a file listing documents of a given type with their field values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>report</strong> &#8211; Name of document type to list</li>
+<li><strong>fmt</strong> &#8211; Format of file to download with list of documents. Defaults to csv</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">HttpResponse or StreamingHttpResponse with document list file as attachment</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 </div>
 
@@ -117,7 +150,6 @@ to_date_day=[int]&amp;to_date_month=[int]&amp;to_date_year=[int] : Queries exper
   <ul>
 <li><a class="reference internal" href="#">web</a><ul>
 <li><a class="reference internal" href="#module-web.views">views</a></li>
-<li><a class="reference internal" href="#module-web.tests">tests</a></li>
 </ul>
 </li>
 </ul>
@@ -125,6 +157,8 @@ to_date_day=[int]&amp;to_date_month=[int]&amp;to_date_year=[int] : Queries exper
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../mongenotype/package_doc.html" title="previous chapter">mongenotype</a></li>
+      <li>Next: <a href="../scripts/package_doc.html" title="next chapter">scripts</a></li>
   </ul></li>
 </ul>
 </div>

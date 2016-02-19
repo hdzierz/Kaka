@@ -24,6 +24,8 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="Kaka 1.0 documentation" href="../index.html" />
+    <link rel="next" title="mongenotype" href="../mongenotype/package_doc.html" />
+    <link rel="prev" title="Tutorial" href="../tutorial.html" />
    
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
@@ -266,24 +268,18 @@ the given query set
 </dd></dl>
 
 </div>
-<div class="section" id="module-mongcore.test_db_setup">
-<span id="test-db-setup"></span><h2>test_db_setup<a class="headerlink" href="#module-mongcore.test_db_setup" title="Permalink to this headline">¶</a></h2>
-<p>Populates the test database from csv files for each collection, stored in the test
-resources folder</p>
-</div>
-<div class="section" id="module-mongcore.tests">
-<span id="tests"></span><h2>tests<a class="headerlink" href="#module-mongcore.tests" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="mongcore.tests.MasterTestCase">
-<em class="property">class </em><code class="descclassname">mongcore.tests.</code><code class="descname">MasterTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.MasterTestCase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Super class of all Kaka test cases. As Mongoengine is not part of django, need to override
-several methods of django.test.TestCase to get it to work. Also has helper methods useful for
-testing most apps</p>
-</dd></dl>
-
-</div>
 <div class="section" id="module-mongcore.view_helpers">
 <span id="view-helpers"></span><h2>view_helpers<a class="headerlink" href="#module-mongcore.view_helpers" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mongcore.view_helpers.write_stream_response">
+<code class="descclassname">mongcore.view_helpers.</code><code class="descname">write_stream_response</code><span class="sig-paren">(</span><em>rows</em>, <em>experi_name</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.view_helpers.write_stream_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a csv file from the given list of string representations of csv rows and
+returns a StreamingHttpResponse with the csv file as an attachment
+:param rows: list of string representations of csv rows
+:param experi_name: Used to name the csv file
+:return: StreamingHttpResponse with csv file as attachment</p>
+</dd></dl>
+
 </div>
 </div>
 
@@ -301,8 +297,6 @@ testing most apps</p>
 <li><a class="reference internal" href="#module-mongcore.models">models</a></li>
 <li><a class="reference internal" href="#module-mongcore.query_from_request">query_from_request</a></li>
 <li><a class="reference internal" href="#module-mongcore.query_set_helpers">query_set_helpers</a></li>
-<li><a class="reference internal" href="#module-mongcore.test_db_setup">test_db_setup</a></li>
-<li><a class="reference internal" href="#module-mongcore.tests">tests</a></li>
 <li><a class="reference internal" href="#module-mongcore.view_helpers">view_helpers</a></li>
 </ul>
 </li>
@@ -311,6 +305,8 @@ testing most apps</p>
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../tutorial.html" title="previous chapter">Tutorial</a></li>
+      <li>Next: <a href="../mongenotype/package_doc.html" title="next chapter">mongenotype</a></li>
   </ul></li>
 </ul>
 </div>

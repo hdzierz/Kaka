@@ -1,0 +1,794 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Unit Testing &mdash; Kaka 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Kaka 1.0 documentation" href="../index.html" />
+    <link rel="prev" title="experimentsearch" href="../experimentsearch/package_doc.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="unit-testing">
+<h1>Unit Testing<a class="headerlink" href="#unit-testing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-mongcore.test_db_setup">
+<span id="test-setup"></span><h2>Test Setup<a class="headerlink" href="#module-mongcore.test_db_setup" title="Permalink to this headline">¶</a></h2>
+<p>Populates the test database from csv files for each collection, stored in the test
+resources folder</p>
+<dl class="class">
+<dt id="mongcore.tests.MasterTestCase">
+<em class="property">class </em><code class="descclassname">mongcore.tests.</code><code class="descname">MasterTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.MasterTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Super class of all Kaka test cases. As Mongoengine is not part of django, needed to override
+several methods of django.test.TestCase to get it to work. Also has helper methods useful for
+testing most apps</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mongcore.tests">
+<span id="core-tests"></span><h2>Core Tests<a class="headerlink" href="#module-mongcore.tests" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mongcore.tests.CsvToDocTestCase">
+<em class="property">class </em><code class="descclassname">mongcore.tests.</code><code class="descname">CsvToDocTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.CsvToDocTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests the csv file to mongoengine document converter</p>
+<dl class="method">
+<dt id="mongcore.tests.CsvToDocTestCase.test_bad_strategy">
+<code class="descname">test_bad_strategy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.CsvToDocTestCase.test_bad_strategy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that An error is thrown when a sub class of CsvToDocStrategy is used that
+doesn&#8217;t have create_document() implemented</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mongcore.tests.CsvToDocTestCase.test_bad_url_2">
+<code class="descname">test_bad_url_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.CsvToDocTestCase.test_bad_url_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that an error gets raised when trying to receive a csv from a nonexistent address</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mongcore.tests.CsvToDocTestCase.test_data_source_query_1">
+<code class="descname">test_data_source_query_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.CsvToDocTestCase.test_data_source_query_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test csv of DataSource documents was correctly loaded into database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mongcore.tests.CsvToDocTestCase.test_experiment_query_1">
+<code class="descname">test_experiment_query_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.CsvToDocTestCase.test_experiment_query_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test csv of Experiment documents was correctly loaded into database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mongcore.tests.CsvToDocTestCase.test_url_build_1">
+<code class="descname">test_url_build_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.CsvToDocTestCase.test_url_build_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests the method helps build the addresses of the csv files</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mongcore.tests.ModelsTestCase">
+<em class="property">class </em><code class="descclassname">mongcore.tests.</code><code class="descname">ModelsTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.ModelsTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests for Kaka&#8217;s core mongoengine documents</p>
+<dl class="method">
+<dt id="mongcore.tests.ModelsTestCase.test_data_source_table_model_dont_save">
+<code class="descname">test_data_source_table_model_dont_save</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.ModelsTestCase.test_data_source_table_model_dont_save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests an exception gets raised when save() called on a models.DataSourceForTable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mongcore.tests.ModelsTestCase.test_experiment_table_model_dont_save">
+<code class="descname">test_experiment_table_model_dont_save</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.ModelsTestCase.test_experiment_table_model_dont_save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests an exception gets raised when save() called on a models.ExperimentForTable</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mongcore.tests.QuerySetHelpersTestCase">
+<em class="property">class </em><code class="descclassname">mongcore.tests.</code><code class="descname">QuerySetHelpersTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.QuerySetHelpersTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests for the module query_set_helpers</p>
+<dl class="method">
+<dt id="mongcore.tests.QuerySetHelpersTestCase.test_fetch_or_save_id">
+<code class="descname">test_fetch_or_save_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.QuerySetHelpersTestCase.test_fetch_or_save_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests fetch_or_save() fetches correctly when using db id</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mongcore.tests.QuerySetHelpersTestCase.test_query_csv_to_rows_different_fields">
+<code class="descname">test_query_csv_to_rows_different_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.tests.QuerySetHelpersTestCase.test_query_csv_to_rows_different_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that query_csv_to_rows creates the correct csv strings when given a query
+set of Genotype models that have different fields to each other</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-experimentsearch.tests">
+<span id="experiment-search-tests"></span><h2>Experiment Search Tests<a class="headerlink" href="#module-experimentsearch.tests" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase">
+<em class="property">class </em><code class="descclassname">experimentsearch.tests.</code><code class="descname">AdvancedSearchTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the Advanced Search form gives expected results</p>
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_1">
+<code class="descname">test_advanced_search_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test advanced search with no parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_2">
+<code class="descname">test_advanced_search_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test advanced search with only name</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_3">
+<code class="descname">test_advanced_search_3</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test advanced search with only pi</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_4">
+<code class="descname">test_advanced_search_4</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test advanced search with only from date</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_5">
+<code class="descname">test_advanced_search_5</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test advanced search with only to date</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_6">
+<code class="descname">test_advanced_search_6</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test advanced search with from date and to date</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_7">
+<code class="descname">test_advanced_search_7</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_7" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test with name and pi</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_8">
+<code class="descname">test_advanced_search_8</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_advanced_search_8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test with all fields</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.AdvancedSearchTestCase.test_form_error_2">
+<code class="descname">test_form_error_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.AdvancedSearchTestCase.test_form_error_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test error raised when from_date &gt; to_date</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="experimentsearch.tests.DownloadTestCase">
+<em class="property">class </em><code class="descclassname">experimentsearch.tests.</code><code class="descname">DownloadTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the download links generated for the search result table behave correctly and downloads
+the correct files or return the correct responses</p>
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_1">
+<code class="descname">test_download_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>This test tests the sequence that gets triggered when the user clicks a Download link
+in the results table. As part of the sequence involves jQuery code in templates
+redirecting to another page once the template is loaded, this has to be mimicked with
+calls of self.client.get([url jQuery code would have redirected to])</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_2">
+<code class="descname">test_download_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test renders no download template when query finds nothing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_3">
+<code class="descname">test_download_3</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test raises 404 when downloading data for a non existent experiment attempted</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_4">
+<code class="descname">test_download_4</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test download experiment page redirects to index when there&#8217;s nothing to download</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_5">
+<code class="descname">test_download_5</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test download experiment page redirects to &#8216;from&#8217; when there&#8217;s nothing to download</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_6">
+<code class="descname">test_download_6</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_6" title="Permalink to this definition">¶</a></dt>
+<dd><p>This test tests the sequence that gets triggered when the download link gets requested with
+empty GET data. As part of the sequence involves jQuery code in templates redirecting
+to another page once the template is loaded, this has to be mimicked with calls of
+self.client.get([url jQuery code would have redirected to])</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_7">
+<code class="descname">test_download_7</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_7" title="Permalink to this definition">¶</a></dt>
+<dd><p>This test tests the sequence that gets triggered when the download link gets requested via
+POST (ie when user goes directly to it). As part of the sequence involves jQuery
+code in templates redirecting to another page once the template is loaded, this has to be
+mimicked with calls of self.client.get([url jQuery code would have redirected to])</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_all">
+<code class="descname">test_download_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>This test tests the sequence that gets triggered when the user clicks the &#8216;download all
+results&#8217; link. As part of the sequence involves jQuery code in templates
+redirecting to another page once the template is loaded, this has to be mimicked with
+calls of self.client.get([url jQuery code would have redirected to])</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_all_POST">
+<code class="descname">test_download_all_POST</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_all_POST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that going to the download link without an experiment id and via POST
+raises a 404</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DownloadTestCase.test_download_all_empty_GET">
+<code class="descname">test_download_all_empty_GET</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DownloadTestCase.test_download_all_empty_GET" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that going to the download link without an experiment id or any GET data
+raises a 404</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="experimentsearch.tests.DsResponseTestCase">
+<em class="property">class </em><code class="descclassname">experimentsearch.tests.</code><code class="descname">DsResponseTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DsResponseTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that check that the index page creates the appropriate table from the results
+of queries made using the &#8216;get&#8217; data</p>
+<dl class="method">
+<dt id="experimentsearch.tests.DsResponseTestCase.test_ds_response_1">
+<code class="descname">test_ds_response_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DsResponseTestCase.test_ds_response_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the appropriate data source table gets displayed, with data that matches
+results of the data source query by name</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DsResponseTestCase.test_ds_response_2">
+<code class="descname">test_ds_response_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DsResponseTestCase.test_ds_response_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that no table gets displayed when no query results found</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DsResponseTestCase.test_ds_response_3">
+<code class="descname">test_ds_response_3</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DsResponseTestCase.test_ds_response_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing that it works with get data from an advanced search</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DsResponseTestCase.test_ds_response_4">
+<code class="descname">test_ds_response_4</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DsResponseTestCase.test_ds_response_4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the appropriate data source table gets displayed, with data that matches
+results of the data source query by name, from a response with no GET data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.DsResponseTestCase.test_ds_response_5">
+<code class="descname">test_ds_response_5</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.DsResponseTestCase.test_ds_response_5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the appropriate data source table gets displayed, with data that matches
+results of the data source query by name, from a response via POST</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="experimentsearch.tests.ExperimentSearchTestCase">
+<em class="property">class </em><code class="descclassname">experimentsearch.tests.</code><code class="descname">ExperimentSearchTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.ExperimentSearchTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Super class for Test Cases for the experimentsearch app.</p>
+<dl class="method">
+<dt id="experimentsearch.tests.ExperimentSearchTestCase.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.ExperimentSearchTestCase.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populates the test database and sets up the expected django models for django_tables_2 for the
+tests to compare against</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.ExperimentSearchTestCase.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.ExperimentSearchTestCase.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the test database and removes any (Streaming)HttpResponse stored in memory</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="experimentsearch.tests.IndexResponseTestCase">
+<em class="property">class </em><code class="descclassname">experimentsearch.tests.</code><code class="descname">IndexResponseTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that check that the index page creates the appropriate table from the results
+of queries made using the &#8216;get&#8217; data</p>
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_form_error_1">
+<code class="descname">test_form_error_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_form_error_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the DateSearchForm raises an error when the to_date precedes the from_date</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_index_response_1">
+<code class="descname">test_index_response_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_index_response_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing searching by name</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_index_response_2">
+<code class="descname">test_index_response_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_index_response_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing that no table gets rendered when no results are found</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_index_response_3">
+<code class="descname">test_index_response_3</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_index_response_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing searching by primary investigator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_index_response_4">
+<code class="descname">test_index_response_4</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_index_response_4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing searching by date</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_index_response_5">
+<code class="descname">test_index_response_5</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_index_response_5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test page rendered with the search form that matches the GET data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_index_response_6">
+<code class="descname">test_index_response_6</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_index_response_6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test page rendered with the search form that matches the GET data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_index_response_7">
+<code class="descname">test_index_response_7</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_index_response_7" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test page rendered with the search form that matches the GET data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_index_response_8">
+<code class="descname">test_index_response_8</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_index_response_8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing index with no get data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_query_dict_1">
+<code class="descname">test_query_dict_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_query_dict_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the method in views.QueryRequestHandler that makes the raw PyMongo query from a string</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_search_term_1">
+<code class="descname">test_search_term_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_search_term_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the &#8216;$or&#8217; operator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_search_term_2">
+<code class="descname">test_search_term_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_search_term_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test it only matches whole words</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_search_term_3">
+<code class="descname">test_search_term_3</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_search_term_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test wildcard operator at front</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_search_term_4">
+<code class="descname">test_search_term_4</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_search_term_4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test wildcard operator at back</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_search_term_5">
+<code class="descname">test_search_term_5</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_search_term_5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test wildcard operator on both sides</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_search_term_6">
+<code class="descname">test_search_term_6</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_search_term_6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test wildcard operator alone</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="experimentsearch.tests.IndexResponseTestCase.test_search_term_7">
+<code class="descname">test_search_term_7</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.tests.IndexResponseTestCase.test_search_term_7" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test $and operator</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.tests">
+<span id="scripts-tests"></span><h2>Scripts Tests<a class="headerlink" href="#module-scripts.tests" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scripts.tests.ScriptsTestCase">
+<em class="property">class </em><code class="descclassname">scripts.tests.</code><code class="descname">ScriptsTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the modules load_from_config and configuration_parser correctly read config files for
+loading data in a directory to the database, and then correctly loads them into the database</p>
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensures the load_from_config script itterates through the test resources folder instead of the
+default data directory</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the test database and resets the test configuration files</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_catches_bad_date_1">
+<code class="descname">test_catches_bad_date_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_catches_bad_date_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that an error gets raised by a ConfigParser when a config file has no date in a date field</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_catches_bad_date_2">
+<code class="descname">test_catches_bad_date_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_catches_bad_date_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that an error gets raised by a ConfigParser when a config file has a badly formatted date in a date field</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_config_parser_to_json_json">
+<code class="descname">test_config_parser_to_json_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_config_parser_to_json_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the JsonConfigParser get_json_string() method outputs a correct json formatted
+string representing its config file&#8217;s content</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_config_parser_to_json_yaml">
+<code class="descname">test_config_parser_to_json_yaml</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_config_parser_to_json_yaml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the YamlConfigParser get_json_string() method outputs a correct json formatted
+string representing its config file&#8217;s content</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_does_not_run_twice">
+<code class="descname">test_does_not_run_twice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_does_not_run_twice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that load_from_config.run() marks all the config files it comes across as loaded and does not
+load from their directories when called a second time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_file_not_found">
+<code class="descname">test_file_not_found</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_file_not_found" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that a FileNotFoundError gets raised when trying to get a ConfigParser from a directory with
+no config file in them</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_json_marked_loaded_no_load">
+<code class="descname">test_json_marked_loaded_no_load</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_json_marked_loaded_no_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test script does not load data from a directory where the config.json file has been marked as loaded</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_marks_json_loaded">
+<code class="descname">test_marks_json_loaded</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_marks_json_loaded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the mark_loaded() method was called on the JsonConfigParser when load_from_config
+loaded its config files dir, and that the method correctly edited the config file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_marks_yaml_loaded">
+<code class="descname">test_marks_yaml_loaded</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_marks_yaml_loaded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the mark_loaded() method was called on the YamlConfigParser when load_from_config
+loaded its config files dir, and that the method correctly edited the config file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_run_json">
+<code class="descname">test_run_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_run_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test loads in the data correctly from a directory with a json format config file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_run_look_dir">
+<code class="descname">test_run_look_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_run_look_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that load_from_config.run() loads all the data from all the directories in test_resources with
+config files in them</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_run_yaml">
+<code class="descname">test_run_yaml</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_run_yaml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test loads in the data correctly from a directory with a yaml format config file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_undoes_db_changes_when_error_1">
+<code class="descname">test_undoes_db_changes_when_error_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_undoes_db_changes_when_error_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that load_from_config.run() removes all documents it saved to the database when it comes
+across an unexpected error</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_undoes_db_changes_when_error_2">
+<code class="descname">test_undoes_db_changes_when_error_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_undoes_db_changes_when_error_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that load_from_config.run() removes only the documents it saved to the database and leaves
+alone any documents that were already there when it comes across an unexpected error</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scripts.tests.ScriptsTestCase.test_yaml_marked_loaded_no_load">
+<code class="descname">test_yaml_marked_loaded_no_load</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.tests.ScriptsTestCase.test_yaml_marked_loaded_no_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test script does not load data from a directory where the config.yaml file has been marked as loaded</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-web.tests">
+<span id="api-tests"></span><h2>Api Tests<a class="headerlink" href="#module-web.tests" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="web.tests.ReportTestCase">
+<em class="property">class </em><code class="descclassname">web.tests.</code><code class="descname">ReportTestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the /api/ urls behave correctly and output the correct files/responses</p>
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_datasource">
+<code class="descname">test_report_datasource</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_datasource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/data_source/csv/&#8217; downloads the correct csv file of DataSource docs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_experiment">
+<code class="descname">test_report_experiment</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/experiment/csv/&#8217; downloads the correct csv file of Experiment docs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_advanced_all">
+<code class="descname">test_report_genotype_advanced_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_advanced_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by primary investigator,
+name and date created downloads the correct csv file of Genotype documents that reference the experiment that
+matches the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_advanced_name_date">
+<code class="descname">test_report_genotype_advanced_name_date</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_advanced_name_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by name and date
+created downloads the correct csv file of Genotype documents that reference the experiment that
+matches the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_advanced_name_pi">
+<code class="descname">test_report_genotype_advanced_name_pi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_advanced_name_pi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by primary investigator
+and name downloads the correct csv file of Genotype documents that reference the experiment that
+matches the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_advanced_pi_date">
+<code class="descname">test_report_genotype_advanced_pi_date</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_advanced_pi_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by primary investigator
+and date created downloads the correct csv file of Genotype documents that reference the experiment that
+matches the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_bad_date_1">
+<code class="descname">test_report_genotype_bad_date_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_bad_date_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data with an incomplete &#8216;to&#8217; date returns
+a response with the appropriate error message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_bad_date_2">
+<code class="descname">test_report_genotype_bad_date_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_bad_date_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data with an incomplete &#8216;from&#8217; date returns
+a response with the appropriate error message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_bad_dates_1">
+<code class="descname">test_report_genotype_bad_dates_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_bad_dates_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data with both to and from date but one of them
+incomplete returns a response with the appropriate error message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_bad_dates_2">
+<code class="descname">test_report_genotype_bad_dates_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_bad_dates_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data with incomplete &#8216;to&#8217; and &#8216;from&#8217; date returns
+a response with the appropriate error message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_bad_dates_3">
+<code class="descname">test_report_genotype_bad_dates_3</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_bad_dates_3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data with a &#8216;to&#8217; date that precedes the &#8216;from&#8217;
+date returns a response with the appropriate error message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_bad_fields">
+<code class="descname">test_report_genotype_bad_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_bad_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data with only invalid fields returns a response with the
+appropriate error message</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_both_dates">
+<code class="descname">test_report_genotype_both_dates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_both_dates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by date created, using
+both a from date and to date, downloads the correct csv file of Genotype documents that reference
+the experiment that matches the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_from_date">
+<code class="descname">test_report_genotype_from_date</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_from_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by date created, using
+just a from date, downloads the correct json file of Genotype documents that reference
+the experiments that match the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_json">
+<code class="descname">test_report_genotype_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by name downloads the
+correct json file of Genotype documents that reference the experiments that match the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_name">
+<code class="descname">test_report_genotype_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by name downloads the
+correct csv file of Genotype documents that reference the experiment that matches the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_pi">
+<code class="descname">test_report_genotype_pi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_pi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by primary investigator
+downloads the correct csv file of Genotype documents that reference the experiment that matches the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_genotype_to_date">
+<code class="descname">test_report_genotype_to_date</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_genotype_to_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data for querying Experiments by date created, using
+just a to date, downloads the correct csv file of Genotype documents that reference
+the experiment that matches the query</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_json_no_data">
+<code class="descname">test_report_json_no_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_json_no_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data that is a query matching multiple
+Experiments that have no Genotype documents reference them return the &#8216;no data&#8217; response</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_no_data_1">
+<code class="descname">test_report_no_data_1</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_no_data_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data that is a query matching an
+Experiment that has no Genotype documents reference it returns the &#8216;no data&#8217; response</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="web.tests.ReportTestCase.test_report_no_data_2">
+<code class="descname">test_report_no_data_2</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#web.tests.ReportTestCase.test_report_no_data_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that the link &#8216;/api/genotype/&#8217; with GET data that is a query matching no
+Experiments returns the &#8216;no data&#8217; response</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Unit Testing</a><ul>
+<li><a class="reference internal" href="#module-mongcore.test_db_setup">Test Setup</a></li>
+<li><a class="reference internal" href="#module-mongcore.tests">Core Tests</a></li>
+<li><a class="reference internal" href="#module-experimentsearch.tests">Experiment Search Tests</a></li>
+<li><a class="reference internal" href="#module-scripts.tests">Scripts Tests</a></li>
+<li><a class="reference internal" href="#module-web.tests">Api Tests</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../experimentsearch/package_doc.html" title="previous chapter">experimentsearch</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/test_resources/test_doc.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Badi James, Helge Dzierzon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../_sources/test_resources/test_doc.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
