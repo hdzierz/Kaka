@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>experimentsearch &mdash; Kaka 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Kaka 1.0 documentation" href="../index.html" />
+    <link rel="prev" title="How to run it" href="../tutorial.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="experimentsearch">
+<h1>experimentsearch<a class="headerlink" href="#experimentsearch" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-experimentsearch.forms">
+<span id="forms"></span><h2>forms<a class="headerlink" href="#module-experimentsearch.forms" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="experimentsearch.forms.AdvancedSearchForm">
+<em class="property">class </em><code class="descclassname">experimentsearch.forms.</code><code class="descname">AdvancedSearchForm</code><span class="sig-paren">(</span><em>data=None</em>, <em>files=None</em>, <em>auto_id='id_%s'</em>, <em>prefix=None</em>, <em>initial=None</em>, <em>error_class=&lt;class 'django.forms.utils.ErrorList'&gt;</em>, <em>label_suffix=None</em>, <em>empty_permitted=False</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.forms.AdvancedSearchForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form that allows for combining queries by name, primary investigator and date created</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="experimentsearch.forms.DateSearchForm">
+<em class="property">class </em><code class="descclassname">experimentsearch.forms.</code><code class="descname">DateSearchForm</code><span class="sig-paren">(</span><em>data=None</em>, <em>files=None</em>, <em>auto_id='id_%s'</em>, <em>prefix=None</em>, <em>initial=None</em>, <em>error_class=&lt;class 'django.forms.utils.ErrorList'&gt;</em>, <em>label_suffix=None</em>, <em>empty_permitted=False</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.forms.DateSearchForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Form for querying the database by date created. Has a field for date to search
+from, returning experiments created after the inputted date. Has a field for date to
+search to, returning experiments created before the inputted date. Both fields can be
+used to define a range of dates to query the database with</p>
+<dl class="method">
+<dt id="experimentsearch.forms.DateSearchForm.clean">
+<code class="descname">clean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.forms.DateSearchForm.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the form is valid by making sure at least one date has been completely
+filled and, if there are both dates, that the &#8216;from&#8217; date precedes the &#8216;to&#8217; date
+:return:</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="experimentsearch.forms.SearchTypeSelect">
+<em class="property">class </em><code class="descclassname">experimentsearch.forms.</code><code class="descname">SearchTypeSelect</code><span class="sig-paren">(</span><em>data=None</em>, <em>files=None</em>, <em>auto_id='id_%s'</em>, <em>prefix=None</em>, <em>initial=None</em>, <em>error_class=&lt;class 'django.forms.utils.ErrorList'&gt;</em>, <em>label_suffix=None</em>, <em>empty_permitted=False</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.forms.SearchTypeSelect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop down box for selecting what field the user wants to query the database by</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-experimentsearch.tables">
+<span id="tables"></span><h2>tables<a class="headerlink" href="#module-experimentsearch.tables" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-experimentsearch.views">
+<span id="views"></span><h2>views<a class="headerlink" href="#module-experimentsearch.views" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="experimentsearch.views.big_download">
+<code class="descclassname">experimentsearch.views.</code><code class="descname">big_download</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.views.big_download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called when &#8220;download all results&#8221; link clicked. Renders the template with the download
+preparation message and the loading gif that, once loaded, tries to redirect to the url that
+calls stream_result_data(), passing on the GET data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="experimentsearch.views.datasource">
+<code class="descclassname">experimentsearch.views.</code><code class="descname">datasource</code><span class="sig-paren">(</span><em>request</em>, <em>experi_name</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.views.datasource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders a data source table page according to the datasource.html template</p>
+<p>Populates a table with models.DataSource from a data_source table query
+using the name field in the GET data.</p>
+<p>Provides a link for the &#8216;back to search&#8217; buttons from the from field in the
+GET data if there is one</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="experimentsearch.views.download_experiment">
+<code class="descclassname">experimentsearch.views.</code><code class="descname">download_experiment</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.views.download_experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the stored response with the experiment csv attachment, then removes it
+from storage</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="experimentsearch.views.download_message">
+<code class="descclassname">experimentsearch.views.</code><code class="descname">download_message</code><span class="sig-paren">(</span><em>request</em>, <em>experi_id</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.views.download_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the template with the download preparation message and the loading gif that,
+once loaded, tries to redirect to the url that calls the stream_experiment_csv() view
+with the given experiment name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; </li>
+<li><strong>experi_id</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="experimentsearch.views.index">
+<code class="descclassname">experimentsearch.views.</code><code class="descname">index</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.views.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renders the search page according to the index.html template, with a
+form.SearchForm as the search form.</p>
+<p>If the search form has any GET data, builds the appropriate context dict
+for the render from the request using an QueryRequestHandler</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="experimentsearch.views.stream_experiment_csv">
+<code class="descclassname">experimentsearch.views.</code><code class="descname">stream_experiment_csv</code><span class="sig-paren">(</span><em>request</em>, <em>experi_id</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.views.stream_experiment_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Queries the genotype collection with the experiment that matches experi_id
+as a filter on &#8216;study&#8217;. Creates a csv representation of the query set.</p>
+<p>Writes a http response which downloads the csv file for the client. This response
+is stored by this module to be downloaded by the download_experiment() view, which
+gets called by the index.html template once there is a redirect to the index() view,
+which this view returns</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request</strong> &#8211; </li>
+<li><strong>experi_id</strong> &#8211; name of experiment to query for associations</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Redirect to index</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="experimentsearch.views.stream_result_data">
+<code class="descclassname">experimentsearch.views.</code><code class="descname">stream_result_data</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="headerlink" href="#experimentsearch.views.stream_result_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used when &#8220;download all results&#8221; link clicked
+Creates and stores an attachment that is data of Genotype documents who&#8217;s study matches the
+query built from the request&#8217;s get data. Redirects to the index (which should then download
+the attachment), passing on the GET data to display the search results that got us here in
+the first place</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-experimentsearch.tests">
+<span id="tests"></span><h2>tests<a class="headerlink" href="#module-experimentsearch.tests" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">experimentsearch</a><ul>
+<li><a class="reference internal" href="#module-experimentsearch.forms">forms</a></li>
+<li><a class="reference internal" href="#module-experimentsearch.tables">tables</a></li>
+<li><a class="reference internal" href="#module-experimentsearch.views">views</a></li>
+<li><a class="reference internal" href="#module-experimentsearch.tests">tests</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../tutorial.html" title="previous chapter">How to run it</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/experimentsearch/package_doc.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Badi James, Helge Dzierzon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../_sources/experimentsearch/package_doc.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

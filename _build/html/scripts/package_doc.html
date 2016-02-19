@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>scripts &mdash; Kaka 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Kaka 1.0 documentation" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="scripts">
+<h1>scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-scripts.load_from_config">
+<span id="load-from-config"></span><h2>load_from_config<a class="headerlink" href="#module-scripts.load_from_config" title="Permalink to this headline">¶</a></h2>
+<p>Goes through the data directory finding folders with config files in the correct format.
+Loads the data in those folders to the database using the fields defined in the folder&#8217;s
+config file</p>
+</div>
+<div class="section" id="module-scripts.configuration_parser">
+<span id="configuration-parser"></span><h2>configuration_parser<a class="headerlink" href="#module-scripts.configuration_parser" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="scripts.configuration_parser.DateTimeJSONEncoder">
+<em class="property">class </em><code class="descclassname">scripts.configuration_parser.</code><code class="descname">DateTimeJSONEncoder</code><span class="sig-paren">(</span><em>skipkeys=False</em>, <em>ensure_ascii=True</em>, <em>check_circular=True</em>, <em>allow_nan=True</em>, <em>sort_keys=False</em>, <em>indent=None</em>, <em>separators=None</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.configuration_parser.DateTimeJSONEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extension of JSONEncoder that makes datetime objects JSON serializable</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.configuration_parser.config_write">
+<code class="descclassname">scripts.configuration_parser.</code><code class="descname">config_write</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.configuration_parser.config_write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a dictionary with python object values and builds from it a yaml.safe_dump() friendly
+dictionary with just primitive types.
+In particular, datetime objects get represented as strings of format &#8220;dt(%Y-%m-%d)&#8221; or
+&#8220;dt(%Y-%m-%dT%H:%M:%SZ)&#8221;, and any strings with &#8216;#&#8217; characters get represented as quoted strings</p>
+<blockquote>
+<div>to prevent yaml from mistaking them for comments</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> &#8211; Dictionary to build a yaml.safe_dump() friendly representation of</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">yaml.safe_dump() friendly dictionary</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.configuration_parser.datetime_parse">
+<code class="descclassname">scripts.configuration_parser.</code><code class="descname">datetime_parse</code><span class="sig-paren">(</span><em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.configuration_parser.datetime_parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>(Method to be used as the object_hook kwarg in json.load)</p>
+<p>Returns a copy of the given dictionary with the string values for dates
+replaced with datetime objects, provided they match the formats
+&#8220;dt(%Y-%m-%d)&#8221; or &#8220;dt(%Y-%m-%dT%H:%M:%SZ)&#8221;
+:param d: Dictionary read from parsed config file
+:return: Copy of d with datetime objects replacing strings of dates</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.configuration_parser.get_parser_from_path">
+<code class="descclassname">scripts.configuration_parser.</code><code class="descname">get_parser_from_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.configuration_parser.get_parser_from_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for a config file of a supported format in the given path. Returns the
+appropriate ConfigParser for the file
+:param path: Path to look for config file in
+:return: Parser for config file</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.tests">
+<span id="tests"></span><h2>tests<a class="headerlink" href="#module-scripts.tests" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">scripts</a><ul>
+<li><a class="reference internal" href="#module-scripts.load_from_config">load_from_config</a></li>
+<li><a class="reference internal" href="#module-scripts.configuration_parser">configuration_parser</a></li>
+<li><a class="reference internal" href="#module-scripts.tests">tests</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/scripts/package_doc.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Badi James, Helge Dzierzon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../_sources/scripts/package_doc.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

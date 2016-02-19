@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>web &mdash; Kaka 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Kaka 1.0 documentation" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="web">
+<h1>web<a class="headerlink" href="#web" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-web.views">
+<span id="views"></span><h2>views<a class="headerlink" href="#module-web.views" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="web.views.Echo">
+<em class="property">class </em><code class="descclassname">web.views.</code><code class="descname">Echo</code><a class="headerlink" href="#web.views.Echo" title="Permalink to this definition">¶</a></dt>
+<dd><p>An object that implements just the write method of the file-like
+interface.</p>
+<dl class="method">
+<dt id="web.views.Echo.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#web.views.Echo.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the value by returning it, instead of storing in a buffer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="web.views.genotype_csv_report">
+<code class="descclassname">web.views.</code><code class="descname">genotype_csv_report</code><span class="sig-paren">(</span><em>db_alias</em>, <em>experiment</em><span class="sig-paren">)</span><a class="headerlink" href="#web.views.genotype_csv_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Queries the Genotype collection for documents referencing the given Experiment, then returns
+a StreamingHttpResponse with a csv representation of the resulting queryset as an attachment
+:param db_alias: Alias of database to query
+:param experiment: Experiment use to query genotype by study
+:return: StreamingHttpResponse with csv representation of acquired queryset as an attachment</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="web.views.genotype_json_report">
+<code class="descclassname">web.views.</code><code class="descname">genotype_json_report</code><span class="sig-paren">(</span><em>db_alias</em>, <em>experiments</em><span class="sig-paren">)</span><a class="headerlink" href="#web.views.genotype_json_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a JSON file from the given query set of Experiments. Each experiment&#8217;s name is a key to a list
+of JSON doc representations of the Genotype documents that have the experiment as their study field
+value.</p>
+<p>Returns the JSON file as an attachment for an HttpResponse
+:param db_alias: Alias of database to search through
+:param experiments: Queryset of experiments to use to query the Genotype collection by study
+:return: HttpResponse with JSON representation of the query sets as an attachment</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="web.views.genotype_report">
+<code class="descclassname">web.views.</code><code class="descname">genotype_report</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="headerlink" href="#web.views.genotype_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>For downloading data files on Genotype documents.</p>
+<p>Uses the request&#8217;s GET data to construct a query of the Experiment collection.
+Then, for each Experiment, queries the Genotype collection for documents whose
+study field matches the Experiment. Constructs a file representation of the query
+set(s) (csv format one experiment queried, json format for multiple experiments)
+and returns an HttpResponse with the file as an attachment</p>
+<p>Query parsed from GET data following these rules:</p>
+<p>search_name=[string] : Queries experiments by name
+search_pi=[string] : Queries experiments by primary investigator
+from_date_day=[int]&amp;from_date_month=[int]&amp;from_date_year=[int] : Queries experiments by createddate &gt; from_date
+to_date_day=[int]&amp;to_date_month=[int]&amp;to_date_year=[int] : Queries experiments by createddate &lt; to_date</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> &#8211; Use to query Genotype collection with</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">HttpResponse with file representation of Genotype query set(s)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-web.tests">
+<span id="tests"></span><h2>tests<a class="headerlink" href="#module-web.tests" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">web</a><ul>
+<li><a class="reference internal" href="#module-web.views">views</a></li>
+<li><a class="reference internal" href="#module-web.tests">tests</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/web/package_doc.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Badi James, Helge Dzierzon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="../_sources/web/package_doc.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
