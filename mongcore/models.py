@@ -284,6 +284,25 @@ def SaveKVs(ob, lst, save=False):
         ob.save()
 
 
+def GetData(ob, header, fmt='csv'):
+    res = []
+    for h in header:
+        try:
+            res.append(getattr(ob, h))
+        except:
+            res.append("None")
+            Logger.Warning("Header " + h  + "h does not exist in: " + self.name)
+
+    return res
+
+
+def GetDataObs(ob, header, fmt="csv"):
+    res = []
+    for h in header:
+        res.append(ob.obs[h])
+    return res
+
+
 def GetKV(ob, key):
     if not hasattr(ob, 'obs'):
         return None

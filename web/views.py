@@ -194,22 +194,24 @@ class JsonQry(Endpoint):
     def get(self, request, realm):
         obs = False
         qry = request.params.get('qry')
-        if realm=="genotype":
-            qry = eval(qry)
-            obs = Genotype.objects(__raw__=qry)
-            header = obs[0].study.targets 
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="helge.csv"'
-            writer = csv.writer(response)
-            writer.writerow(header)
-            for o in obs:
-                writer.writerow(o.GetData(header))
-            return response
+        qry = eval(qry)
 
-        if(obs):
-            return JsonResponse(obs.to_json(), safe=False)
-        else:
-            return HttpResponse("no data")
+        cls = eval(to_camelcase(realm))
+        obs = cls.objects(__raw__=qry)
+
+        header = obs[0].study.targets 
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="' + realm  + '.csv"'
+        writer = csv.writer(response)
+        writer.writerow(header)
+        for o in obs:
+            writer.writerow(GetData(o, header))
+        return response
+
+        #if(obs):
+        #    return JsonResponse(obs.to_json(), safe=False)
+        #else:
+        #    return HttpResponse("no data")
 
 
 def page_main(request):
