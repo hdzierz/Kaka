@@ -70,6 +70,8 @@ INSTALLED_APPS = (
     #'compressor',
     'async',
     'mongcore',
+    'mongseafood',
+    'mongenotype',
     'gene_expression',
     'restless',
     'web',
