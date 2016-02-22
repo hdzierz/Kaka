@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutorial &mdash; Kaka 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Kaka 1.0 documentation" href="index.html" />
+    <link rel="next" title="experimentsearch" href="experimentsearch/package_doc.html" />
+    <link rel="prev" title="Intro" href="intro.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="how-to-run-it">
+<h2>How to run it<a class="headerlink" href="#how-to-run-it" title="Permalink to this headline">¶</a></h2>
+<p>Clone github repo from (GitHub)[<a class="reference external" href="https://github.com/hdzierz/Kaka">https://github.com/hdzierz/Kaka</a>]</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>$ git clone https://github.com/hdzierz/Kaka
+$ cd Kaka
+</pre></div>
+</div>
+<p>then, either set up a primary (master) or a replica (slave) to connect to a kaka primary</p>
+<p>To set up a primary</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>$ bash env_setup.sh true
+$ docker-compose build
+$ docker-compose up -d
+</pre></div>
+</div>
+<p>To set up a replica</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>$ bash env_setup.sh false [host ip address of primary to connect to] [port of primary to connect to]
+$ docker-compose build
+$ docker-compose up -d
+</pre></div>
+</div>
+<p>You might have to configure Kaka. Please look into (docker-compose.yml)[docker-compose.yml]. Please refer to the (docker compose)[<a class="reference external" href="https://docs.docker.com/compose/compose-file/">https://docs.docker.com/compose/compose-file/</a>].</p>
+</div>
+<div class="section" id="configure-postgresql">
+<h2>Configure PostGreSQL<a class="headerlink" href="#configure-postgresql" title="Permalink to this headline">¶</a></h2>
+<p>Kaka has been configured for running it within the PFR infrastructure. The web servicie will cionnect to it internally so no configuration needed. In case you want to access the DB directly you might have to set the forwarded port to a different value (Change the first value (5434).</p>
+<p>Also if not used with PFr you might want to set the proxy servers.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>db:
+  image: postgres
+  volumes:
+    - .:/dat
+  ports:
+    - &quot;5434:5432&quot;
+  environment:
+     - dummy:dummy
+     - http_proxy:http://proxy.pfr.co.nz:8080
+     - https_proxy:http://proxy.pfr.co.nz:8080
+     - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
+</pre></div>
+</div>
+</div>
+<div class="section" id="configure-the-web-service">
+<h2>Configure the web service<a class="headerlink" href="#configure-the-web-service" title="Permalink to this headline">¶</a></h2>
+<p>If outside PFR you would like to configure the proxy servers, forwarded port (change first number) and the volumes. Don&#8217;t vchaneg any of the other configurations.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>web:
+  build: .
+  dockerfile: Dockerfile_web
+  command: python manage.py runserver 0.0.0.0:8000
+  volumes:
+    - .:/code
+    - /input:/input
+    - /output:/output
+    - /workspace:/workspace
+  ports:
+    - &quot;8000:8000&quot;
+  links:
+    - db
+  environment:
+     - dummy:dummy
+     - http_proxy:http://proxy.pfr.co.nz:8080
+     - https_proxy:http://proxy.pfr.co.nz:8080
+     - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
+</pre></div>
+</div>
+</div>
+<div class="section" id="how-to-use-it">
+<h2>How to use it<a class="headerlink" href="#how-to-use-it" title="Permalink to this headline">¶</a></h2>
+<p>To use the web app: in a browser go to</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>[host address of kaka]/experimentsearch/
+</pre></div>
+</div>
+<p>Logical operators that can be used in the text search fields are:</p>
+<ul class="simple">
+<li>&#8216;%&#8217; : wildcard<ul>
+<li>&#8216;%&#8217; : matches anything</li>
+<li>&#8216;%[text]&#8217; : matches anything that ends in [text]</li>
+<li>&#8216;[text]%&#8217; : matches anything that starts in [text]</li>
+<li>&#8216;%[text]%&#8217; : matches [text] with anything either side of text</li>
+</ul>
+</li>
+<li>whitespace : OR operator</li>
+<li>&#8216;+&#8217; : AND operator</li>
+</ul>
+<p>To use the API to download a csv file listing all the experiments, go to</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>[host address of kaka]/api/experiments/csv/
+</pre></div>
+</div>
+<p>To use the API to download a csv file listing all the data sources, go to</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>[host address of kaka]/api/data_source/csv/
+</pre></div>
+</div>
+<p>To use the API to get experiment(s) data, go to</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>[host address of kaka]/api/genotype/?[GET query string]
+</pre></div>
+</div>
+<p>The GET query string can contain the following queries:</p>
+<ul class="simple">
+<li>search_name=[experiment&#8217;s name] : Queries experiments by name</li>
+<li>search_pi=[experiment&#8217;s primary investigator] : Queries experiments by primary investigator</li>
+<li>from_date_day=[day as integer]&amp;from_date_month=[month as integer]&amp;from_date_year=[year as integer] : Matches experiments whose date created follows from_date</li>
+<li>to_date_day=[day as integer]&amp;to_date_month=[month as integer]&amp;to_date_year=[year as integer] : Matches experiments whose date created precedes to_date</li>
+</ul>
+<p>Queries can be joined together using the character &#8216;&amp;&#8217;</p>
+<p>Logic operators (see above) can be used in the GET query string. Replace</p>
+<ul class="simple">
+<li>&#8216;%&#8217; with &#8216;%25&#8217;</li>
+<li>&#8216;+&#8217; with &#8216;%2B&#8217;</li>
+<li>whitespace with &#8216;+&#8217;</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>127.0.0.1:8000/api/genotype/?search_name=GBS+kiwi%25&amp;search_pi=John%2BMcCallumn&amp;from_date_month=1&amp;from_date_day=1&amp;from_date_year=2013&amp;to_date_month=12&amp;to_date_day=1&amp;to_date_year=2016
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutorial</a><ul>
+<li><a class="reference internal" href="#how-to-run-it">How to run it</a></li>
+<li><a class="reference internal" href="#configure-postgresql">Configure PostGreSQL</a></li>
+<li><a class="reference internal" href="#configure-the-web-service">Configure the web service</a></li>
+<li><a class="reference internal" href="#how-to-use-it">How to use it</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="intro.html" title="previous chapter">Intro</a></li>
+      <li>Next: <a href="experimentsearch/package_doc.html" title="next chapter">experimentsearch</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/tutorial.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Badi James, Helge Dzierzon.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/tutorial.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
