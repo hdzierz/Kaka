@@ -15,6 +15,13 @@ class Echo(object):
 
 
 def write_stream_response(rows, experi_name):
+    """
+    Builds a csv file from the given list of string representations of csv rows and
+    returns a StreamingHttpResponse with the csv file as an attachment
+    :param rows: list of string representations of csv rows
+    :param experi_name: Used to name the csv file
+    :return: StreamingHttpResponse with csv file as attachment
+    """
     if 'Windows' in platform():
         writer = csv.writer(Echo())
     else:

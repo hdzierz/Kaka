@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/MicrowavedScrambledEggs/Kaka.svg?branch=mongosearch)](https://travis-ci.org/MicrowavedScrambledEggs/Kaka)
 
+html of documentation can be found in ~/_build/html/index.html
+
 # Let the Kea Fly-integrating genotype storage with KEA
 
 Kaka has three major aims:

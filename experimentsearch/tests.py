@@ -82,8 +82,15 @@ ds_table_set = [expected_table_ds]
 
 
 class ExperimentSearchTestCase(MasterTestCase):
+    """
+    Super class for Test Cases for the experimentsearch app.
+    """
 
     def setUp(self):
+        """
+        Populates the test database and sets up the expected django models for django_tables_2 for the
+        tests to compare against
+        """
         views.testing = True
         super(ExperimentSearchTestCase, self).setUp()
         test_db_setup.set_up_test_db()
@@ -104,11 +111,18 @@ class ExperimentSearchTestCase(MasterTestCase):
             unexpected_table_experi_3.download_link = "download/" + str(unexperi_3.id) + "/"
 
     def tearDown(self):
+        """
+        Clears the test database and removes any (Streaming)HttpResponse stored in memory
+        """
         super(ExperimentSearchTestCase, self).tearDown()
         views.csv_response = None
 
 
 class DownloadTestCase(ExperimentSearchTestCase):
+    """
+    Tests that the download links generated for the search result table behave correctly and downloads
+    the correct files or return the correct responses
+    """
 
     def test_download_1(self):
         """
@@ -148,24 +162,32 @@ class DownloadTestCase(ExperimentSearchTestCase):
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_download_2(self):
-        # test renders no download template when query finds nothing
+        """
+        Test renders no download template when query finds nothing
+        """
         addr = '/experimentsearch/stream_experiment_csv/' + str(self.unexpected_experi_model_2_id) + '/'
         response = self.client.get(addr)
         self.assertTemplateUsed(response, 'experimentsearch/no_download.html')
         self.assertIsNone(views.csv_response)
 
     def test_download_3(self):
-        # test raises 404 when downloading data for a non existent experiment attempted
+        """
+        Test raises 404 when downloading data for a non existent experiment attempted
+        """
         response = self.client.get('/experimentsearch/stream_experiment_csv/08a28757e0eb18321bbc3d3e/')
         self.assertEqual(response.status_code, 404)
 
     def test_download_4(self):
-        # Test download experiment page redirects to index when there's nothing to download
+        """
+        Test download experiment page redirects to index when there's nothing to download
+        """
         response = self.client.get('/experimentsearch/download_experiment/')
         self.assertRedirects(response, '/experimentsearch/')
 
     def test_download_5(self):
-        # Test download experiment page redirects to 'from' when there's nothing to download
+        """
+        Test download experiment page redirects to 'from' when there's nothing to download
+        """
         from_url = 'http://testserver/experimentsearch/?search_name=What+is+up'
         response = self.client.get('/experimentsearch/download_experiment/', {'from': from_url})
         self.assertRedirects(response, from_url)
@@ -275,24 +297,32 @@ class DownloadTestCase(ExperimentSearchTestCase):
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_download_all_empty_GET(self):
-        # Tests that going to the download link without an experiment id or any GET data
-        # raises a 404
+        """
+        Tests that going to the download link without an experiment id or any GET data
+        raises a 404
+        """
         response = self.client.get('/experimentsearch/download/')
         self.assertEqual(response.status_code, 404)
 
     def test_download_all_POST(self):
-        # Tests that going to the download link without an experiment id and via POST
-        # raises a 404
+        """
+        Tests that going to the download link without an experiment id and via POST
+        raises a 404
+        """
         response = self.client.post('/experimentsearch/download/')
         self.assertEqual(response.status_code, 404)
 
 
 class IndexResponseTestCase(ExperimentSearchTestCase):
-    # Tests that check that the index page creates the appropriate table from the results
-    # of queries made using the 'get' data
+    """
+    Tests that check that the index page creates the appropriate table from the results
+    of queries made using the 'get' data
+    """
 
     def test_index_response_1(self):
-        # Testing searching by name
+        """
+        Testing searching by name
+        """
         response = self.client.get('/experimentsearch/', {'search_name': 'Whazzzup'})
         self.assertTemplateUsed(response, 'experimentsearch/index.html')
         form = response.context['search_form']
@@ -303,7 +333,9 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_2(self):
-        # Testing that no table gets rendered when no results are found
+        """
+        Testing that no table gets rendered when no results are found
+        """
         response = self.client.get(
             '/experimentsearch/', {'search_name': 'found nothing.csv'}
         )
@@ -312,7 +344,9 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertIsNone(response.context['table'])
 
     def test_index_response_3(self):
-        # Testing searching by primary investigator
+        """
+        Testing searching by primary investigator
+        """
         response = self.client.get(
             '/experimentsearch/', {'search_pi': 'Badi'}
         )
@@ -324,7 +358,9 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_4(self):
-        # Testing searching by date
+        """
+        Testing searching by date
+        """
         response = self.client.get(
             '/experimentsearch/', {
                 'from_date_year': '2015', 'from_date_month': '11', 'from_date_day': '20',
@@ -342,25 +378,33 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_index_response_5(self):
-        # test has the right search form
+        """
+        Test page rendered with the search form that matches the GET data
+        """
         response = self.client.get('/experimentsearch/', {'search_by': "Name"})
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
 
     def test_index_response_6(self):
-        # test has the right search form
+        """
+        Test page rendered with the search form that matches the GET data
+        """
         response = self.client.get('/experimentsearch/', {'search_by': "Primary Investigator"})
         form = response.context['search_form']
         self.assertIsInstance(form, PISearchForm)
 
     def test_index_response_7(self):
-        # test has the right search form
+        """
+        Test page rendered with the search form that matches the GET data
+        """
         response = self.client.get('/experimentsearch/', {'search_by': "Date Created"})
         form = response.context['search_form']
         self.assertIsInstance(form, DateSearchForm)
 
     def test_index_response_8(self):
-        # Testing index with no get data
+        """
+        Testing index with no get data
+        """
         response = self.client.post('/experimentsearch/')
         self.assertTemplateUsed(response, 'experimentsearch/index.html')
         form = response.context['search_form']
@@ -368,8 +412,10 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.assertFalse(hasattr(form, 'cleaned_data'))
         self.assertNotIn('table', response.context.keys())
 
-    def test_index_response_9(self):
-        # Testing the '$or' operator
+    def test_search_term_1(self):
+        """
+        Testing the '$or' operator
+        """
         response = self.client.get('/experimentsearch/', {'search_name': "up que"})
         self.assertTemplateUsed(response, 'experimentsearch/index.html')
         form = response.context['search_form']
@@ -379,16 +425,20 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
-    def test_index_response_10(self):
-        # Test it only matches whole words
+    def test_search_term_2(self):
+        """
+        Test it only matches whole words
+        """
         response = self.client.get('/experimentsearch/', {'search_name': 'hat'})
         form = response.context['search_form']
         self.assertEqual(form.cleaned_data['search_name'], 'hat')
         self.assertIsNone(response.context['table'])
         self.assertIn('Search came up with no results', str(response.content))
 
-    def test_index_response_11(self):
-        # Test wildcard operator at front
+    def test_search_term_3(self):
+        """
+        Test wildcard operator at front
+        """
         response = self.client.get('/experimentsearch/', {'search_name': '%ing'})
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
@@ -397,8 +447,10 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
-    def test_index_response_12(self):
-        # Test wildcard operator at back
+    def test_search_term_4(self):
+        """
+        Test wildcard operator at back
+        """
         response = self.client.get('/experimentsearch/', {'search_name': 'u%'})
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
@@ -407,8 +459,10 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
-    def test_index_response_13(self):
-        # Test wildcard operator on both sides
+    def test_search_term_5(self):
+        """
+        Test wildcard operator on both sides
+        """
         response = self.client.get('/experimentsearch/', {'search_name': '%sss%'})
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
@@ -417,8 +471,10 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
-    def test_index_response_14(self):
-        # Test wildcard operator alone
+    def test_search_term_6(self):
+        """
+        Test wildcard operator alone
+        """
         response = self.client.get('/experimentsearch/', {'search_name': '%'})
         form = response.context['search_form']
         self.assertIsInstance(form, NameSearchForm)
@@ -427,8 +483,10 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         actual_table = response.context['table']
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
-    def test_index_response_15(self):
-        # Test $and operator
+    def test_search_term_7(self):
+        """
+        Test $and operator
+        """
         response = self.client.get('/experimentsearch/', {'search_pi': 'badi+james'})
         form = response.context['search_form']
         self.assertIsInstance(form, PISearchForm)
@@ -438,7 +496,9 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_form_error_1(self):
-        # Testing the DateSearchForm raises an error when the to_date precedes the from_date
+        """
+        Testing the DateSearchForm raises an error when the to_date precedes the from_date
+        """
         response = self.client.get(
             '/experimentsearch/', {
                 'from_date_year': '2015', 'from_date_month': '11', 'from_date_day': '21',
@@ -450,7 +510,9 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
         )
 
     def test_query_dict_1(self):
-        # Test the method in views.QueryRequestHandler that makes the raw PyMongo query from a string
+        """
+        Test the method in views.QueryRequestHandler that makes the raw PyMongo query from a string
+        """
         search_terms = 'cat+dog bird snake+green+jungle were% %saur% %man+spider'
         field = "name"
         terms = ['cat', 'dog', 'bird', 'snake', 'green', 'jungle', 'were', 'saur', 'man', 'spider']
@@ -477,9 +539,14 @@ class IndexResponseTestCase(ExperimentSearchTestCase):
 
 
 class AdvancedSearchTestCase(ExperimentSearchTestCase):
+    """
+    Tests that the Advanced Search form gives expected results
+    """
 
     def test_advanced_search_1(self):
-        # Test advanced search with no parameters
+        """
+        Test advanced search with no parameters
+        """
         get_dic = {
             'search_name': '', 'search_pi': '', 'from_date_year': '0',
             'from_date_month': '0', 'from_date_day': '0',
@@ -492,7 +559,9 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.assertIn('Search came up with no results', str(response.content))
 
     def test_advanced_search_2(self):
-        # Test advanced search with only name
+        """
+        Test advanced search with only name
+        """
         get_dic = {
             'search_name': 'up', 'search_pi': '', 'from_date_year': '0',
             'from_date_month': '0', 'from_date_day': '0',
@@ -506,7 +575,9 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_3(self):
-        # Test advanced search with only pi
+        """
+        Test advanced search with only pi
+        """
         get_dic = {
             'search_name': '', 'search_pi': 'Badi', 'from_date_year': '0',
             'from_date_month': '0', 'from_date_day': '0',
@@ -520,7 +591,9 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_4(self):
-        # Test advanced search with only from date
+        """
+        Test advanced search with only from date
+        """
         get_dic = {
             'search_name': '', 'search_pi': '', 'from_date_year': '2015',
             'from_date_month': '11', 'from_date_day': '20',
@@ -534,7 +607,9 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_5(self):
-        # Test advanced search with only to date
+        """
+        Test advanced search with only to date
+        """
         get_dic = {
             'search_name': '', 'search_pi': '', 'from_date_year': '0',
             'from_date_month': '0', 'from_date_day': '0',
@@ -548,7 +623,9 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_6(self):
-        # Test advanced search with from date and to date
+        """
+        Test advanced search with from date and to date
+        """
         get_dic = {
             'search_name': '', 'search_pi': '', 'from_date_year': '2015',
             'from_date_month': '11', 'from_date_day': '20',
@@ -562,7 +639,9 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_7(self):
-        # Test with name and pi
+        """
+        Test with name and pi
+        """
         get_dic = {
             'search_name': 'wha%', 'search_pi': 'james', 'from_date_year': '0',
             'from_date_month': '0', 'from_date_day': '0',
@@ -576,7 +655,9 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_advanced_search_8(self):
-        # Test with all fields
+        """
+        Test with all fields
+        """
         get_dic = {
             'search_name': 'wha%', 'search_pi': 'jame%', 'from_date_year': '2015',
             'from_date_month': '11', 'from_date_day': '19',
@@ -590,7 +671,9 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, ExperimentForTable)
 
     def test_form_error_2(self):
-        # Test error raised when from_date > to_date
+        """
+        Test error raised when from_date > to_date
+        """
         get_dic = {
             'search_name': '', 'search_pi': '', 'from_date_year': '2015',
             'from_date_month': '11', 'from_date_day': '21',
@@ -605,13 +688,16 @@ class AdvancedSearchTestCase(ExperimentSearchTestCase):
 
 
 class DsResponseTestCase(ExperimentSearchTestCase):
-
-    # Tests that check that the index page creates the appropriate table from the results
-    # of queries made using the 'get' data
+    """
+    Tests that check that the index page creates the appropriate table from the results
+    of queries made using the 'get' data
+    """
 
     def test_ds_response_1(self):
-        # testing the appropriate data source table gets displayed, with data that matches
-        # results of the data source query by name
+        """
+        Testing the appropriate data source table gets displayed, with data that matches
+        results of the data source query by name
+        """
         from_url = '/experimentsearch/?search_name=What%2Bis%2Bup'
 
         response = self.client.get(
@@ -625,7 +711,9 @@ class DsResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
 
     def test_ds_response_3(self):
-        # Testing that it works with get data from an advanced search
+        """
+        Testing that it works with get data from an advanced search
+        """
         get_dic = {
             'search_name': 'wha%', 'search_pi': 'jame%', 'from_date_year': '2015',
             'from_date_month': '11', 'from_date_day': '19',
@@ -643,8 +731,10 @@ class DsResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
 
     def test_ds_response_4(self):
-        # testing the appropriate data source table gets displayed, with data that matches
-        # results of the data source query by name, from a response with no GET data
+        """
+        Testing the appropriate data source table gets displayed, with data that matches
+        results of the data source query by name, from a response with no GET data
+        """
         from_url = '/experimentsearch/'
 
         response = self.client.get('/experimentsearch/data_source/What is up/')
@@ -656,8 +746,10 @@ class DsResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
 
     def test_ds_response_5(self):
-        # testing the appropriate data source table gets displayed, with data that matches
-        # results of the data source query by name, from a response via POST
+        """
+        Testing the appropriate data source table gets displayed, with data that matches
+        results of the data source query by name, from a response via POST
+        """
         from_url = '/experimentsearch/'
 
         response = self.client.post('/experimentsearch/data_source/What is up/')
@@ -669,7 +761,9 @@ class DsResponseTestCase(ExperimentSearchTestCase):
         self.check_tables_equal(actual_table, expected_table, DataSourceForTable)
 
     def test_ds_response_2(self):
-        # Tests that no table gets displayed when no query results found
+        """
+        Tests that no table gets displayed when no query results found
+        """
         response = self.client.get(
             '/experimentsearch/data_source/found+nothing.csv/'
         )

@@ -53,6 +53,7 @@ def datasource(request, experi_name):
 
     Provides a link for the 'back to search' buttons from the from field in the
     GET data if there is one
+
     :param request:
     :return:
     """
@@ -90,6 +91,7 @@ def download_message(request, experi_id):
     Renders the template with the download preparation message and the loading gif that,
     once loaded, tries to redirect to the url that calls the stream_experiment_csv() view
     with the given experiment name
+
     :param request:
     :param experi_id:
     :return:
@@ -108,6 +110,7 @@ def big_download(request):
     Method called when "download all results" link clicked. Renders the template with the download
     preparation message and the loading gif that, once loaded, tries to redirect to the url that
     calls stream_result_data(), passing on the GET data
+
     :param request:
     :return:
     """
@@ -129,6 +132,7 @@ def stream_result_data(request):
     query built from the request's get data. Redirects to the index (which should then download
     the attachment), passing on the GET data to display the search results that got us here in
     the first place
+
     :param request:
     :return:
     """
@@ -191,6 +195,7 @@ def download_experiment(request):
     """
     Returns the stored response with the experiment csv attachment, then removes it
     from storage
+
     :param request:
     :return:
     """

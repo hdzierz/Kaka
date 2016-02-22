@@ -8,6 +8,9 @@ from mongcore import test_db_setup
 
 
 class ReportTestCase(MasterTestCase):
+    """
+    Tests that the /api/ urls behave correctly and output the correct files/responses
+    """
 
     def setUp(self):
         views.testing = True
@@ -15,22 +18,41 @@ class ReportTestCase(MasterTestCase):
         test_db_setup.set_up_test_db()
 
     def test_report_experiment(self):
+        """
+        Tests that the link '/api/experiment/csv/' downloads the correct csv file of Experiment docs
+        """
         response = self.client.get("/api/experiment/csv/")
         self.download_csv_comparison(response, 'test_resources/experiment/bar_report.csv')
 
     def test_report_datasource(self):
+        """
+        Tests that the link '/api/data_source/csv/' downloads the correct csv file of DataSource docs
+        """
         response = self.client.get("/api/data_source/csv/")
         self.download_csv_comparison(response, 'test_resources/data_source/foo_report.csv')
 
     def test_report_genotype_name(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by name downloads the
+        correct csv file of Genotype documents that reference the experiment that matches the query
+        """
         response = self.client.get("/api/genotype/", {"search_name": "What+is+up"})
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_report_genotype_pi(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by primary investigator
+        downloads the correct csv file of Genotype documents that reference the experiment that matches the query
+        """
         response = self.client.get("/api/genotype/", {"search_pi": "Badi"})
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_report_genotype_both_dates(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by date created, using
+        both a from date and to date, downloads the correct csv file of Genotype documents that reference
+        the experiment that matches the query
+        """
         get_data = {
             "from_date_year": 2015, "from_date_month": 11, "from_date_day": 20,
             "to_date_year": 2015, "to_date_month": 11, "to_date_day": 21
@@ -39,6 +61,11 @@ class ReportTestCase(MasterTestCase):
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_report_genotype_from_date(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by date created, using
+        just a from date, downloads the correct json file of Genotype documents that reference
+        the experiments that match the query
+        """
         get_data = {
             "from_date_year": 2015, "from_date_month": 11, "from_date_day": 20
         }
@@ -58,6 +85,11 @@ class ReportTestCase(MasterTestCase):
         self.assertDictEqual(actual_json_dict, expected_dict_from_json)
 
     def test_report_genotype_to_date(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by date created, using
+        just a to date, downloads the correct csv file of Genotype documents that reference
+        the experiment that matches the query
+        """
         get_data = {
             "to_date_year": 2015, "to_date_month": 11, "to_date_day": 19
         }
@@ -65,6 +97,11 @@ class ReportTestCase(MasterTestCase):
         self.download_csv_comparison(response, 'test_resources/genotype/buz_report.csv')
 
     def test_report_genotype_advanced_name_pi(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by primary investigator
+        and name downloads the correct csv file of Genotype documents that reference the experiment that
+        matches the query
+        """
         get_data = {
             "search_name": "What", "search_pi": "James"
         }
@@ -72,6 +109,11 @@ class ReportTestCase(MasterTestCase):
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_report_genotype_advanced_name_date(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by name and date
+        created downloads the correct csv file of Genotype documents that reference the experiment that
+        matches the query
+        """
         get_data = {
             "from_date_year": 2015, "from_date_month": 11, "from_date_day": 19,
             "to_date_year": 2015, "to_date_month": 11, "to_date_day": 22,
@@ -81,6 +123,11 @@ class ReportTestCase(MasterTestCase):
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_report_genotype_advanced_pi_date(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by primary investigator
+        and date created downloads the correct csv file of Genotype documents that reference the experiment that
+        matches the query
+        """
         get_data = {
             "from_date_year": 2015, "from_date_month": 11, "from_date_day": 19,
             "to_date_year": 2015, "to_date_month": 11, "to_date_day": 22,
@@ -90,6 +137,11 @@ class ReportTestCase(MasterTestCase):
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_report_genotype_advanced_all(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by primary investigator,
+        name and date created downloads the correct csv file of Genotype documents that reference the experiment that
+        matches the query
+        """
         get_data = {
             "from_date_year": 2015, "from_date_month": 11, "from_date_day": 19,
             "to_date_year": 2015, "to_date_month": 11, "to_date_day": 22,
@@ -99,12 +151,20 @@ class ReportTestCase(MasterTestCase):
         self.download_csv_comparison(response, 'test_resources/genotype/baz_report.csv')
 
     def test_report_genotype_bad_fields(self):
+        """
+        Tests that the link '/api/genotype/' with GET data with only invalid fields returns a response with the
+        appropriate error message
+        """
         response = self.client.get("/api/genotype/", {"search_nam": "What+is+up"})
         self.assertFalse(hasattr(response, 'streaming_content'))
         self.assertContains(response, "can't be parsed into a mongoengine query")
         self.assertContains(response, "Missing keys for search fields")
 
     def test_report_genotype_bad_date_1(self):
+        """
+        Tests that the link '/api/genotype/' with GET data with an incomplete 'to' date returns
+        a response with the appropriate error message
+        """
         get_data = {
             "to_date_year": 2015, "to_date_month": 11,
         }
@@ -114,6 +174,10 @@ class ReportTestCase(MasterTestCase):
         self.assertContains(response, "Invalid date(s)")
 
     def test_report_genotype_bad_date_2(self):
+        """
+        Tests that the link '/api/genotype/' with GET data with an incomplete 'from' date returns
+        a response with the appropriate error message
+        """
         get_data = {
             "from_date_year": 2015, "from_date_month": 11, "from_date_day": 0
         }
@@ -123,6 +187,10 @@ class ReportTestCase(MasterTestCase):
         self.assertContains(response, "Invalid date(s)")
 
     def test_report_genotype_bad_dates_1(self):
+        """
+        Tests that the link '/api/genotype/' with GET data with both to and from date but one of them
+        incomplete returns a response with the appropriate error message
+        """
         get_data = {
             "from_date_year": 2015, "from_date_day": 20,
             "to_date_year": 2015, "to_date_month": 11, "to_date_day": 21
@@ -133,6 +201,10 @@ class ReportTestCase(MasterTestCase):
         self.assertContains(response, "Invalid date(s)")
 
     def test_report_genotype_bad_dates_2(self):
+        """
+        Tests that the link '/api/genotype/' with GET data with incomplete 'to' and 'from' date returns
+        a response with the appropriate error message
+        """
         get_data = {
             "from_date_year": 2015, "from_date_month": '', "from_date_day": 20,
             "to_date_year": 0, "to_date_month": 11, "to_date_day": 21
@@ -143,6 +215,10 @@ class ReportTestCase(MasterTestCase):
         self.assertContains(response, "Invalid date(s)")
 
     def test_report_genotype_bad_dates_3(self):
+        """
+        Tests that the link '/api/genotype/' with GET data with a 'to' date that precedes the 'from'
+        date returns a response with the appropriate error message
+        """
         get_data = {
             "from_date_year": 2015, "from_date_month": 12, "from_date_day": 20,
             "to_date_year": 2015, "to_date_month": 11, "to_date_day": 21
@@ -153,6 +229,10 @@ class ReportTestCase(MasterTestCase):
         self.assertContains(response, "Invalid date(s)")
 
     def test_report_genotype_json(self):
+        """
+        Tests that the link '/api/genotype/' with GET data for querying Experiments by name downloads the
+        correct json file of Genotype documents that reference the experiments that match the query
+        """
         response = self.client.get("/api/genotype/", {"search_name": "What"})
         actual_bytes = response.content
         up_createddate = datetime(2016, 1, 11, 17, 1, 25)
@@ -176,19 +256,28 @@ class ReportTestCase(MasterTestCase):
         self.assertDictEqual(actual_json_dict, expected_dict_from_json)
 
     def test_report_json_no_data(self):
-        # Test with multiple experiments that have no genotype data referencing it
+        """
+        Tests that the link '/api/genotype/' with GET data that is a query matching multiple
+        Experiments that have no Genotype documents reference them return the 'no data' response
+        """
         response = self.client.get("/api/genotype/", {"search_name": "Whazzzup QUE"})
         self.assertFalse(hasattr(response, 'streaming_content'))
         self.assertContains(response, "No Data")
 
     def test_report_no_data_1(self):
-        # Test with experiment that has not genotype data referencing it
+        """
+        Tests that the link '/api/genotype/' with GET data that is a query matching an
+        Experiment that has no Genotype documents reference it returns the 'no data' response
+        """
         response = self.client.get("/api/genotype/?search_name=Whazzzup")
         self.assertFalse(hasattr(response, 'streaming_content'))
         self.assertContains(response, "No Data")
 
     def test_report_no_data_2(self):
-        # Test with non existent experiment
+        """
+        Tests that the link '/api/genotype/' with GET data that is a query matching no
+        Experiments returns the 'no data' response
+        """
         response = self.client.get("/api/genotype/?search_name=Banana")
         self.assertFalse(hasattr(response, 'streaming_content'))
         self.assertContains(response, "No Data")
