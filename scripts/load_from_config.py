@@ -119,7 +119,7 @@ def make_field_dic(document, build_dic):
             field_dic[key] = build_dic[key]
     return field_dic
 
-
+import re
 class Import:
     ds = None
     study = None
@@ -138,11 +138,21 @@ class Import:
         pr.save()
         # add to record of docs saved to db by this run through
         created_doc_ids.append((Genotype, pr.id))
+
+        if not Import.study.targets:
+            keys = [] 
+            for key in line.keys():
+                key = re.sub('[^0-9a-zA-Z_]+', '_', key)
+                keys.append(key)
+
+            Import.study.targets = list(keys)
+            Import.study.save()
+
         return True
 
     @staticmethod
     def clean_op():
-        Primer.objects.filter(datasource=Import.ds).delete()
+        Genotype.objects.filter(datasource=Import.ds).delete()
 
 
 def load(fn):

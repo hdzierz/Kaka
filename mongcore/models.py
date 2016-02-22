@@ -121,6 +121,7 @@ class Experiment(mongoengine.Document):
     createddate = mongoengine.DateTimeField(default=datetime.now())
     createdby = mongoengine.StringField(max_length=255)
     description = mongoengine.StringField(default="")
+    targets = mongoengine.ListField()
 
     def __unicode__(self):
         return self.name
@@ -165,7 +166,7 @@ def make_table_experiment(experiment):
 
 """ Class that holds features with observations attached
 """
-class Feature(mongoengine.Document):
+class Feature(mongoengine.DynamicDocument):
     fmt = "csv"
 
     name = mongoengine.StringField(max_length=255, default="unknown")
@@ -184,15 +185,24 @@ class Feature(mongoengine.Document):
     obkeywords = mongoengine.StringField()
     statuscode = mongoengine.IntField(default=1)
     search_index = VectorField()
-
-
     obs = mongoengine.DictField()
 
-    def GetData(self, fmt="csv"):
+    def GetData(self, header, fmt='csv'):
         res = []
-        for h in self.header:
+        for h in header:
+            try:
+                res.append(getattr(self, h))
+            except:
+                res.append("None")
+                Logger.Warning("Header " + h  + "h does not exist in: " + self.name)
+
+        return res
+
+    def GetDataObs(self, header, fmt="csv"):
+        res = []
+        for h in header:
             res.append(self.obs[h])
-        return ','.res
+        return res
 
     @classmethod
     def InitOntology(cls):

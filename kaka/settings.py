@@ -74,7 +74,7 @@ INSTALLED_APPS = (
     'seafood',
     'genotype',
     'gene_expression',
-    #'nosql',
+    'restless',
     'web',
     'inplaceeditform',
     'experimentsearch',

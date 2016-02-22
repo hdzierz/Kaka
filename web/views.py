@@ -3,7 +3,7 @@ import json
 import re
 from collections import OrderedDict
 
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 
 from mongcore.errors import ExperiSearchError
@@ -423,10 +423,30 @@ def genotype_csv_report(db_alias, experiment):
     return write_stream_response(rows, "Genotype")
 
 
-def page_jsonqry(request, app, qry):
-    if app=="genotype":
-        obs = Genotype.objects(__raw__=qry)
+from mongcore.logger import *
+from restless.views import Endpoint
+from restless.models import serialize
 
+class JsonQry(Endpoint):
+    def get(self, request, realm):
+        obs = False
+        qry = request.params.get('qry')
+        if realm=="genotype":
+            qry = eval(qry)
+            obs = Genotype.objects(__raw__=qry)
+            header = obs[0].study.targets 
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="helge.csv"'
+            writer = csv.writer(response)
+            writer.writerow(header)
+            for o in obs:
+                writer.writerow(o.GetData(header))
+            return response
+
+        if(obs):
+            return JsonResponse(obs.to_json(), safe=False)
+        else:
+            return HttpResponse("no data")
 
 
 def page_main(request):
