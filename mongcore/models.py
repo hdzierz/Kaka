@@ -49,6 +49,7 @@ class Ontology(mongoengine.EmbeddedDocument):
     def __unicode__(self):
         return self.name
 
+
 """ Class for referencing meta data around the source of the data. 
 You will usually get file names here.
 
@@ -63,6 +64,17 @@ class DataSource(mongoengine.Document):
     is_active = mongoengine.BooleanField(default=False)
     values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
     search_index = VectorField()
+
+
+    def GetHeader(self):
+        return [
+                "name",
+                "typ",
+                "source",
+                "supplier",
+                "supplieddate",
+                "comment",
+            ]
 
     def GetName(self):
         return self.name
@@ -123,6 +135,17 @@ class Experiment(mongoengine.Document):
     description = mongoengine.StringField(default="")
     targets = mongoengine.ListField()
 
+    def GetHeader(self):
+        return [
+                "id",
+                "name",
+                "pi",
+                "createddate",
+                "createdby",
+                "description",
+                "targets",
+            ]
+
     def __unicode__(self):
         return self.name
 
@@ -164,17 +187,34 @@ def make_table_experiment(experiment):
     )
 
 
+class Design(mongoengine.Document):
+    study = mongoengine.ReferenceField(Experiment)
+    experiment = mongoengine.StringField(max_length=255, default="unknown")
+    phenotype = mongoengine.StringField(max_length=255, default="unknown")
+    condition = mongoengine.StringField(max_length=255, default="unknown")
+    typ = mongoengine.StringField(max_length=255, default="unknown")
+    notes = mongoengine.StringField(max_length=255, default="unknown")
+
+    def GetHeader(self):
+        return [
+            "phenotype",
+            "condition",
+            "typ",
+        ]
+
+
 """ Class that holds features with observations attached
 """
 class Feature(mongoengine.DynamicDocument):
-    fmt = "csv"
-
+    group = mongoengine.StringField(max_length=255, default="unknown")
     name = mongoengine.StringField(max_length=255, default="unknown")
     dtt = mongoengine.DateTimeField(default=timezone.now)
     geom = PointField(default={'type': 'Point', 'coordinates': [0, 0]})    
     alias = mongoengine.StringField(max_length=255, default="unknown")
     datasource = mongoengine.ReferenceField(DataSource)
+    data_source = mongoengine.StringField(max_length=255, default="unknown")
     study = mongoengine.ReferenceField(Experiment)
+    experiment = mongoengine.StringField(max_length=255, default="unknown")
     description = mongoengine.StringField(default="")
     ontology = mongoengine.EmbeddedDocumentField(Ontology)
     xreflsid = mongoengine.StringField(max_length=255)
@@ -187,7 +227,23 @@ class Feature(mongoengine.DynamicDocument):
     search_index = VectorField()
     obs = mongoengine.DictField()
 
-    def GetData(self, header, fmt='csv'):
+
+    def GetHeader(self):
+        header = []
+        header.append("name")
+        header.append("datasource")
+        header.append("ontology")
+        header.append("study")
+        header.append("xreflsid")
+        for t in self.study.targets:
+            header.append(t)
+ 
+        return header 
+
+    def GetData(self, header=False):
+        if not header:
+            header = self.GetHeader()
+
         res = []
         for h in header:
             try:
@@ -198,7 +254,8 @@ class Feature(mongoengine.DynamicDocument):
 
         return res
 
-    def GetDataObs(self, header, fmt="csv"):
+    def GetDataObs(self, fmt="csv"):
+        header = self.study.targets
         res = []
         for h in header:
             res.append(self.obs[h])
@@ -284,14 +341,18 @@ def SaveKVs(ob, lst, save=False):
         ob.save()
 
 
-def GetData(ob, header, fmt='csv'):
+def GetData(ob, header=False):
     res = []
+
+    if not header:
+        header = ob.GetHeader()
+
     for h in header:
         try:
             res.append(getattr(ob, h))
         except:
-            res.append("None")
-            Logger.Warning("Header " + h  + "h does not exist in: " + self.name)
+            res.append("NA")
+            Logger.Warning("Header " + h  + " does not exist in: " + self.name)
 
     return res
 

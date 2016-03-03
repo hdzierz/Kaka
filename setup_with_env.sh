@@ -1,1 +1,3 @@
-bash setup.sh true 
+#!/bin/bash
+
+./setup.sh true 

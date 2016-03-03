@@ -22,6 +22,7 @@ def is_int(s):
 class GenericImport:
     conn = None
     load_op = None
+    load_design_op = None
     clean_op = None
     ds = None
     header = None
