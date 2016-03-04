@@ -1,6 +1,6 @@
-from api.connectors import *
-from seafood.models import *
-from api.imports import *
+from mongcore.connectors import *
+from mongseafood.models import *
+from mongcore.imports import *
 import time
 import datetime
 from django.utils.timezone import get_current_timezone, make_aware
@@ -31,17 +31,14 @@ def load():
 
 
 def init():
-    onto = Ontology.objects.get(name="Staff")
     dt = datetime.datetime.now()
     ds_tree, created = DataSource.objects.get_or_create(
         name='Seafood Import Staff Init',
-        ontology=onto,
         supplier="Seafood",
     )
 
-    st = Study.objects.get_or_create(
+    st = Experiment.objects.get_or_create(
         name='Seafood',
-	datasource=ds_tree,
     )
 
     Import.study = st

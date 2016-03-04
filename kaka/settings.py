@@ -21,12 +21,12 @@ PRIMARY_DB_NAME = 'primary'
 PRIMARY_DB_ALIAS = 'primary'
 
 connected = False
-# connect(PRIMARY_DB_NAME, host='mongodb://10.1.8.102', replicaSet='kaka1')
+# connect(PRIMARY_DB_NAME, host='mongodb://mongo')
 # MONGODB_HOST = os.environ.get('mongo_PORT_27017_TCP_ADDR', '127.0.0.1')
 # connect(host=MONGODB_HOST)
 while not connected:
     try:
-        connect(PRIMARY_DB_NAME, host='mongodb://mongo')
+        connect(PRIMARY_DB_NAME, host='mongodb://mongo:27017')
         connected = True
     except ConnectionError:
         pass
@@ -70,8 +70,10 @@ INSTALLED_APPS = (
     #'compressor',
     'async',
     'mongcore',
+    'mongseafood',
+    'mongenotype',
     'gene_expression',
-    #'nosql',
+    'restless',
     'web',
     'inplaceeditform',
     'experimentsearch',
@@ -169,8 +171,10 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR 
+
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
-    "/static/",
+    "static/",
 )

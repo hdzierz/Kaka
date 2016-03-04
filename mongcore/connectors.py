@@ -175,7 +175,8 @@ class CsvConnector(DataConnector):
         if(self.gzipped):
             self.f = gzip.open(self.origin_name, 'rt')
         else:
-            self.f = open(self.origin_name, 'rb')
+            self.f = open(self.origin_name, 'rt')
+            
         self.reader = csv.DictReader(self.f, delimiter=self.delimiter, fieldnames=self.header)
         self.header = self.reader.fieldnames
 

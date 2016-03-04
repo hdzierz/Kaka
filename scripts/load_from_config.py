@@ -7,11 +7,12 @@ config file
 from pathlib import Path
 from .configuration_parser import get_parser_from_path
 from mongcore.query_set_helpers import fetch_or_save
-from mongcore.models import DataSource, Experiment, SaveKVs
+from mongcore.models import DataSource, Experiment, SaveKVs, Design
 from mongenotype.models import Genotype, Primer
 from mongcore.connectors import CsvConnector
 from mongcore.imports import GenericImport
 from mongcore.logger import Logger
+from mongcore.algorithms import *
 from kaka.settings import TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
 
@@ -92,6 +93,8 @@ def init_for_all(path, config_dic):
 
     # Sets the values common to all genotype docs made from the given path
     Import.study = ex
+    if "Design" in build_dic:
+        load_design("data/gene_expression/" + build_dic['Design'])
     Import.createddate = build_dic['createddate']
     Import.description = build_dic['description']
     Import.gen_col = build_dic['Genotype Column']
@@ -119,7 +122,7 @@ def make_field_dic(document, build_dic):
             field_dic[key] = build_dic[key]
     return field_dic
 
-
+import re
 class Import:
     ds = None
     study = None
@@ -128,21 +131,55 @@ class Import:
     gen_col = None
 
     @staticmethod
+    def laod_design_op(line, succ):
+        d = Design()
+        d.phenotype = line["phenotype"]
+        d.condition = line["condition"]
+        d.typ = line["type"]
+        d.study = Import.study
+        d.experiment = Import.study.name
+        d.save()
+
+    @staticmethod
     def load_op(line, succ):
-        pr = Genotype(
-            name=line[Import.gen_col], study=Import.study, datasource=Import.ds,
-            createddate=Import.createddate, description=Import.description,
-        )
-        SaveKVs(pr, line)
-        pr.switch_db(db_alias)
-        pr.save()
-        # add to record of docs saved to db by this run through
-        created_doc_ids.append((Genotype, pr.id))
+        try:
+            pr = Genotype(
+                name=line[Import.gen_col], 
+                study=Import.study, 
+                experiment=Import.study.name,
+                datasource=Import.ds,
+                data_source=Import.ds.name,
+                createddate=Import.createddate, 
+                description=Import.description,
+            )
+            SaveKVs(pr, line)
+            pr.switch_db(db_alias)
+            pr.save()
+            # add to record of docs saved to db by this run through
+            created_doc_ids.append((Genotype, pr.id))
+
+            if not Import.study.targets:
+                keys = [] 
+                for key in line.keys():
+                    key = re.sub('[^0-9a-zA-Z_]+', '_', key)
+                    keys.append(key)
+
+                Import.study.targets = list(keys)
+                Import.study.save()
+        except:
+            Logger.Error("Linen did not save")
+
         return True
 
     @staticmethod
     def clean_op():
-        Primer.objects.filter(datasource=Import.ds).delete()
+        Genotype.objects.filter(datasource=Import.ds).delete()
+
+
+def load_design(fn):
+    conn = CsvConnector(fn, delimiter=',', gzipped=False)
+    succ = False
+    succ = accumulate(conn, Import.laod_design_op,  succ)
 
 
 def load(fn):

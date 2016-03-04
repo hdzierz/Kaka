@@ -132,7 +132,7 @@ def write_header_row(query_set):
     header = []
     # Gets name of all the fields of the first document in the queryset
     head_dict = query_set[0].to_mongo().to_dict()
-    dict_keys = head_dict.keys()
+    dict_keys = list(head_dict.keys())
     keys = []
     for key in dict_keys:
         keys.append(key)

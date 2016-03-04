@@ -3,11 +3,11 @@ import json
 import re
 from collections import OrderedDict
 
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 
 from mongcore.errors import ExperiSearchError
-from mongcore.models import DataSource, Experiment
+from mongcore.models import *
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -184,3 +184,108 @@ def genotype_csv_report(db_alias, experiment):
         return HttpResponse('No Data')
     rows = query_to_csv_rows_list(obs, testing=testing)
     return write_stream_response(rows, "Genotype")
+
+
+from mongcore.logger import *
+from mongcore.models import GetData
+from restless.views import Endpoint
+from restless.models import serialize
+
+def get_header(obs):
+    header = []
+    header.append("name")
+    header.append("data_source")
+    header.append("ontology")
+    header.append("experiment")
+    header.append("xreflsid")
+
+    exps = obs.distinct("study")
+    for exp in exps:
+        header = set(header) | set(exp.targets)
+    return header
+
+
+def check_realm(realm):
+    re.match()
+
+
+class Query:
+    @staticmethod
+    def result(request, infmt, qry):
+        try:
+            if(infmt == "python"):
+                import pql
+                qry = pql.find(qry)
+            else:
+                qry = eval(qry)
+        except Exception as inst:
+            Logger.Error(type(inst))    # the exception instance
+            Logger.Error(inst.args)     # arguments stored in .args
+            Logger.Error(inst) 
+            return Error.error("Syntax Error in " + qry), False 
+
+        return qry, True
+
+
+class Error:
+    @staticmethod
+    def error(msg):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="error.csv"'
+        writer = csv.writer(response)
+        writer.writerow(["Error"])
+        writer.writerow(['"'+ msg + '"'])
+        return response
+
+
+class JsonQry(Endpoint):
+    def get(self, request, realm, fmt="csv"):
+        obs = False
+
+        try:
+            infmt = request.params.get('infmt')
+        except:
+            infmt = "json"
+
+        qry = request.params.get('qry')
+        qry, succ = Query.result(request, infmt, qry)
+        if not succ:
+            return qry
+
+        try:
+            cls = eval(to_camelcase(realm))
+        except:
+            return Error.error("Query on <b>" + realm  + "</b> not (yet) possible. Check spelling or use of underscore.")
+
+        obs = cls.objects(__raw__=qry)
+
+        if len(obs) == 0:
+            return HttpResponse("Query empty")
+
+        if(infmt=="json"):
+            return JsonResponse(obs.to_json(), safe=False)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="' + realm  + '.csv"'
+        writer = csv.writer(response)
+
+        if(cls.__base__ == Feature):
+            header = get_header(obs)
+        else:
+            header = obs[0].GetHeader()
+
+        writer.writerow(header)
+        for o in obs:
+            if hasattr(o, 'GetData'):
+                dat = o.GetData(header)
+                writer.writerow(dat)
+            else:
+                try:
+                    writer.writerow(GetData(o, header))
+                except:
+                    return HttpResponse("Query on " + realm  + " not (yet) possible.")
+        return response
+
+
+def page_main(request):
+    return redirect("/experimentsearch")

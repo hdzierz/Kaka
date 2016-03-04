@@ -49,6 +49,7 @@ class Ontology(mongoengine.EmbeddedDocument):
     def __unicode__(self):
         return self.name
 
+
 """ Class for referencing meta data around the source of the data. 
 You will usually get file names here.
 
@@ -63,6 +64,17 @@ class DataSource(mongoengine.Document):
     is_active = mongoengine.BooleanField(default=False)
     values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
     search_index = VectorField()
+
+
+    def GetHeader(self):
+        return [
+                "name",
+                "typ",
+                "source",
+                "supplier",
+                "supplieddate",
+                "comment",
+            ]
 
     def GetName(self):
         return self.name
@@ -121,6 +133,18 @@ class Experiment(mongoengine.Document):
     createddate = mongoengine.DateTimeField(default=datetime.now())
     createdby = mongoengine.StringField(max_length=255)
     description = mongoengine.StringField(default="")
+    targets = mongoengine.ListField()
+
+    def GetHeader(self):
+        return [
+                "id",
+                "name",
+                "pi",
+                "createddate",
+                "createdby",
+                "description",
+                "targets",
+            ]
 
     def __unicode__(self):
         return self.name
@@ -163,17 +187,34 @@ def make_table_experiment(experiment):
     )
 
 
+class Design(mongoengine.Document):
+    study = mongoengine.ReferenceField(Experiment)
+    experiment = mongoengine.StringField(max_length=255, default="unknown")
+    phenotype = mongoengine.StringField(max_length=255, default="unknown")
+    condition = mongoengine.StringField(max_length=255, default="unknown")
+    typ = mongoengine.StringField(max_length=255, default="unknown")
+    notes = mongoengine.StringField(max_length=255, default="unknown")
+
+    def GetHeader(self):
+        return [
+            "phenotype",
+            "condition",
+            "typ",
+        ]
+
+
 """ Class that holds features with observations attached
 """
-class Feature(mongoengine.Document):
-    fmt = "csv"
-
+class Feature(mongoengine.DynamicDocument):
+    group = mongoengine.StringField(max_length=255, default="unknown")
     name = mongoengine.StringField(max_length=255, default="unknown")
     dtt = mongoengine.DateTimeField(default=timezone.now)
     geom = PointField(default={'type': 'Point', 'coordinates': [0, 0]})    
     alias = mongoengine.StringField(max_length=255, default="unknown")
     datasource = mongoengine.ReferenceField(DataSource)
+    data_source = mongoengine.StringField(max_length=255, default="unknown")
     study = mongoengine.ReferenceField(Experiment)
+    experiment = mongoengine.StringField(max_length=255, default="unknown")
     description = mongoengine.StringField(default="")
     ontology = mongoengine.EmbeddedDocumentField(Ontology)
     xreflsid = mongoengine.StringField(max_length=255)
@@ -184,15 +225,41 @@ class Feature(mongoengine.Document):
     obkeywords = mongoengine.StringField()
     statuscode = mongoengine.IntField(default=1)
     search_index = VectorField()
-
-
     obs = mongoengine.DictField()
 
-    def GetData(self, fmt="csv"):
+
+    def GetHeader(self):
+        header = []
+        header.append("name")
+        header.append("datasource")
+        header.append("ontology")
+        header.append("study")
+        header.append("xreflsid")
+        for t in self.study.targets:
+            header.append(t)
+ 
+        return header 
+
+    def GetData(self, header=False):
+        if not header:
+            header = self.GetHeader()
+
         res = []
-        for h in self.header:
+        for h in header:
+            try:
+                res.append(getattr(self, h))
+            except:
+                res.append("None")
+                Logger.Warning("Header " + h  + "h does not exist in: " + self.name)
+
+        return res
+
+    def GetDataObs(self, fmt="csv"):
+        header = self.study.targets
+        res = []
+        for h in header:
             res.append(self.obs[h])
-        return ','.res
+        return res
 
     @classmethod
     def InitOntology(cls):
@@ -215,7 +282,8 @@ class Feature(mongoengine.Document):
         return True
 
     meta = {
-        'allow_inheritance': True, 'abstract': True
+        'allow_inheritance': True, 
+        'abstract': True
     }
 
 
@@ -244,7 +312,7 @@ class Species(Feature):
         return self.name
 
 
-def SaveKV(ob, key, value, save=False):
+def SaveKV2(ob, key, value, save=False):
     key = key.replace(".", "-")
     if hasattr(ob, 'obs'):
         # As dictfields in mongoengine default to an empty dictionary, assumes ob.obs is a dictionary
@@ -257,12 +325,43 @@ def SaveKV(ob, key, value, save=False):
     if save:
         ob.save()
 
+import re
+def SaveKV(ob, key, value, save=False):
+    if key:
+        key = re.sub('[^0-9a-zA-Z_]+', '_', key)
+        setattr(ob, key, value)
+
+    if save:
+        ob.save()
 
 def SaveKVs(ob, lst, save=False):
     for key, value in list(lst.items()):
         SaveKV(ob, key, value)
     if save:
         ob.save()
+
+
+def GetData(ob, header=False):
+    res = []
+
+    if not header:
+        header = ob.GetHeader()
+
+    for h in header:
+        try:
+            res.append(getattr(ob, h))
+        except:
+            res.append("NA")
+            Logger.Warning("Header " + h  + " does not exist in: " + self.name)
+
+    return res
+
+
+def GetDataObs(ob, header, fmt="csv"):
+    res = []
+    for h in header:
+        res.append(ob.obs[h])
+    return res
 
 
 def GetKV(ob, key):

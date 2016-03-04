@@ -1,8 +1,12 @@
-from seafood.models import *
+from mongseafood.models import *
+from mongcore.models import *
+from mongcore.logger import *
 
 def run():
-    onto = Ontology.objects.get(name="Term")
-    ds, ceated = DataSource.objects.get_or_create(name = "Loading Fish Scores", ontology=onto, supplier="Seafood")
+    onto = Ontology(name="Term")
+    ds, ceated = DataSource.objects.get_or_create(name = "Loading Fish Scores", supplier="Seafood")
+
+    Logger.Message("Import started")
 
     Term.objects.all().delete()
 
@@ -255,6 +259,6 @@ def run():
     fs.values = { 'minor': 1, 'moderate': 9, 'major': 17 }
     fs.save()
 
-
+    Logger.Message("Import Finished")
 
 
