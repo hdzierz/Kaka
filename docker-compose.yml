@@ -92,7 +92,7 @@ pyrat:
      - dummy:dummy
      - http_proxy:http://proxy.pfr.co.nz:8080
      - https_proxy:http://proxy.pfr.co.nz:8080
-     - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
+     - no_proxy:web,mongo,localhost,127.0.0.1,*.pfr.co.nz,::1
 rstudio:
   build: .
   dockerfile: Dockerfile_rstudio
