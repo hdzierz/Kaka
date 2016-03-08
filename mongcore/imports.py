@@ -51,8 +51,10 @@ class ImportOp:
     def __init__(self):
         pass
 
-    # def Op():
-    #     pass
+    def LoadOp():
+         pass
 
+    def CleanOp():
+        pass
 
-
+    

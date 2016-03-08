@@ -16,10 +16,24 @@ from mongcore.algorithms import *
 from kaka.settings import TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
 
+from mongenotype.import_ops import ImportOp, LoadOps, created_doc_ids
+
 testing = False
 db_alias = 'default'
 path_string = "data/"
-created_doc_ids = []
+#created_doc_ids = []
+
+
+def load_conn(fn, cfg, typ):
+    if typ in cfg:
+        fmt = cfg[typ]["Format"]
+        if fmt == "csv":
+            conn = CsvConnector(fn, cfg[typ]["Delimiter"], cfg[typ]["Gzipped"])
+        elif fmt == "xlsx":
+            conn = ExcelConnector(fn, cfg[typ]["Sheet"])
+        return conn
+    else:
+        raise Exception("ERROR: Configuration failed when loading data: " + str(cfg))
 
 
 def run():
@@ -68,11 +82,21 @@ def load_in_dir(path):
     if '_loaded' in config_dic and config_dic['_loaded'] == True:
         # skips this directory if it is recorded as already loaded into db
         return
+
     build_dic = init_for_all(path, config_dic)
-    for file_path in path.glob("*.gz"):
+    if "Design" in build_dic:
+        pattern = build_dic["Design"]["Name"]
+        for file_path in path.glob(pattern):
+            Logger.Message("Processing: " + str(file_path))
+            init_file(file_path, build_dic)
+            load(str(file_path), build_dic, "Design")
+   
+    pattern = build_dic["Data"]["Name"]
+    for file_path in path.glob(pattern):
         Logger.Message("Processing: " + str(file_path))
         init_file(file_path, build_dic)
-        load(str(file_path))
+        load(str(file_path), build_dic, "Data")
+
     config_parser.mark_loaded()
 
 
@@ -92,12 +116,9 @@ def init_for_all(path, config_dic):
             created_doc_ids.append((Experiment, ex.id))
 
     # Sets the values common to all genotype docs made from the given path
-    Import.study = ex
-    if "Design" in build_dic:
-        load_design("data/gene_expression/" + build_dic['Design'])
-    Import.createddate = build_dic['createddate']
-    Import.description = build_dic['description']
-    Import.gen_col = build_dic['Genotype Column']
+    ImportOp.study = ex
+    ImportOp.cfg = build_dic
+
     return build_dic
 
 
@@ -110,7 +131,7 @@ def init_file(file_path, build_dic):
         if created:  # add to record of docs saved to db by this run through
             created_doc_ids.append((DataSource, ds.id))
 
-    Import.ds = ds
+    ImportOp.ds = ds
 
 
 def make_field_dic(document, build_dic):
@@ -122,71 +143,13 @@ def make_field_dic(document, build_dic):
             field_dic[key] = build_dic[key]
     return field_dic
 
-import re
-class Import:
-    ds = None
-    study = None
-    createddate = None
-    description = None
-    gen_col = None
 
-    @staticmethod
-    def laod_design_op(line, succ):
-        d = Design()
-        d.phenotype = line["phenotype"]
-        d.condition = line["condition"]
-        d.typ = line["type"]
-        d.study = Import.study
-        d.experiment = Import.study.name
-        d.save()
-
-    @staticmethod
-    def load_op(line, succ):
-        try:
-            pr = Genotype(
-                name=line[Import.gen_col], 
-                study=Import.study, 
-                experiment=Import.study.name,
-                datasource=Import.ds,
-                data_source=Import.ds.name,
-                createddate=Import.createddate, 
-                description=Import.description,
-            )
-            SaveKVs(pr, line)
-            pr.switch_db(db_alias)
-            pr.save()
-            # add to record of docs saved to db by this run through
-            created_doc_ids.append((Genotype, pr.id))
-
-            if not Import.study.targets:
-                keys = [] 
-                for key in line.keys():
-                    key = re.sub('[^0-9a-zA-Z_]+', '_', key)
-                    keys.append(key)
-
-                Import.study.targets = list(keys)
-                Import.study.save()
-        except:
-            Logger.Error("Linen did not save")
-
-        return True
-
-    @staticmethod
-    def clean_op():
-        Genotype.objects.filter(datasource=Import.ds).delete()
-
-
-def load_design(fn):
-    conn = CsvConnector(fn, delimiter=',', gzipped=False)
-    succ = False
-    succ = accumulate(conn, Import.laod_design_op,  succ)
-
-
-def load(fn):
-    conn = CsvConnector(fn, delimiter='\t', gzipped=True)
+def load(fn, cfg, typ):
+    #load_imp_op(cfg["Realm"])
+    conn = load_conn(fn=fn, cfg=cfg, typ=typ)
     im = GenericImport(conn)
-    im.load_op = Import.load_op
-    im.clean_op = Import.clean_op
+    im.load_op = LoadOps[typ]
+    im.clean_op = ImportOp.clean_op
     im.Clean()
     im.Load()
 
@@ -195,6 +158,7 @@ def config_dic_to_build_dic(config_dic):
     # Creates a copy of the given dictionary (usually parsed from a config file), with
     # some key names changed to match the document fields
     build_dic = {}
+
     for key in config_dic:
         if key == "Experiment Description":
             build_dic['description'] = config_dic[key]
@@ -206,6 +170,7 @@ def config_dic_to_build_dic(config_dic):
             build_dic['supplieddate'] = config_dic[key]
         else:
             build_dic[key] = config_dic[key]
+    print(config_dic)
     return build_dic
 
 

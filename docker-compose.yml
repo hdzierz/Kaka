@@ -79,12 +79,15 @@ pyrat:
 #  image: cfljam/pyrat
   build: .
   dockerfile: Dockerfile_pyrat
+  volumes:
+    - /Users/cfphxd/PyKaka:/tmp/PyKaka
+    - /Users/cfphxd/rkaka:/tmp/rkaka
 #  volumes:
 #    - /input:/input
 #    - /output:/output
 #    - /workspace:/workspace
   ports:
-    - "8889:8888"
+    - "8888:8888"
   links:
     - web
     - mongo

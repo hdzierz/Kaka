@@ -32,6 +32,12 @@ It is also been used in the signals section
 class DataError(Exception):
     pass
 
+
+class ImportOp(mongoengine.Document):
+    op = mongoengine.StringField(max_length=2048)
+    realm = mongoengine.StringField(max_length=2048)
+    ftyp = mongoengine.StringField(max_length=2048)
+
 """ Class for Ontology terms
 
 
