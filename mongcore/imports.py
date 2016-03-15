@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # from .models import *
 # from .logger import *
-from .algorithms import accumulate
+from .algorithms import *
 #from .connectors import *
 
 
@@ -19,28 +19,61 @@ def is_int(s):
         return None
 
 
+class ImportOpRegistry:
+    _ops = {}
+
+    @staticmethod
+    def register(realm, typ, op):
+        if realm not in ImportOpRegistry._ops:
+            ImportOpRegistry._ops[realm] = {}
+
+        ImportOpRegistry._ops[realm][typ] = op
+
+    @staticmethod
+    def get(realm, typ):
+        return ImportOpRegistry._ops[realm.lower()][typ.lower()]
+
+
+class ImportOpValidationRegistry(ImportOpRegistry):
+    _ops = {}
+
+    @staticmethod
+    def register(realm, typ, op):
+        if realm not in ImportOpValidationRegistry._ops:
+            ImportOpValidationRegistry._ops[realm] = {}
+
+        ImportOpValidationRegistry._ops[realm][typ] = op
+
+    @staticmethod
+    def get(realm, typ):
+        print(ImportOpValidationRegistry._ops)
+        return ImportOpValidationRegistry._ops[realm.lower()][typ.lower()]
+
+
 class GenericImport:
     conn = None
-    load_op = None
-    load_design_op = None
-    clean_op = None
-    ds = None
     header = None
-    study = None
+    experiment = None
+    data_source = None
+    imp = None
+    clean_op = None
+    load_op = None
+    val_op = None
 
-    def __init__(self, conn, study=None, ds=None):
-        self.study = study
-        self.ds = ds
+    def __init__(self, conn, exp=None, ds=None):
+        self.experiment = exp
+        self.data_source = ds
         self.conn = conn
 
     def Clean(self):
-        self.clean_op()
+        self.clean_op(self)
 
     def Load(self):
         self.header = self.conn.header
-        succ = False
-        succ = accumulate(self.conn, self.load_op, succ)
-        return succ
+        if(self.val_op):
+            acc_validate(self.conn, self.load_op, self.val_op, self)
+        else:
+            accumulate(self.conn, self.load_op, self)
 
     def Close(self):
         self.conn.close()
@@ -57,4 +90,6 @@ class ImportOp:
     def CleanOp():
         pass
 
-    
+  
+
+  

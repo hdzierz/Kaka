@@ -8,15 +8,19 @@ from pathlib import Path
 from .configuration_parser import get_parser_from_path
 from mongcore.query_set_helpers import fetch_or_save
 from mongcore.models import DataSource, Experiment, SaveKVs, Design
-from mongenotype.models import Genotype, Primer
 from mongcore.connectors import CsvConnector
-from mongcore.imports import GenericImport
+from mongcore.imports import * 
 from mongcore.logger import Logger
 from mongcore.algorithms import *
 from kaka.settings import TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
 
-from mongenotype.import_ops import ImportOp, LoadOps, created_doc_ids
+from mongenotype.models import Genotype, Primer
+from mongkiwifruit.models import * 
+
+from mongenotype.import_ops import *
+from mongkiwifruit.import_ops import *
+from mongseafood.import_ops import *
 
 testing = False
 db_alias = 'default'
@@ -24,13 +28,15 @@ path_string = "data/"
 #created_doc_ids = []
 
 
-def load_conn(fn, cfg, typ):
+def load_conn(fn, cfg, typ, sheet=None):
     if typ in cfg:
         fmt = cfg[typ]["Format"]
         if fmt == "csv":
             conn = CsvConnector(fn, cfg[typ]["Delimiter"], cfg[typ]["Gzipped"])
         elif fmt == "xlsx":
-            conn = ExcelConnector(fn, cfg[typ]["Sheet"])
+            if not sheet:
+                sheet = cfg[typ]["Sheet"]
+            conn = ExcelConnector(fn, sheet)
         return conn
     else:
         raise Exception("ERROR: Configuration failed when loading data: " + str(cfg))
@@ -83,19 +89,15 @@ def load_in_dir(path):
         # skips this directory if it is recorded as already loaded into db
         return
 
-    build_dic = init_for_all(path, config_dic)
-    if "Design" in build_dic:
-        pattern = build_dic["Design"]["Name"]
-        for file_path in path.glob(pattern):
-            Logger.Message("Processing: " + str(file_path))
-            init_file(file_path, build_dic)
-            load(str(file_path), build_dic, "Design")
-   
-    pattern = build_dic["Data"]["Name"]
-    for file_path in path.glob(pattern):
-        Logger.Message("Processing: " + str(file_path))
-        init_file(file_path, build_dic)
-        load(str(file_path), build_dic, "Data")
+    build_dic, ex = init_for_all(path, config_dic)
+
+    for item in config_dic:
+        if type(config_dic[item]) is dict and "Format" in config_dic[item]: 
+            pattern = config_dic[item]["Name"]
+            for file_path in path.glob(pattern):
+                Logger.Message("Processing: " + str(file_path))
+                ds = init_file(file_path, build_dic)
+                load(fn=str(file_path), cfg=build_dic,ex=ex, ds=ds, typ=item)
 
     config_parser.mark_loaded()
 
@@ -109,17 +111,14 @@ def init_for_all(path, config_dic):
     # creates the dictionary to use for keyword args to fetch or save documents with
     build_dic = config_dic_to_build_dic(config_dic)
     build_dic['name'] = name
+    build_dic['realm'] = build_dic['Realm'] 
 
     with switch_db(Experiment, db_alias) as Exper:
         ex, created = fetch_or_save(Exper, db_alias=db_alias, **make_field_dic(Exper, build_dic))
         if created:  # add to record of docs saved to db by this run through
             created_doc_ids.append((Experiment, ex.id))
 
-    # Sets the values common to all genotype docs made from the given path
-    ImportOp.study = ex
-    ImportOp.cfg = build_dic
-
-    return build_dic
+    return build_dic, ex
 
 
 def init_file(file_path, build_dic):
@@ -131,7 +130,7 @@ def init_file(file_path, build_dic):
         if created:  # add to record of docs saved to db by this run through
             created_doc_ids.append((DataSource, ds.id))
 
-    ImportOp.ds = ds
+    return ds
 
 
 def make_field_dic(document, build_dic):
@@ -144,15 +143,29 @@ def make_field_dic(document, build_dic):
     return field_dic
 
 
-def load(fn, cfg, typ):
-    #load_imp_op(cfg["Realm"])
-    conn = load_conn(fn=fn, cfg=cfg, typ=typ)
-    im = GenericImport(conn)
-    im.load_op = LoadOps[typ]
-    im.clean_op = ImportOp.clean_op
+def load(fn, cfg, ex, ds , typ):
+    fmt = cfg[typ]["Format"]
+    if fmt=="xlsx" and cfg[typ]["Sheet"] == "ALL":
+        sheets = ExcelConnector.GetSheets(fn) 
+        for sheet in sheets:
+            conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
+            load_data(conn, cfg, ex, ds , typ)
+    else:
+        conn = load_conn(fn=fn, cfg=cfg, typ=typ)
+        load_data(conn, cfg, ex, ds , typ)
+
+
+def load_data(conn, cfg, ex, ds , typ):
+    im = GenericImport(conn=conn, exp=ex, ds=ds)
+    im.id_column = cfg['ID Column']
+    im.load_op = ImportOpRegistry.get(cfg["Realm"], typ) 
+    im.clean_op = ImportOpRegistry.get(cfg["Realm"], "clean")
+    try:
+        im.val_op = ImportOpValidationRegistry.get(cfg["Realm"], typ)
+    except:
+        Logger.Warning("No validator for " + cfg["Realm"] + "/" + typ + "!")
     im.Clean()
     im.Load()
-
 
 def config_dic_to_build_dic(config_dic):
     # Creates a copy of the given dictionary (usually parsed from a config file), with

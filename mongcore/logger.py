@@ -2,6 +2,15 @@ import datetime
 import os
 #import logging
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class Logger:
     log_dir = '/tmp/nunz/'
@@ -26,14 +35,17 @@ class Logger:
 
     @staticmethod
     def Warning(msg):
+        print(bcolors.WARNING + msg + bcolors.ENDC)
         Logger.Log("WARNING", Logger.log_dir + Logger.log_wrn, msg)
 
     @staticmethod
     def Error(msg):
+        print(bcolors.FAIL + msg + bcolors.ENDC)
         Logger.Log("ERROR", Logger.log_dir + Logger.log_err, msg)
 
     @staticmethod
     def Message(msg):
+        print(bcolors.OKBLUE + msg + bcolors.ENDC)
         Logger.Log("MESSAGE", Logger.log_dir + Logger.log_msg, msg)
 
 

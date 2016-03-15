@@ -131,10 +131,11 @@ class Term(mongoengine.Document):
 class Experiment(mongoengine.Document):
 
     field_names = [
-        'Name', 'Primary Investigator', 'Date Created', 'Description'
+        'Realm', 'Name', 'Primary Investigator', 'Date Created', 'Description'
     ]
 
     name = mongoengine.StringField(max_length=2048, default="Unknown")
+    realm =  mongoengine.StringField(max_length=2048, default="Unknown") 
     pi = mongoengine.StringField(max_length=2048, default="Unknown")
     createddate = mongoengine.DateTimeField(default=datetime.now())
     createdby = mongoengine.StringField(max_length=255)
@@ -145,6 +146,7 @@ class Experiment(mongoengine.Document):
         return [
                 "id",
                 "name",
+                "realm",
                 "pi",
                 "createddate",
                 "createdby",
@@ -217,9 +219,9 @@ class Feature(mongoengine.DynamicDocument):
     dtt = mongoengine.DateTimeField(default=timezone.now)
     geom = PointField(default={'type': 'Point', 'coordinates': [0, 0]})    
     alias = mongoengine.StringField(max_length=255, default="unknown")
-    datasource = mongoengine.ReferenceField(DataSource)
+    data_source_obj = mongoengine.ReferenceField(DataSource)
     data_source = mongoengine.StringField(max_length=255, default="unknown")
-    study = mongoengine.ReferenceField(Experiment)
+    experiment_obj = mongoengine.ReferenceField(Experiment)
     experiment = mongoengine.StringField(max_length=255, default="unknown")
     description = mongoengine.StringField(default="")
     ontology = mongoengine.EmbeddedDocumentField(Ontology)

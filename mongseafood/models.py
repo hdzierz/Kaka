@@ -43,7 +43,11 @@ class Crew(Feature):
 
 
 class Tree(Feature):
-    pass
+    def __unicode__(self):
+        return self.name
+
+    def GetName(self):
+        return self.name
 
 
 class Trip(Feature):
