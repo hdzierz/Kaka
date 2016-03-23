@@ -7,9 +7,11 @@ before_install:
  - cp Dockerfile_web Dockerfile_web_tmpl
  - cp Dockerfile_shinyr Dockerfile_shinyr_tmpl
  - cp Dockerfile_mongo Dockerfile_mongo_tmpl
+ - cp Dockerfile_pyrat Dockerfile_pyrat_tmpl
  - grep -vi proxy docker-compose_tmpl.yml > docker-compose.yml
  - grep -vi proxy Dockerfile_web_tmpl > Dockerfile_web
  - grep -vi proxy Dockerfile_shinyr_tmpl > Dockerfile_shinyr
+ - grep -vi proxy Dockerfile_pyrat_tmpl > Dockerfile_pyrat
  - grep -vi proxy Dockerfile_mongo_tmpl > Dockerfile_mongo
 
 script:
