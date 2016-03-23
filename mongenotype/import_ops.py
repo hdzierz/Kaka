@@ -29,11 +29,13 @@ class ImportOp:
     @staticmethod
     def load_design_op(line, imp):
         d = Design()
-        d.phenotype = line["phenotype"]
-        d.condition = line["condition"]
+        d.phenotype = str(line[imp.id_column])
+        d.condition = str(line["condition"])
         d.typ = line["type"]
         d.study = imp.experiment
         d.experiment = imp.experiment.name
+        SaveKVs(d, line)
+        d.switch_db(db_alias)
         d.save()
         return imp
    
@@ -46,6 +48,7 @@ class ImportOp:
         #try:
         pr = Genotype(
             name=line[imp.id_column],
+            group=imp.group,
             experiment_obj=imp.experiment,
             experiment=imp.experiment.name,
             data_source_obj=imp.data_source,
@@ -70,16 +73,17 @@ class ImportOp:
 
         #except:
         #    Logger.Error("Line did not save")
-
         return imp
 
     @staticmethod
     def clean_op(imp):
-        Genotype.objects.filter(experiment=imp.experiment.name).delete()
-        Design.objects.filter(experiment=imp.experiment.name).delete()
+        pass
+        #Genotype.objects.filter(experiment=imp.experiment.name).delete()
+        #Design.objects.filter(experiment=imp.experiment.name).delete()
 
 ImportOpValidationRegistry.register("genotype","design", ImportOp.validate_design_op)
 #ImportOpValidationRegistry.register("genotype","data", ImportOp.validate_design_op)
 ImportOpRegistry.register("genotype", "design", ImportOp.load_design_op)
 ImportOpRegistry.register("genotype", "data", ImportOp.load_op)
 ImportOpRegistry.register("genotype", "clean", ImportOp.clean_op)
+ImportOpRegistry.register("genotype", "default", ImportOp.load_op)

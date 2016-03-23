@@ -25,7 +25,7 @@ class Genotype(Feature):
         name = self.name
         if self.kea_id is not None and self.ebrida_id is not None:
             name = name + '/' + self.kea_id + '/' + self.ebrida_id
-        name = name + '/' + self.datasource.GetName()
+        name = name + '/' + self.data_source
         return name
 
 

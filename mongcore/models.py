@@ -33,10 +33,10 @@ class DataError(Exception):
     pass
 
 
-class ImportOp(mongoengine.Document):
-    op = mongoengine.StringField(max_length=2048)
+class DataDir(mongoengine.Document):
+    name = mongoengine.StringField(max_length=2048)
+    path = mongoengine.StringField(max_length=2048)
     realm = mongoengine.StringField(max_length=2048)
-    ftyp = mongoengine.StringField(max_length=2048)
 
 """ Class for Ontology terms
 
@@ -195,7 +195,7 @@ def make_table_experiment(experiment):
     )
 
 
-class Design(mongoengine.Document):
+class Design(mongoengine.DynamicDocument):
     study = mongoengine.ReferenceField(Experiment)
     experiment = mongoengine.StringField(max_length=255, default="unknown")
     phenotype = mongoengine.StringField(max_length=255, default="unknown")
@@ -239,11 +239,11 @@ class Feature(mongoengine.DynamicDocument):
     def GetHeader(self):
         header = []
         header.append("name")
-        header.append("datasource")
+        header.append("data_source")
         header.append("ontology")
-        header.append("study")
+        header.append("experiment")
         header.append("xreflsid")
-        for t in self.study.targets:
+        for t in self.experiment_obj.targets:
             header.append(t)
  
         return header 
@@ -263,7 +263,7 @@ class Feature(mongoengine.DynamicDocument):
         return res
 
     def GetDataObs(self, fmt="csv"):
-        header = self.study.targets
+        header = self.experiment_obj.targets
         res = []
         for h in header:
             res.append(self.obs[h])

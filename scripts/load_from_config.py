@@ -8,7 +8,7 @@ from pathlib import Path
 from .configuration_parser import get_parser_from_path
 from mongcore.query_set_helpers import fetch_or_save
 from mongcore.models import DataSource, Experiment, SaveKVs, Design
-from mongcore.connectors import CsvConnector
+from mongcore.connectors import CsvConnector, ExcelConnector
 from mongcore.imports import * 
 from mongcore.logger import Logger
 from mongcore.algorithms import *
@@ -24,11 +24,11 @@ from mongseafood.import_ops import *
 
 testing = False
 db_alias = 'default'
-path_string = "data/"
+#path_string = "data/"
 #created_doc_ids = []
 
 
-def load_conn(fn, cfg, typ, sheet=None):
+def load_conn(fn, cfg, typ):
     if typ in cfg:
         fmt = cfg[typ]["Format"]
         if fmt == "csv":
@@ -50,16 +50,18 @@ def run():
     global created_doc_ids
     created_doc_ids = []
 
-    path = Path(path_string)
-    try:
-        look_for_config_dir(path)
-    except Exception as e:
-        Logger.Error(str(e))
-        # 'Cancels' the script, by removing from db all documents saved to db in this script run-through
-        for doc_type, doc_id in created_doc_ids:
-            with switch_db(doc_type, db_alias) as Col:
-                Col.objects.get(id=doc_id).delete()
-        raise e
+    dirs = DataDir.objects.all()
+    for d in dirs:
+        path = Path(d.path)
+        try:
+            look_for_config_dir(path)
+        except Exception as e:
+            Logger.Error(str(e))
+            # 'Cancels' the script, by removing from db all documents saved to db in this script run-through
+            for doc_type, doc_id in created_doc_ids:
+                with switch_db(doc_type, db_alias) as Col:
+                    Col.objects.get(id=doc_id).delete()
+            raise e
 
 
 def look_for_config_dir(path):
@@ -92,12 +94,13 @@ def load_in_dir(path):
     build_dic, ex = init_for_all(path, config_dic)
 
     for item in config_dic:
-        if type(config_dic[item]) is dict and "Format" in config_dic[item]: 
-            pattern = config_dic[item]["Name"]
-            for file_path in path.glob(pattern):
-                Logger.Message("Processing: " + str(file_path))
-                ds = init_file(file_path, build_dic)
-                load(fn=str(file_path), cfg=build_dic,ex=ex, ds=ds, typ=item)
+        if type(config_dic[item]) is dict:
+            if "Format" in config_dic[item]: 
+                pattern = config_dic[item]["Name"]
+                for file_path in path.glob(pattern):
+                    Logger.Message("Processing: " + str(file_path))
+                    ds = init_file(file_path, build_dic)
+                    load(fn=str(file_path), cfg=build_dic,ex=ex, ds=ds, typ=item)
 
     config_parser.mark_loaded()
 
@@ -106,7 +109,7 @@ def init_for_all(path, config_dic):
     # Gets the name for the experiment and data_source documents from the directory name
     posix_path = path.as_posix()
     dir_list = posix_path.split("/")
-    name = dir_list[-1]
+    name = config_dic["Experiment Code"]
 
     # creates the dictionary to use for keyword args to fetch or save documents with
     build_dic = config_dic_to_build_dic(config_dic)
@@ -148,8 +151,13 @@ def load(fn, cfg, ex, ds , typ):
     if fmt=="xlsx" and cfg[typ]["Sheet"] == "ALL":
         sheets = ExcelConnector.GetSheets(fn) 
         for sheet in sheets:
+            Logger.Message("Processing sheet:" + sheet)
             conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
             load_data(conn, cfg, ex, ds , typ)
+    elif fmt=="xlsx":
+        sheet = cfg[typ]["Sheet"]  
+        conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
+        load_data(conn, cfg, ex, ds , typ)
     else:
         conn = load_conn(fn=fn, cfg=cfg, typ=typ)
         load_data(conn, cfg, ex, ds , typ)
@@ -157,8 +165,18 @@ def load(fn, cfg, ex, ds , typ):
 
 def load_data(conn, cfg, ex, ds , typ):
     im = GenericImport(conn=conn, exp=ex, ds=ds)
-    im.id_column = cfg['ID Column']
-    im.load_op = ImportOpRegistry.get(cfg["Realm"], typ) 
+    im.id_column = cfg[typ]['ID Column']
+    if "Group" in cfg[typ]:
+        im.group = cfg[typ]["Group"]
+    else:
+        im.group = "None"
+
+    try:
+        im.load_op = ImportOpRegistry.get(cfg["Realm"], typ) 
+    except:
+        Logger.Warning("No operator for " + cfg["Realm"] + "/" + typ + "! Use default")
+        im.load_op = ImportOpRegistry.get(cfg["Realm"], "default")
+
     im.clean_op = ImportOpRegistry.get(cfg["Realm"], "clean")
     try:
         im.val_op = ImportOpValidationRegistry.get(cfg["Realm"], typ)

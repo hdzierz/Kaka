@@ -46,7 +46,6 @@ class ImportOpValidationRegistry(ImportOpRegistry):
 
     @staticmethod
     def get(realm, typ):
-        print(ImportOpValidationRegistry._ops)
         return ImportOpValidationRegistry._ops[realm.lower()][typ.lower()]
 
 
@@ -59,6 +58,7 @@ class GenericImport:
     clean_op = None
     load_op = None
     val_op = None
+    cfg = []
 
     def __init__(self, conn, exp=None, ds=None):
         self.experiment = exp

@@ -38,7 +38,7 @@ web:
   volumes:
     - .:/code
     #- /input:/input
-    #- /output:/output
+    - /Users/cfphxd/output:/output
     #- /workspace:/workspace
   ports:
     - "8001:80"

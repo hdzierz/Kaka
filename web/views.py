@@ -199,7 +199,7 @@ def get_header(obs):
     header.append("experiment")
     header.append("xreflsid")
 
-    exps = obs.distinct("study")
+    exps = obs.distinct("experiment_obj")
     for exp in exps:
         header = set(header) | set(exp.targets)
     return header

@@ -71,6 +71,7 @@ class Fish(Feature):
     form_completed = mongoengine.BooleanField(default=False)
     trip = mongoengine.ReferenceField(Trip)
     tow = mongoengine.ReferenceField(Tow)
+    species = mongoengine.ReferenceField(Species)
 
     def __unicode__(self):
         return str(self.GetName())
