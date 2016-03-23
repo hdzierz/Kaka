@@ -11,7 +11,7 @@ ADD req_pyrat.txt req_pyrat.txt
 RUN mkdir /tmp/PyKaka; \
     mkdir /tmp/rkaka;
 
-RUN Rscript -e 'devtools::install_github("hdzierz/rkaka")';
+RUN Rscript -e 'devtools::install_github("hdzierz/rkaka", ref="lod_lib")';
 
 # test
 RUN pip2.7 install --upgrade pip;\
