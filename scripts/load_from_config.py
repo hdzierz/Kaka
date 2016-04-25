@@ -27,6 +27,8 @@ db_alias = 'default'
 #path_string = "data/"
 #created_doc_ids = []
 
+MODE = "PRESERVE"
+
 
 def load_conn(fn, cfg, typ, sheet=None):
     if typ in cfg:
@@ -43,8 +45,13 @@ def load_conn(fn, cfg, typ, sheet=None):
         raise Exception("ERROR: Configuration failed when loading data: " + str(cfg))
 
 
-def run():
-    Logger.Message("Loading process started.")
+def run(*args):
+    global MODE
+    if 'override' in args:
+        Logger.Warning("OVERRIDE MODE!")
+        MODE = "OVERRIDE"
+
+    Logger.Message("Loading process in mode: " + MODE  + "started.")
     global db_alias
     if testing:
         db_alias = TEST_DB_ALIAS
@@ -77,6 +84,7 @@ def look_for_config_dir(path):
 
 
 def load_in_dir(path):
+    global MODE
     Logger.Message("Processing: " + str(path))
 
     if isinstance(path, str):
@@ -94,7 +102,9 @@ def load_in_dir(path):
     if '_loaded' in config_dic and config_dic['_loaded'] == True:
         Logger.Warning("Data already loaded:" + config_dic['Realm'] + "/" + config_dic['Experiment Code'])
         # skips this directory if it is recorded as already loaded into db
-        return
+        if(MODE=="PRESERVE"):
+            Logger.Warning("Mode preserve. Not loading data.")
+            return
 
     build_dic, ex = init_for_all(path, config_dic)
 
