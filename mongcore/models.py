@@ -38,6 +38,9 @@ class DataDir(mongoengine.Document):
     path = mongoengine.StringField(max_length=2048)
     realm = mongoengine.StringField(max_length=2048)
 
+    def __unicode__(self):
+        return self.name + "/" + self.realm + "/" + self.path
+
 """ Class for Ontology terms
 
 
@@ -205,9 +208,11 @@ class Design(mongoengine.DynamicDocument):
 
     def GetHeader(self):
         return [
+            "experiment",
             "phenotype",
             "condition",
             "typ",
+            "notes", 
         ]
 
 
@@ -239,6 +244,7 @@ class Feature(mongoengine.DynamicDocument):
     def GetHeader(self):
         header = []
         header.append("name")
+        header.append("group")
         header.append("data_source")
         header.append("ontology")
         header.append("experiment")

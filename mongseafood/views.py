@@ -38,6 +38,7 @@ def build_tree():
 
 def page_seafood(request):
     tree = build_tree()
+    
 
     return render(request, "page_seafood.html", {"tree": tree, })
 

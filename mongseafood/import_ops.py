@@ -64,7 +64,7 @@ class ImportSeafoodOp():
         tow_name = 'Tow_%d' % convert_int(line['Tow Number'])
         tow, created = Tow.objects.get_or_create(name=tow_name, trip=trip)
 
-        fish_name = 'Fish_%d' % line['Fish Number']
+        fish_name = 'Fish_' + '_' + line['Vessel name']  + '_' + str(line['Trip'])  + '_' + str(line['Tow Number'])  + '_' + str(line['Fish Number'])
 
         fob = Fish()
         fob.name = fish_name
@@ -78,7 +78,32 @@ class ImportSeafoodOp():
         SaveKVs(fob, line)
         fob.save()
 
+        keys = []
+        for key in line.keys():
+            key = re.sub('[^0-9a-zA-Z_]+', '_', key)
+            keys.append(key)
+
+        imp.experiment.targets = list(keys)
+        imp.experiment.save()
+
         return imp
+
+    @staticmethod
+    def load_tow_op(line, imp):
+        sp, created = Species.objects.get_or_create(name=line['Species'])
+        tow_name = "Tow_" + line["Trip Number"] + "_" + line["Tow Number"]
+        ob = Tow()
+        ob.name = tow_name
+        ob.recordeddate = datetime.datetime.now()
+        ob.data_source_obj = imp.data_source
+        ob.data_source = imp.data_source.name
+        ob.experiment_obj = imp.experiment
+        ob.experiment = imp.experiment.name
+        SaveKVs(ob, line)
+        ob.save()
+
+        
+
 
     @staticmethod
     def clean_op(imp):

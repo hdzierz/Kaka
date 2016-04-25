@@ -46,6 +46,18 @@ class Tree(Feature):
     def __unicode__(self):
         return self.name
 
+    def GetHeader(self):
+        header = []
+        header.append("name")
+        header.append("experiment")
+        header.append("Level_1")
+        header.append("Level_2")
+        header.append("Level_3")
+        header.append("Level_4") 
+        header.append("Level_5")
+        header.append("Definition")
+        return header
+
     def GetName(self):
         return self.name
 

@@ -62,14 +62,13 @@ class ImportOp:
         # add to record of docs saved to db by this run through
         created_doc_ids.append((Genotype, pr.id))
 
-        if not imp.experiment.targets:
-            keys = []
-            for key in line.keys():
-                key = re.sub('[^0-9a-zA-Z_]+', '_', key)
-                keys.append(key)
-
-            imp.experiment.targets = list(keys)
-            imp.experiment.save()
+        keys = []
+        for key in line.keys():
+            key = re.sub('[^0-9a-zA-Z_]+', '_', key)
+            if(not key in imp.experiment.targets):
+                imp.experiment.targets.append(key)
+        
+        imp.experiment.save()
 
         #except:
         #    Logger.Error("Line did not save")

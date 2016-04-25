@@ -28,9 +28,10 @@ db_alias = 'default'
 #created_doc_ids = []
 
 
-def load_conn(fn, cfg, typ):
+def load_conn(fn, cfg, typ, sheet=None):
     if typ in cfg:
         fmt = cfg[typ]["Format"]
+        Logger.Message("Loading connector using format: " + fmt)
         if fmt == "csv":
             conn = CsvConnector(fn, cfg[typ]["Delimiter"], cfg[typ]["Gzipped"])
         elif fmt == "xlsx":
@@ -43,6 +44,7 @@ def load_conn(fn, cfg, typ):
 
 
 def run():
+    Logger.Message("Loading process started.")
     global db_alias
     if testing:
         db_alias = TEST_DB_ALIAS
@@ -52,6 +54,7 @@ def run():
 
     dirs = DataDir.objects.all()
     for d in dirs:
+        Logger.Message("Processing data dir: " + d.path)
         path = Path(d.path)
         try:
             look_for_config_dir(path)
@@ -74,6 +77,7 @@ def look_for_config_dir(path):
 
 
 def load_in_dir(path):
+    Logger.Message("Processing: " + str(path))
 
     if isinstance(path, str):
         path = Path(path)
@@ -88,6 +92,7 @@ def load_in_dir(path):
 
     config_dic = config_parser.read()
     if '_loaded' in config_dic and config_dic['_loaded'] == True:
+        Logger.Warning("Data already loaded:" + config_dic['Realm'] + "/" + config_dic['Experiment Code'])
         # skips this directory if it is recorded as already loaded into db
         return
 
@@ -101,6 +106,8 @@ def load_in_dir(path):
                     Logger.Message("Processing: " + str(file_path))
                     ds = init_file(file_path, build_dic)
                     load(fn=str(file_path), cfg=build_dic,ex=ex, ds=ds, typ=item)
+            else:
+                Logger.Error("Error in data load: No 'Format' given.")
 
     config_parser.mark_loaded()
 
@@ -182,7 +189,7 @@ def load_data(conn, cfg, ex, ds , typ):
         im.val_op = ImportOpValidationRegistry.get(cfg["Realm"], typ)
     except:
         Logger.Warning("No validator for " + cfg["Realm"] + "/" + typ + "!")
-    im.Clean()
+    #im.Clean()
     im.Load()
 
 def config_dic_to_build_dic(config_dic):
@@ -201,7 +208,6 @@ def config_dic_to_build_dic(config_dic):
             build_dic['supplieddate'] = config_dic[key]
         else:
             build_dic[key] = config_dic[key]
-    print(config_dic)
     return build_dic
 
 

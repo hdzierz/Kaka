@@ -18,6 +18,7 @@ from mongoengine.context_managers import switch_db
 from mongcore.query_from_request import QueryRequestHandler
 from scripts.configuration_parser import DateTimeJSONEncoder
 from mongenotype.models import *
+from mongseafood.models import *
 from django.core.urlresolvers import reverse_lazy
 
 from querystring_parser import parser
@@ -248,19 +249,27 @@ class JsonQry(Endpoint):
             infmt = "json"
 
         qry = request.params.get('qry')
-        qry, succ = Query.result(request, infmt, qry)
-        if not succ:
-            return qry
+        limited = False
+        if(not qry):
+            qry = "name==regex('.*')"
+            limited = True
+        try:
+            qry, succ = Query.result(request, infmt, qry)
+        except:
+            return Error.error("Query unsuccessful: " + qry + ". Check spelling.")
 
         try:
             cls = eval(to_camelcase(realm))
         except:
-            return Error.error("Query on <b>" + realm  + "</b> not (yet) possible. Check spelling or use of underscore.")
+            return Error.error("Query on <b>" + realm  + "</b> not (yet) possible. You might want to check the spelling particularly the use of underscores.")
 
-        obs = cls.objects(__raw__=qry)
+        if(limited):
+            obs = cls.objects(__raw__=qry)[:100]
+        else:
+            obs = cls.objects(__raw__=qry)
 
         if len(obs) == 0:
-            return HttpResponse("Query empty")
+            return HttpResponse("Query empty\n")
 
         if(infmt=="json"):
             return JsonResponse(obs.to_json(), safe=False)
@@ -269,10 +278,12 @@ class JsonQry(Endpoint):
         response['Content-Disposition'] = 'attachment; filename="' + realm  + '.csv"'
         writer = csv.writer(response)
 
-        if(cls.__base__ == Feature):
+        if hasattr(obs[0], 'GetHeader'):
+            header = obs[0].GetHeader()
+        elif(cls.__base__ == Feature):
             header = get_header(obs)
         else:
-            header = obs[0].GetHeader()
+            header = ["id", "name"]
 
         writer.writerow(header)
         for o in obs:

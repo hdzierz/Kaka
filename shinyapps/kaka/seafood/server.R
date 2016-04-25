@@ -1,5 +1,7 @@
 library(shiny)
 library(ggplot2)
+library(rkaka)
+
 
 choices <- c("crew", "fishob", "city") 
 
@@ -21,7 +23,7 @@ sanitise_header <-function(lst){
 
 get_seafood_headers <- function(selected){
 	selected <- sanitise_header(selected)
-    gs <- read.csv(paste('http://web:8000/report/tree/csv/', sep=''), header=TRUE)
+    gs <- kaka.qry("tree","")
     gs <- unique(gs$group)
     gs <- sanitise_header(gs)
     selected <- selected[! selected %in% gs]
@@ -58,7 +60,7 @@ shinyServer(function(input, output, session) {
 	# Render teh data source tree
 
 	output$datasource <- renderTree({
-		dat <- read.csv(paste('http://web:8000/report/fish_datasource/csv/?ds_group=Seafood', sep=''), header=TRUE)
+        dat <- kaka.qry("data_source", "ds_group=='Seafood'")
 		suppliers <- levels(unique(dat[,"supplier"]))
 		tr <- list()
 		for(i in seq(length(suppliers))){
@@ -73,18 +75,18 @@ shinyServer(function(input, output, session) {
 	})
 
 	output$tree <- renderTree({
-		dat <- read.csv(paste('http://web:8000/report/tree/csv/', sep=''), header=TRUE)
+        dat <- kaka.qry("tree","")
 
-		dat <- dat[order(dat$Level.1,dat$Level.2,dat$Level.3,dat$Level.4,dat$Level.5),]
+		dat <- dat[order(dat$Level_1,dat$Level_2,dat$Level_3,dat$Level_4,dat$Level_5),]
 
 		tr <- list()
 
 		for(i in seq(nrow(dat))){
-			l1 <- trim(toString(dat[i, "Level.1"]))
-		  	l2 <- trim(toString(dat[i, "Level.2"]))
-		  	l3 <- trim(toString(dat[i, "Level.3"]))
-		  	l4 <- trim(toString(dat[i, "Level.4"]))
-		  	l5 <- trim(toString(dat[i, "Level.5"]))
+			l1 <- trim(toString(dat[i, "Level_1"]))
+		  	l2 <- trim(toString(dat[i, "Level_2"]))
+		  	l3 <- trim(toString(dat[i, "Level_3"]))
+		  	l4 <- trim(toString(dat[i, "Level_4"]))
+		  	l5 <- trim(toString(dat[i, "Level_5"]))
 		
 			#print(paste(i,l1,l2,l3,l4,l5, sep="/"))
 			if(l2 == "" | is.null(l2)){
@@ -123,17 +125,18 @@ shinyServer(function(input, output, session) {
   	})
  
     datasetInput <- reactive({
-        read.csv(paste('http://web:8000/report/fish_by_datasource/csv/', sep=''), header=TRUE)
+        kaka.qry("fish","")
+        #read.csv(paste('http://web/report/fish_by_datasource/csv/', sep=''), header=TRUE)
     }) 
 
 
 	termInput <- reactive({
-        read.csv(paste('http://web:8000/report/fish_term/csv/', sep=''), header=TRUE)
+        kaka.qry("tree","")
     })
 
 
 	demoInput <- reactive({
-        dat <- read.csv('http://web:8000/report/lengthfrequencyob/?fmt=csv/', header=TRUE)
+        dat <- read.csv('http://web/report/lengthfrequencyob/?fmt=csv/', header=TRUE)
 		flt <- input$group
 		if(flt == 'None'){
 			dat <- data.frame(dat[c("length..mm.")])
@@ -150,7 +153,7 @@ shinyServer(function(input, output, session) {
 
     observe({
         x <- input$show_vars
-        cb_options <- names(read.csv(paste('http://web:8000/report/tree/csv/', sep=''), header=TRUE))
+        cb_options <- names(kaka.qry("tree", ""))
 
         selected <- x
     })
@@ -162,10 +165,10 @@ shinyServer(function(input, output, session) {
 		selected <- unlist(get_selected(input$tree))
 		selected <- get_seafood_headers(selected)
         ds <- datasetInput()
-		ds.names = names(ds)
-		sel <- intersect(selected,ds.names)
-		sel <- c("fish", "trip", "tow",  sel)
-		ds[,sel]
+		#ds.names = names(ds)
+		#sel <- intersect(selected,ds.names)
+		#sel <- c("name",  sel)
+		#ds[,sel]
     })
 
 	output$seafoodterms <- renderDataTable({
