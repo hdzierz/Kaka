@@ -109,6 +109,22 @@ class ImportOpValidationRegistry(ImportOpRegistry):
         return ImportOpValidationRegistry._ops[realm.lower()][typ.lower()]
 
 
+class ImportOpCleanRegistry(ImportOpRegistry):
+    _ops = {}
+
+    @staticmethod
+    def register(realm, typ, op):
+        if realm not in ImportOpCleanRegistry._ops:
+            ImportOpCleanRegistry._ops[realm] = {}
+
+        ImportOpCleanRegistry._ops[realm][typ] = op
+
+    @staticmethod
+    def get(realm, typ):
+        return ImportOpCleanRegistry._ops[realm.lower()][typ.lower()]
+
+
+
 class GenericImport:
     conn = None
     header = None
@@ -151,5 +167,6 @@ class ImportOp:
         pass
 
   
+
 
   

@@ -166,11 +166,13 @@ def make_field_dic(document, build_dic):
 def load(fn, cfg, ex, ds , typ):
     fmt = cfg[typ]["Format"]
     if fmt=="xlsx" and cfg[typ]["Sheet"] == "ALL":
-        sheets = ExcelConnector.GetSheets(fn) 
+        sheets = ExcelConnector.GetSheets(fn)
+        first = True 
         for sheet in sheets:
             Logger.Message("Processing sheet:" + sheet)
             conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
-            load_data(conn, cfg, ex, ds , typ)
+            load_data(conn, cfg, ex, ds , typ, first)
+            first = False
     elif fmt=="xlsx":
         sheet = cfg[typ]["Sheet"]  
         conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
@@ -180,7 +182,7 @@ def load(fn, cfg, ex, ds , typ):
         load_data(conn, cfg, ex, ds , typ)
 
 
-def load_data(conn, cfg, ex, ds , typ):
+def load_data(conn, cfg, ex, ds , typ, clean=True):
     im = GenericImport(conn=conn, exp=ex, ds=ds)
     im.id_column = cfg[typ]['ID Column']
     if "Group" in cfg[typ]:
@@ -194,12 +196,18 @@ def load_data(conn, cfg, ex, ds , typ):
         Logger.Warning("No operator for " + cfg["Realm"] + "/" + typ + "! Use default")
         im.load_op = ImportOpRegistry.get(cfg["Realm"], "default")
 
-    im.clean_op = ImportOpRegistry.get(cfg["Realm"], "clean")
+    try:
+        im.clean_op = ImportOpCleanRegistry.get(cfg["Realm"], typ)
+    except:
+        Logger.Warning("No clean operator for " + cfg["Realm"] + "/" + typ)
+
     try:
         im.val_op = ImportOpValidationRegistry.get(cfg["Realm"], typ)
     except:
         Logger.Warning("No validator for " + cfg["Realm"] + "/" + typ + "!")
-    #im.Clean()
+
+    if(clean):
+        im.Clean()
     im.Load()
 
 def config_dic_to_build_dic(config_dic):

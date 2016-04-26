@@ -1,6 +1,6 @@
 from mongenotype.models import *
 from mongcore.models import *
-from mongcore.imports import ImportOpRegistry, ImportOpValidationRegistry
+from mongcore.imports import ImportOpRegistry, ImportOpValidationRegistry, ImportOpCleanRegistry
 
 db_alias = 'default'
 created_doc_ids = []
@@ -62,13 +62,13 @@ class ImportOp:
         # add to record of docs saved to db by this run through
         created_doc_ids.append((Genotype, pr.id))
 
-        keys = []
-        for key in line.keys():
-            key = re.sub('[^0-9a-zA-Z_]+', '_', key)
-            if(not key in imp.experiment.targets):
-                imp.experiment.targets.append(key)
+        #keys = []
+        #for key in line.keys():
+        #    key = re.sub('[^0-9a-zA-Z_]+', '_', key)
+        #    if(not key in imp.experiment.targets):
+        #        imp.experiment.targets.append(key)
         
-        imp.experiment.save()
+        # imp.experiment.save()
 
         #except:
         #    Logger.Error("Line did not save")
@@ -76,13 +76,16 @@ class ImportOp:
 
     @staticmethod
     def clean_op(imp):
-        pass
-        #Genotype.objects.filter(experiment=imp.experiment.name).delete()
-        #Design.objects.filter(experiment=imp.experiment.name).delete()
+        Genotype.objects.filter(experiment=imp.experiment.name).delete()
+
+    @staticmethod
+    def clean_design_op(imp):
+        Design.objects.filter(experiment=imp.experiment.name).delete()
 
 ImportOpValidationRegistry.register("genotype","design", ImportOp.validate_design_op)
 #ImportOpValidationRegistry.register("genotype","data", ImportOp.validate_design_op)
 ImportOpRegistry.register("genotype", "design", ImportOp.load_design_op)
 ImportOpRegistry.register("genotype", "data", ImportOp.load_op)
-ImportOpRegistry.register("genotype", "clean", ImportOp.clean_op)
+ImportOpCleanRegistry.register("genotype", "data", ImportOp.clean_op)
+ImportOpCleanRegistry.register("genotype", "design", ImportOp.clean_design_op)
 ImportOpRegistry.register("genotype", "default", ImportOp.load_op)

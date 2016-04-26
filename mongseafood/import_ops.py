@@ -90,8 +90,8 @@ class ImportSeafoodOp():
 
     @staticmethod
     def load_tow_op(line, imp):
-        sp, created = Species.objects.get_or_create(name=line['Species'])
-        tow_name = "Tow_" + line["Trip Number"] + "_" + line["Tow Number"]
+        sp, created = Species.objects.get_or_create(name='Unknown')
+        tow_name = line["ID"]
         ob = Tow()
         ob.name = tow_name
         ob.recordeddate = datetime.datetime.now()
@@ -101,17 +101,29 @@ class ImportSeafoodOp():
         ob.experiment = imp.experiment.name
         SaveKVs(ob, line)
         ob.save()
-
+        return imp
         
-
+    @staticmethod
+    def clean_term_op(imp):
+        Term.objects.filter(group="Seafood").delete()
 
     @staticmethod
-    def clean_op(imp):
-        Term.objects.filter(group="Seafood").delete()
+    def clean_tree_op(imp):
         Tree.objects.filter(data_source=imp.data_source.name).delete()
+
+    @staticmethod
+    def clean_fish_op(imp):
         Fish.objects.filter(data_source=imp.data_source.name).delete()
+
+    @staticmethod
+    def clean_tow_op(imp):
+        Tow.objects.filter(data_source=imp.data_source.name).delete()
 
 
 ImportOpRegistry.register("seafood", "tree", ImportSeafoodOp.load_tree_op)
-ImportOpRegistry.register("seafood", "historicfish", ImportSeafoodOp.load_fish_data_op)
-ImportOpRegistry.register("seafood", "clean", ImportSeafoodOp.clean_op)
+ImportOpRegistry.register("seafood", "tow", ImportSeafoodOp.load_tow_op)
+ImportOpRegistry.register("seafood", "fish", ImportSeafoodOp.load_fish_data_op)
+ImportOpCleanRegistry.register("seafood", "term", ImportSeafoodOp.clean_term_op)
+ImportOpCleanRegistry.register("seafood", "tree", ImportSeafoodOp.clean_tree_op)
+ImportOpCleanRegistry.register("seafood", "fish", ImportSeafoodOp.clean_fish_op)
+ImportOpCleanRegistry.register("seafood", "tow", ImportSeafoodOp.clean_tow_op)

@@ -25,6 +25,10 @@ db:
 mongo:
   build: .
   dockerfile: Dockerfile_mongo
+  volumes:
+    - /Users/cfphxd/output:/output
+  ports:
+    - "27018:27017"
   environment:
     - dummy:dummy
     - http_proxy:http://proxy.pfr.co.nz:8080
