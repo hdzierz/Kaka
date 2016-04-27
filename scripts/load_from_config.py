@@ -110,12 +110,14 @@ def load_in_dir(path):
 
     for item in config_dic:
         if type(config_dic[item]) is dict:
+            first=True
             if "Format" in config_dic[item]: 
                 pattern = config_dic[item]["Name"]
                 for file_path in path.glob(pattern):
                     Logger.Message("Processing: " + str(file_path))
                     ds = init_file(file_path, build_dic)
-                    load(fn=str(file_path), cfg=build_dic,ex=ex, ds=ds, typ=item)
+                    load(fn=str(file_path), cfg=build_dic,ex=ex, ds=ds, typ=item, clean=first)
+                    first=False
             else:
                 Logger.Error("Error in data load: No 'Format' given.")
 
@@ -137,6 +139,7 @@ def init_for_all(path, config_dic):
         ex, created = fetch_or_save(Exper, db_alias=db_alias, **make_field_dic(Exper, build_dic))
         if created:  # add to record of docs saved to db by this run through
             created_doc_ids.append((Experiment, ex.id))
+        Logger.Error("Experiment: " + name + " loaded.")
 
     return build_dic, ex
 
@@ -163,16 +166,14 @@ def make_field_dic(document, build_dic):
     return field_dic
 
 
-def load(fn, cfg, ex, ds , typ):
+def load(fn, cfg, ex, ds , typ, clean=False):
     fmt = cfg[typ]["Format"]
     if fmt=="xlsx" and cfg[typ]["Sheet"] == "ALL":
         sheets = ExcelConnector.GetSheets(fn)
-        first = True 
         for sheet in sheets:
             Logger.Message("Processing sheet:" + sheet)
             conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
-            load_data(conn, cfg, ex, ds , typ, first)
-            first = False
+            load_data(conn, cfg, ex, ds , typ, clean)
     elif fmt=="xlsx":
         sheet = cfg[typ]["Sheet"]  
         conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
@@ -183,7 +184,14 @@ def load(fn, cfg, ex, ds , typ):
 
 
 def load_data(conn, cfg, ex, ds , typ, clean=True):
+    Logger.Message("Loading data "+ typ  +" for Experiment "+ ex.name  +".")
+    for h in conn.header:
+        if not h in ex.targets:
+            ex.targets.append(h)
+    ex.save()
+
     im = GenericImport(conn=conn, exp=ex, ds=ds)
+
     im.id_column = cfg[typ]['ID Column']
     if "Group" in cfg[typ]:
         im.group = cfg[typ]["Group"]
@@ -196,10 +204,7 @@ def load_data(conn, cfg, ex, ds , typ, clean=True):
         Logger.Warning("No operator for " + cfg["Realm"] + "/" + typ + "! Use default")
         im.load_op = ImportOpRegistry.get(cfg["Realm"], "default")
 
-    try:
-        im.clean_op = ImportOpCleanRegistry.get(cfg["Realm"], typ)
-    except:
-        Logger.Warning("No clean operator for " + cfg["Realm"] + "/" + typ)
+    im.clean_op = ImportOpRegistry.get(cfg["Realm"], "clean")
 
     try:
         im.val_op = ImportOpValidationRegistry.get(cfg["Realm"], typ)

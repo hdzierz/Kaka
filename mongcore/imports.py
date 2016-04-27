@@ -2,6 +2,8 @@
 # from .models import *
 # from .logger import *
 from .algorithms import *
+from .logger import *
+
 #from .connectors import *
 import os
 
@@ -121,6 +123,7 @@ class ImportOpCleanRegistry(ImportOpRegistry):
 
     @staticmethod
     def get(realm, typ):
+        print(realm + "/" + typ)
         return ImportOpCleanRegistry._ops[realm.lower()][typ.lower()]
 
 
@@ -142,7 +145,11 @@ class GenericImport:
         self.conn = conn
 
     def Clean(self):
-        self.clean_op(self)
+        try:
+            self.clean_op(self)
+        except:
+            Logger.Error("Error in GenericImport. Clean op not found.")
+            raise(Exception( "GenericImport. Clean op not found."))
 
     def Load(self):
         self.header = self.conn.header

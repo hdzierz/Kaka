@@ -165,10 +165,15 @@ shinyServer(function(input, output, session) {
 		selected <- unlist(get_selected(input$tree))
 		selected <- get_seafood_headers(selected)
         ds <- datasetInput()
-		#ds.names = names(ds)
-		#sel <- intersect(selected,ds.names)
-		#sel <- c("name",  sel)
-		#ds[,sel]
+		ds.names = names(ds)
+        if(length(selected)>0){
+		    sel <- intersect(selected,ds.names)
+		    sel <- c("name",  sel)
+            ds[,sel]
+        }
+        else{
+		    ds
+        }
     })
 
 	output$seafoodterms <- renderDataTable({

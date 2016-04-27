@@ -77,15 +77,12 @@ class ImportOp:
     @staticmethod
     def clean_op(imp):
         Genotype.objects.filter(experiment=imp.experiment.name).delete()
-
-    @staticmethod
-    def clean_design_op(imp):
         Design.objects.filter(experiment=imp.experiment.name).delete()
+
 
 ImportOpValidationRegistry.register("genotype","design", ImportOp.validate_design_op)
 #ImportOpValidationRegistry.register("genotype","data", ImportOp.validate_design_op)
 ImportOpRegistry.register("genotype", "design", ImportOp.load_design_op)
 ImportOpRegistry.register("genotype", "data", ImportOp.load_op)
-ImportOpCleanRegistry.register("genotype", "data", ImportOp.clean_op)
-ImportOpCleanRegistry.register("genotype", "design", ImportOp.clean_design_op)
+ImportOpRegistry.register("genotype", "clean", ImportOp.clean_op)
 ImportOpRegistry.register("genotype", "default", ImportOp.load_op)
