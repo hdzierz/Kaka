@@ -61,10 +61,10 @@ class ImportSeafoodOp():
         trip_name = 'Trip_%d' % line['Trip']
         trip, created = Trip.objects.get_or_create(name=trip_name)
 
-        tow_name = 'Tow_%d' % convert_int(line['Tow Number'])
+        tow_name = 'Tow_%d' % convert_int(line['Tow'])
         tow, created = Tow.objects.get_or_create(name=tow_name, trip=trip)
 
-        fish_name = 'Fish_' + '_' + line['Vessel name']  + '_' + str(line['Trip'])  + '_' + str(line['Tow Number'])  + '_' + str(line['Fish Number'])
+        fish_name = 'Fish_' + line['Vessel']  + '_' + str(int(line['Trip']))  + '_' + str(int(line['Tow']))  + '_' + str(int(line['Fish Number']))
 
         fob = Fish()
         fob.name = fish_name
@@ -91,7 +91,7 @@ class ImportSeafoodOp():
     @staticmethod
     def load_tow_op(line, imp):
         sp, created = Species.objects.get_or_create(name='Unknown')
-        tow_name = line["ID"]
+        tow_name = "Tow_" + line["Vessel"] + "_" + str(int(line['Trip'])) + "_" + str(int(line["Tow"]))
         ob = Tow()
         ob.name = tow_name
         ob.recordeddate = datetime.datetime.now()
@@ -104,26 +104,13 @@ class ImportSeafoodOp():
         return imp
         
     @staticmethod
-    def clean_term_op(imp):
-        Term.objects.filter(group="Seafood").delete()
-
-    @staticmethod
-    def clean_tree_op(imp):
+    def clean_op(imp):
         Tree.objects.filter(data_source=imp.data_source.name).delete()
-
-    @staticmethod
-    def clean_fish_op(imp):
         Fish.objects.filter(data_source=imp.data_source.name).delete()
-
-    @staticmethod
-    def clean_tow_op(imp):
         Tow.objects.filter(data_source=imp.data_source.name).delete()
 
 
 ImportOpRegistry.register("seafood", "tree", ImportSeafoodOp.load_tree_op)
 ImportOpRegistry.register("seafood", "tow", ImportSeafoodOp.load_tow_op)
 ImportOpRegistry.register("seafood", "fish", ImportSeafoodOp.load_fish_data_op)
-ImportOpCleanRegistry.register("seafood", "term", ImportSeafoodOp.clean_term_op)
-ImportOpCleanRegistry.register("seafood", "tree", ImportSeafoodOp.clean_tree_op)
-ImportOpCleanRegistry.register("seafood", "fish", ImportSeafoodOp.clean_fish_op)
-ImportOpCleanRegistry.register("seafood", "tow", ImportSeafoodOp.clean_tow_op)
+ImportOpRegistry.register("seafood", "clean", ImportSeafoodOp.clean_op)

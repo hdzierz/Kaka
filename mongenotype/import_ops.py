@@ -1,6 +1,7 @@
 from mongenotype.models import *
 from mongcore.models import *
-from mongcore.imports import ImportOpRegistry, ImportOpValidationRegistry, ImportOpCleanRegistry
+from mongcore.import_op_registry import ImportOpRegistry, ImportOpValidationRegistry
+
 
 db_alias = 'default'
 created_doc_ids = []

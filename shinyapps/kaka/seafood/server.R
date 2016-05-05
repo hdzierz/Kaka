@@ -60,16 +60,12 @@ shinyServer(function(input, output, session) {
 	# Render teh data source tree
 
 	output$datasource <- renderTree({
-        dat <- kaka.qry("data_source", "ds_group=='Seafood'")
-		suppliers <- levels(unique(dat[,"supplier"]))
-		tr <- list()
-		for(i in seq(length(suppliers))){
-			tr[[suppliers[i]]] <- list()
-		}
+        dat <- kaka.qry("data_source", "")
+        tr <- list()
+        tr[["test"]] <- list() 
 		for(i in seq(nrow(dat))){
-			l <- trim(toString(paste(dat[i, "name"],"[",dat[i,"id"],"]", sep="")))
-			s <- dat[i, "supplier"]
-			tr[[s]][[l]] <- ""
+			l <- trim(toString(dat[i, "name"]))
+			tr[["test"]][[l]] <- ""
 		}
 		tr
 	})
@@ -126,7 +122,6 @@ shinyServer(function(input, output, session) {
  
     datasetInput <- reactive({
         kaka.qry("fish","")
-        #read.csv(paste('http://web/report/fish_by_datasource/csv/', sep=''), header=TRUE)
     }) 
 
 
@@ -136,6 +131,7 @@ shinyServer(function(input, output, session) {
 
 
 	demoInput <- reactive({
+        
         dat <- read.csv('http://web/report/lengthfrequencyob/?fmt=csv/', header=TRUE)
 		flt <- input$group
 		if(flt == 'None'){

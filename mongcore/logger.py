@@ -1,6 +1,8 @@
 import datetime
 import os
 #import logging
+from django.http import HttpResponse
+import csv
 
 class bcolors:
     HEADER = '\033[95m'
@@ -47,6 +49,29 @@ class Logger:
     def Message(msg):
         print(bcolors.OKBLUE + msg + bcolors.ENDC)
         Logger.Log("MESSAGE", Logger.log_dir + Logger.log_msg, msg)
+
+
+class HttpLogger:
+    @staticmethod
+    def send(typ, msg):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="error.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['"' + typ  + '"'])
+        writer.writerow(['"'+ msg + '"'])
+        return response
+   
+    @staticmethod
+    def Error(msg):
+        return HttpLogger.send("Error", msg)
+
+    @staticmethod
+    def Message(msg):
+        return HttpLogger.send("Message", msg)
+
+    @staticmethod
+    def Warning(msg):
+        return HttpLogger.send("Warning", msg)
 
 
 Logger.Init()

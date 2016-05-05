@@ -152,7 +152,9 @@ def init_file(file_path, build_dic):
         ds, created = fetch_or_save(DatS, db_alias=db_alias, **make_field_dic(DatS, build_dic))
         if created:  # add to record of docs saved to db by this run through
             created_doc_ids.append((DataSource, ds.id))
-
+        ds.supplier = build_dic["pi"]
+        ds.group = build_dic["Experiment Code"]
+        ds.save()
     return ds
 
 

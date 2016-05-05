@@ -20,6 +20,7 @@ from jsonfield import JSONField
 from djgeojson.fields import PointField
 import mongoengine
 from datetime import datetime
+import binascii
 
 # Create your models here.
 
@@ -31,6 +32,15 @@ It is also been used in the signals section
 
 class DataError(Exception):
     pass
+
+class Key(mongoengine.Document):
+    key = mongoengine.StringField(max_length=2048)
+    name = mongoengine.StringField(max_length=2048)
+    email = mongoengine.StringField(max_length=2048)
+
+    def save(self, *args, **kwargs):
+        self.key = binascii.hexlify(os.urandom(24)).decode('utf-8')
+        super(Key, self).save(*args, **kwargs)
 
 
 class DataDir(mongoengine.Document):
@@ -66,6 +76,7 @@ You will usually get file names here.
 class DataSource(mongoengine.Document):
     name = mongoengine.StringField(max_length=1024)
     typ = mongoengine.StringField(null=True, max_length=256, default="None")
+    group = mongoengine.StringField(null=True, max_length=256, default="None")
     source = mongoengine.StringField()
     supplier = mongoengine.StringField(null=True, max_length=2048, default="None")
     supplieddate = mongoengine.DateTimeField(default=datetime.now())
@@ -79,6 +90,7 @@ class DataSource(mongoengine.Document):
         return [
                 "name",
                 "typ",
+                "group",
                 "source",
                 "supplier",
                 "supplieddate",
@@ -144,6 +156,8 @@ class Experiment(mongoengine.Document):
     createdby = mongoengine.StringField(max_length=255)
     description = mongoengine.StringField(default="")
     targets = mongoengine.ListField()
+    key = mongoengine.StringField(max_length=2048, default="Unknown")
+    createdcontact = mongoengine.StringField(max_length=255, default="Unkown")
 
     def GetHeader(self):
         return [
@@ -153,6 +167,7 @@ class Experiment(mongoengine.Document):
                 "pi",
                 "createddate",
                 "createdby",
+                "createdcontact",
                 "description",
                 "targets",
             ]
