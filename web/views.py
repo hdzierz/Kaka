@@ -1,5 +1,6 @@
 import csv
-import json
+import simplejson as json
+import yaml
 import re
 from collections import OrderedDict
 
@@ -8,6 +9,8 @@ from django.shortcuts import redirect, render
 
 from mongcore.errors import ExperiSearchError
 from mongcore.models import *
+from mongcore.imports import *
+from mongcore.logger import *
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -18,6 +21,7 @@ from mongoengine.context_managers import switch_db
 from mongcore.query_from_request import QueryRequestHandler
 from scripts.configuration_parser import DateTimeJSONEncoder
 from mongenotype.models import *
+from mongseafood.models import *
 from django.core.urlresolvers import reverse_lazy
 
 from querystring_parser import parser
@@ -199,7 +203,7 @@ def get_header(obs):
     header.append("experiment")
     header.append("xreflsid")
 
-    exps = obs.distinct("study")
+    exps = obs.distinct("experiment_obj")
     for exp in exps:
         header = set(header) | set(exp.targets)
     return header
@@ -222,20 +226,9 @@ class Query:
             Logger.Error(type(inst))    # the exception instance
             Logger.Error(inst.args)     # arguments stored in .args
             Logger.Error(inst) 
-            return Error.error("Syntax Error in " + qry), False 
+            return HttpLogger.Error("Syntax Error in " + qry), False 
 
         return qry, True
-
-
-class Error:
-    @staticmethod
-    def error(msg):
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="error.csv"'
-        writer = csv.writer(response)
-        writer.writerow(["Error"])
-        writer.writerow(['"'+ msg + '"'])
-        return response
 
 
 class JsonQry(Endpoint):
@@ -248,19 +241,27 @@ class JsonQry(Endpoint):
             infmt = "json"
 
         qry = request.params.get('qry')
-        qry, succ = Query.result(request, infmt, qry)
-        if not succ:
-            return qry
+        limited = False
+        if(not qry):
+            qry = "name==regex('.*')"
+            limited = True
+        try:
+            qry, succ = Query.result(request, infmt, qry)
+        except:
+            return HttpLogger.Error("Query unsuccessful: " + qry + ". Check spelling.")
 
         try:
             cls = eval(to_camelcase(realm))
         except:
-            return Error.error("Query on <b>" + realm  + "</b> not (yet) possible. Check spelling or use of underscore.")
+            return HttpLogger.Error("Query on <b>" + realm  + "</b> not (yet) possible. You might want to check the spelling particularly the use of underscores.")
 
-        obs = cls.objects(__raw__=qry)
+        if(limited):
+            obs = cls.objects(__raw__=qry)[:100]
+        else:
+            obs = cls.objects(__raw__=qry)
 
         if len(obs) == 0:
-            return HttpResponse("Query empty")
+            return HttpResponse("Query empty\n")
 
         if(infmt=="json"):
             return JsonResponse(obs.to_json(), safe=False)
@@ -269,10 +270,12 @@ class JsonQry(Endpoint):
         response['Content-Disposition'] = 'attachment; filename="' + realm  + '.csv"'
         writer = csv.writer(response)
 
-        if(cls.__base__ == Feature):
+        if hasattr(obs[0], 'GetHeader'):
+            header = obs[0].GetHeader()
+        elif(cls.__base__ == Feature):
             header = get_header(obs)
         else:
-            header = obs[0].GetHeader()
+            header = ["id", "name"]
 
         writer.writerow(header)
         for o in obs:
@@ -285,6 +288,31 @@ class JsonQry(Endpoint):
                 except:
                     return HttpResponse("Query on " + realm  + " not (yet) possible.")
         return response
+
+from django.views.decorators.csrf import csrf_exempt
+import traceback
+
+@csrf_exempt
+def page_send(request):
+    try:
+        if request.method=="POST":
+            config = request.POST.get('config')
+            key = request.POST.get('config')
+            data = request.POST.get('dat')
+            #f = open("/tmp/tt.csv", "w")
+            #f.write(data)
+            data = json.loads(data)
+            config = json.loads(config)
+
+            imp = Import(config)
+            imp.Run(data)
+    
+        return HttpLogger.Message("SUCCESS")
+
+    except Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        return HttpLogger.Error(str(e) + str(traceback.format_exc()))
+
 
 
 def page_main(request):

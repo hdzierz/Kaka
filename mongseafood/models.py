@@ -43,7 +43,23 @@ class Crew(Feature):
 
 
 class Tree(Feature):
-    pass
+    def __unicode__(self):
+        return self.name
+
+    def GetHeader(self):
+        header = []
+        header.append("name")
+        header.append("experiment")
+        header.append("Level_1")
+        header.append("Level_2")
+        header.append("Level_3")
+        header.append("Level_4") 
+        header.append("Level_5")
+        header.append("Definition")
+        return header
+
+    def GetName(self):
+        return self.name
 
 
 class Trip(Feature):
@@ -67,6 +83,7 @@ class Fish(Feature):
     form_completed = mongoengine.BooleanField(default=False)
     trip = mongoengine.ReferenceField(Trip)
     tow = mongoengine.ReferenceField(Tow)
+    species = mongoengine.ReferenceField(Species)
 
     def __unicode__(self):
         return str(self.GetName())

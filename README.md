@@ -142,3 +142,7 @@ Example:
 ```
 127.0.0.1:8000/api/genotype/?search_name=GBS+kiwi%25&search_pi=John%2BMcCallumn&from_date_month=1&from_date_day=1&from_date_year=2013&to_date_month=12&to_date_day=1&to_date_year=2016
 ```
+
+# Loading data administration
+
+## class DataDir

@@ -1,7 +1,18 @@
 import datetime
 import os
 #import logging
+from django.http import HttpResponse
+import csv
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 class Logger:
     log_dir = '/tmp/nunz/'
@@ -26,15 +37,41 @@ class Logger:
 
     @staticmethod
     def Warning(msg):
+        print(bcolors.WARNING + msg + bcolors.ENDC)
         Logger.Log("WARNING", Logger.log_dir + Logger.log_wrn, msg)
 
     @staticmethod
     def Error(msg):
+        print(bcolors.FAIL + msg + bcolors.ENDC)
         Logger.Log("ERROR", Logger.log_dir + Logger.log_err, msg)
 
     @staticmethod
     def Message(msg):
+        print(bcolors.OKBLUE + msg + bcolors.ENDC)
         Logger.Log("MESSAGE", Logger.log_dir + Logger.log_msg, msg)
+
+
+class HttpLogger:
+    @staticmethod
+    def send(typ, msg):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="error.csv"'
+        writer = csv.writer(response)
+        writer.writerow(['"' + typ  + '"'])
+        writer.writerow(['"'+ msg + '"'])
+        return response
+   
+    @staticmethod
+    def Error(msg):
+        return HttpLogger.send("Error", msg)
+
+    @staticmethod
+    def Message(msg):
+        return HttpLogger.send("Message", msg)
+
+    @staticmethod
+    def Warning(msg):
+        return HttpLogger.send("Warning", msg)
 
 
 Logger.Init()

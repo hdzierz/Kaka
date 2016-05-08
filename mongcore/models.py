@@ -20,6 +20,7 @@ from jsonfield import JSONField
 from djgeojson.fields import PointField
 import mongoengine
 from datetime import datetime
+import binascii
 
 # Create your models here.
 
@@ -31,6 +32,24 @@ It is also been used in the signals section
 
 class DataError(Exception):
     pass
+
+class Key(mongoengine.Document):
+    key = mongoengine.StringField(max_length=2048)
+    name = mongoengine.StringField(max_length=2048)
+    email = mongoengine.StringField(max_length=2048)
+
+    def save(self, *args, **kwargs):
+        self.key = binascii.hexlify(os.urandom(24)).decode('utf-8')
+        super(Key, self).save(*args, **kwargs)
+
+
+class DataDir(mongoengine.Document):
+    name = mongoengine.StringField(max_length=2048)
+    path = mongoengine.StringField(max_length=2048)
+    realm = mongoengine.StringField(max_length=2048)
+
+    def __unicode__(self):
+        return self.name + "/" + self.realm + "/" + self.path
 
 """ Class for Ontology terms
 
@@ -57,6 +76,7 @@ You will usually get file names here.
 class DataSource(mongoengine.Document):
     name = mongoengine.StringField(max_length=1024)
     typ = mongoengine.StringField(null=True, max_length=256, default="None")
+    group = mongoengine.StringField(null=True, max_length=256, default="None")
     source = mongoengine.StringField()
     supplier = mongoengine.StringField(null=True, max_length=2048, default="None")
     supplieddate = mongoengine.DateTimeField(default=datetime.now())
@@ -70,6 +90,7 @@ class DataSource(mongoengine.Document):
         return [
                 "name",
                 "typ",
+                "group",
                 "source",
                 "supplier",
                 "supplieddate",
@@ -125,23 +146,28 @@ class Term(mongoengine.Document):
 class Experiment(mongoengine.Document):
 
     field_names = [
-        'Name', 'Primary Investigator', 'Date Created', 'Description'
+        'Realm', 'Name', 'Primary Investigator', 'Date Created', 'Description'
     ]
 
     name = mongoengine.StringField(max_length=2048, default="Unknown")
+    realm =  mongoengine.StringField(max_length=2048, default="Unknown") 
     pi = mongoengine.StringField(max_length=2048, default="Unknown")
     createddate = mongoengine.DateTimeField(default=datetime.now())
     createdby = mongoengine.StringField(max_length=255)
     description = mongoengine.StringField(default="")
     targets = mongoengine.ListField()
+    key = mongoengine.StringField(max_length=2048, default="Unknown")
+    createdcontact = mongoengine.StringField(max_length=255, default="Unkown")
 
     def GetHeader(self):
         return [
                 "id",
                 "name",
+                "realm",
                 "pi",
                 "createddate",
                 "createdby",
+                "createdcontact",
                 "description",
                 "targets",
             ]
@@ -187,7 +213,7 @@ def make_table_experiment(experiment):
     )
 
 
-class Design(mongoengine.Document):
+class Design(mongoengine.DynamicDocument):
     study = mongoengine.ReferenceField(Experiment)
     experiment = mongoengine.StringField(max_length=255, default="unknown")
     phenotype = mongoengine.StringField(max_length=255, default="unknown")
@@ -197,9 +223,11 @@ class Design(mongoengine.Document):
 
     def GetHeader(self):
         return [
+            "experiment",
             "phenotype",
             "condition",
             "typ",
+            "notes", 
         ]
 
 
@@ -211,9 +239,9 @@ class Feature(mongoengine.DynamicDocument):
     dtt = mongoengine.DateTimeField(default=timezone.now)
     geom = PointField(default={'type': 'Point', 'coordinates': [0, 0]})    
     alias = mongoengine.StringField(max_length=255, default="unknown")
-    datasource = mongoengine.ReferenceField(DataSource)
+    data_source_obj = mongoengine.ReferenceField(DataSource)
     data_source = mongoengine.StringField(max_length=255, default="unknown")
-    study = mongoengine.ReferenceField(Experiment)
+    experiment_obj = mongoengine.ReferenceField(Experiment)
     experiment = mongoengine.StringField(max_length=255, default="unknown")
     description = mongoengine.StringField(default="")
     ontology = mongoengine.EmbeddedDocumentField(Ontology)
@@ -231,11 +259,12 @@ class Feature(mongoengine.DynamicDocument):
     def GetHeader(self):
         header = []
         header.append("name")
-        header.append("datasource")
+        header.append("group")
+        header.append("data_source")
         header.append("ontology")
-        header.append("study")
+        header.append("experiment")
         header.append("xreflsid")
-        for t in self.study.targets:
+        for t in self.experiment_obj.targets:
             header.append(t)
  
         return header 
@@ -255,7 +284,7 @@ class Feature(mongoengine.DynamicDocument):
         return res
 
     def GetDataObs(self, fmt="csv"):
-        header = self.study.targets
+        header = self.experiment_obj.targets
         res = []
         for h in header:
             res.append(self.obs[h])

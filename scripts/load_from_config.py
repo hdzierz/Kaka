@@ -8,21 +8,50 @@ from pathlib import Path
 from .configuration_parser import get_parser_from_path
 from mongcore.query_set_helpers import fetch_or_save
 from mongcore.models import DataSource, Experiment, SaveKVs, Design
-from mongenotype.models import Genotype, Primer
-from mongcore.connectors import CsvConnector
-from mongcore.imports import GenericImport
+from mongcore.connectors import CsvConnector, ExcelConnector
+from mongcore.imports import * 
 from mongcore.logger import Logger
 from mongcore.algorithms import *
 from kaka.settings import TEST_DB_ALIAS
 from mongoengine.context_managers import switch_db
 
+from mongenotype.models import Genotype, Primer
+from mongkiwifruit.models import * 
+
+from mongenotype.import_ops import *
+from mongkiwifruit.import_ops import *
+from mongseafood.import_ops import *
+
 testing = False
 db_alias = 'default'
-path_string = "data/"
-created_doc_ids = []
+#path_string = "data/"
+#created_doc_ids = []
+
+MODE = "PRESERVE"
 
 
-def run():
+def load_conn(fn, cfg, typ, sheet=None):
+    if typ in cfg:
+        fmt = cfg[typ]["Format"]
+        Logger.Message("Loading connector using format: " + fmt)
+        if fmt == "csv":
+            conn = CsvConnector(fn, cfg[typ]["Delimiter"], cfg[typ]["Gzipped"])
+        elif fmt == "xlsx":
+            if not sheet:
+                sheet = cfg[typ]["Sheet"]
+            conn = ExcelConnector(fn, sheet)
+        return conn
+    else:
+        raise Exception("ERROR: Configuration failed when loading data: " + str(cfg))
+
+
+def run(*args):
+    global MODE
+    if 'override' in args:
+        Logger.Warning("OVERRIDE MODE!")
+        MODE = "OVERRIDE"
+
+    Logger.Message("Loading process in mode: " + MODE  + "started.")
     global db_alias
     if testing:
         db_alias = TEST_DB_ALIAS
@@ -30,16 +59,19 @@ def run():
     global created_doc_ids
     created_doc_ids = []
 
-    path = Path(path_string)
-    try:
-        look_for_config_dir(path)
-    except Exception as e:
-        Logger.Error(str(e))
-        # 'Cancels' the script, by removing from db all documents saved to db in this script run-through
-        for doc_type, doc_id in created_doc_ids:
-            with switch_db(doc_type, db_alias) as Col:
-                Col.objects.get(id=doc_id).delete()
-        raise e
+    dirs = DataDir.objects.all()
+    for d in dirs:
+        Logger.Message("Processing data dir: " + d.path)
+        path = Path(d.path)
+        try:
+            look_for_config_dir(path)
+        except Exception as e:
+            Logger.Error(str(e))
+            # 'Cancels' the script, by removing from db all documents saved to db in this script run-through
+            for doc_type, doc_id in created_doc_ids:
+                with switch_db(doc_type, db_alias) as Col:
+                    Col.objects.get(id=doc_id).delete()
+            raise e
 
 
 def look_for_config_dir(path):
@@ -52,6 +84,8 @@ def look_for_config_dir(path):
 
 
 def load_in_dir(path):
+    global MODE
+    Logger.Message("Processing: " + str(path))
 
     if isinstance(path, str):
         path = Path(path)
@@ -66,13 +100,27 @@ def load_in_dir(path):
 
     config_dic = config_parser.read()
     if '_loaded' in config_dic and config_dic['_loaded'] == True:
+        Logger.Warning("Data already loaded:" + config_dic['Realm'] + "/" + config_dic['Experiment Code'])
         # skips this directory if it is recorded as already loaded into db
-        return
-    build_dic = init_for_all(path, config_dic)
-    for file_path in path.glob("*.gz"):
-        Logger.Message("Processing: " + str(file_path))
-        init_file(file_path, build_dic)
-        load(str(file_path))
+        if(MODE=="PRESERVE"):
+            Logger.Warning("Mode preserve. Not loading data.")
+            return
+
+    build_dic, ex = init_for_all(path, config_dic)
+
+    for item in config_dic:
+        if type(config_dic[item]) is dict:
+            first=True
+            if "Format" in config_dic[item]: 
+                pattern = config_dic[item]["Name"]
+                for file_path in path.glob(pattern):
+                    Logger.Message("Processing: " + str(file_path))
+                    ds = init_file(file_path, build_dic)
+                    load(fn=str(file_path), cfg=build_dic,ex=ex, ds=ds, typ=item, clean=first)
+                    first=False
+            else:
+                Logger.Error("Error in data load: No 'Format' given.")
+
     config_parser.mark_loaded()
 
 
@@ -80,25 +128,20 @@ def init_for_all(path, config_dic):
     # Gets the name for the experiment and data_source documents from the directory name
     posix_path = path.as_posix()
     dir_list = posix_path.split("/")
-    name = dir_list[-1]
+    name = config_dic["Experiment Code"]
 
     # creates the dictionary to use for keyword args to fetch or save documents with
     build_dic = config_dic_to_build_dic(config_dic)
     build_dic['name'] = name
+    build_dic['realm'] = build_dic['Realm'] 
 
     with switch_db(Experiment, db_alias) as Exper:
         ex, created = fetch_or_save(Exper, db_alias=db_alias, **make_field_dic(Exper, build_dic))
         if created:  # add to record of docs saved to db by this run through
             created_doc_ids.append((Experiment, ex.id))
+        Logger.Error("Experiment: " + name + " loaded.")
 
-    # Sets the values common to all genotype docs made from the given path
-    Import.study = ex
-    if "Design" in build_dic:
-        load_design("data/gene_expression/" + build_dic['Design'])
-    Import.createddate = build_dic['createddate']
-    Import.description = build_dic['description']
-    Import.gen_col = build_dic['Genotype Column']
-    return build_dic
+    return build_dic, ex
 
 
 def init_file(file_path, build_dic):
@@ -109,8 +152,10 @@ def init_file(file_path, build_dic):
         ds, created = fetch_or_save(DatS, db_alias=db_alias, **make_field_dic(DatS, build_dic))
         if created:  # add to record of docs saved to db by this run through
             created_doc_ids.append((DataSource, ds.id))
-
-    Import.ds = ds
+        ds.supplier = build_dic["pi"]
+        ds.group = build_dic["Experiment Code"]
+        ds.save()
+    return ds
 
 
 def make_field_dic(document, build_dic):
@@ -122,79 +167,61 @@ def make_field_dic(document, build_dic):
             field_dic[key] = build_dic[key]
     return field_dic
 
-import re
-class Import:
-    ds = None
-    study = None
-    createddate = None
-    description = None
-    gen_col = None
 
-    @staticmethod
-    def laod_design_op(line, succ):
-        d = Design()
-        d.phenotype = line["phenotype"]
-        d.condition = line["condition"]
-        d.typ = line["type"]
-        d.study = Import.study
-        d.experiment = Import.study.name
-        d.save()
-
-    @staticmethod
-    def load_op(line, succ):
-        try:
-            pr = Genotype(
-                name=line[Import.gen_col], 
-                study=Import.study, 
-                experiment=Import.study.name,
-                datasource=Import.ds,
-                data_source=Import.ds.name,
-                createddate=Import.createddate, 
-                description=Import.description,
-            )
-            SaveKVs(pr, line)
-            pr.switch_db(db_alias)
-            pr.save()
-            # add to record of docs saved to db by this run through
-            created_doc_ids.append((Genotype, pr.id))
-
-            if not Import.study.targets:
-                keys = [] 
-                for key in line.keys():
-                    key = re.sub('[^0-9a-zA-Z_]+', '_', key)
-                    keys.append(key)
-
-                Import.study.targets = list(keys)
-                Import.study.save()
-        except:
-            Logger.Error("Linen did not save")
-
-        return True
-
-    @staticmethod
-    def clean_op():
-        Genotype.objects.filter(datasource=Import.ds).delete()
+def load(fn, cfg, ex, ds , typ, clean=False):
+    fmt = cfg[typ]["Format"]
+    if fmt=="xlsx" and cfg[typ]["Sheet"] == "ALL":
+        sheets = ExcelConnector.GetSheets(fn)
+        for sheet in sheets:
+            Logger.Message("Processing sheet:" + sheet)
+            conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
+            load_data(conn, cfg, ex, ds , typ, clean)
+    elif fmt=="xlsx":
+        sheet = cfg[typ]["Sheet"]  
+        conn = load_conn(fn=fn, cfg=cfg, typ=typ, sheet=sheet)
+        load_data(conn, cfg, ex, ds , typ)
+    else:
+        conn = load_conn(fn=fn, cfg=cfg, typ=typ)
+        load_data(conn, cfg, ex, ds , typ)
 
 
-def load_design(fn):
-    conn = CsvConnector(fn, delimiter=',', gzipped=False)
-    succ = False
-    succ = accumulate(conn, Import.laod_design_op,  succ)
+def load_data(conn, cfg, ex, ds , typ, clean=True):
+    Logger.Message("Loading data "+ typ  +" for Experiment "+ ex.name  +".")
+    for h in conn.header:
+        if not h in ex.targets:
+            ex.targets.append(h)
+    ex.save()
 
+    im = GenericImport(conn=conn, exp=ex, ds=ds)
 
-def load(fn):
-    conn = CsvConnector(fn, delimiter='\t', gzipped=True)
-    im = GenericImport(conn)
-    im.load_op = Import.load_op
-    im.clean_op = Import.clean_op
-    im.Clean()
+    im.id_column = cfg[typ]['ID Column']
+    if "Group" in cfg[typ]:
+        im.group = cfg[typ]["Group"]
+    else:
+        im.group = "None"
+
+    try:
+        im.load_op = ImportOpRegistry.get(cfg["Realm"], typ) 
+    except:
+        Logger.Warning("No operator for " + cfg["Realm"] + "/" + typ + "! Use default")
+        im.load_op = ImportOpRegistry.get(cfg["Realm"], "default")
+
+    im.clean_op = ImportOpRegistry.get(cfg["Realm"], "clean")
+
+    try:
+        im.val_op = ImportOpValidationRegistry.get(cfg["Realm"], typ)
+    except:
+        Logger.Warning("No validator for " + cfg["Realm"] + "/" + typ + "!")
+
+    if(clean):
+        im.Clean()
     im.Load()
-
 
 def config_dic_to_build_dic(config_dic):
     # Creates a copy of the given dictionary (usually parsed from a config file), with
     # some key names changed to match the document fields
     build_dic = {}
+
     for key in config_dic:
         if key == "Experiment Description":
             build_dic['description'] = config_dic[key]
