@@ -7,7 +7,7 @@ from mongcore.models import *
 from mongcore.connectors import *
 from mongenotype.import_ops import *
 import datetime
-
+import hashlib
 #from .connectors import *
 import os
 
@@ -42,6 +42,7 @@ class Import:
     conn = None
     experiment = None
     data_source = None
+    ontology = None
     header = []
     id_column = "Unkown"
     group = "none"
@@ -50,36 +51,37 @@ class Import:
         self.conf = conf
 
     def test_conf(self, conf):
-        if "Access Key" not in self.conf:
-            Logger.Message("Sorry you need an access key.")
-            raise Exception("Sorry you need an access key.")
+        if "Password" not in self.conf["Experiment"]:
+            Logger.Message("Sorry you need a password.")
+            raise Exception("Sorry you need a password.")
 
     def test_access(self, ex):
-        if ex.key != self.conf["Access Key"]:
-            raise Exception("Sorry you don't have access to that experiment") 
-        who = Key.objects.get(key=self.conf["Access Key"])
-        return who
+        key = hashlib.sha224(self.conf["Experiment"]["Password"].encode('utf-8')).hexdigest()
+        if ex.key != key:
+            raise Exception("Sorry you don't have write access to that experiment") 
 
     def Run(self, data_source):
         self.test_conf(self.conf)
-        realm = self.conf["Realm"]
-        Logger.Message("Run started for : " + self.conf["Realm"])
+        realm = self.conf["Experiment"]["Realm"]
+        self.ontology = Ontology.objects.filter(name=realm)
+        print(self.conf)       
+        Logger.Message("Run started for : " + realm)
         try:
-            ex = Experiment.objects.get(name=self.conf["Experiment Code"])
+            ex = Experiment.objects.get(name=self.conf["Experiment"]["Code"])
         except:
-            Logger.Message("New Experiment: " + self.conf["Experiment Code"])
+            Logger.Message("New Experiment: " + self.conf["Experiment"]["Code"])
             ex = Experiment()
-            ex.key = self.conf["Access Key"]
-        ex.realm = self.conf["Realm"]
-        ex.name = self.conf["Experiment Code"]
+            ex.key = hashlib.sha224(self.conf["Experiment"]["Password"].encode('utf-8')).hexdigest()
+        ex.realm = realm
+        ex.name = self.conf["Experiment"]["Code"]
         ex.createddate = datetime.datetime.now()
-        ex.pi = self.conf["Data Creator"]
-        ex.description = self.conf["Experiment Description"] 
+        ex.pi = self.conf["Experiment"]["PI"]
+        ex.description = self.conf["Experiment"]["Description"] 
 
-        who = self.test_access(ex)
+        self.test_access(ex)
 
-        ex.createdby = who.name
-        ex.createdcontact = who.email
+        ex.createdby = self.conf["DataSource"]["Creator"]
+        ex.createdcontact = self.conf["DataSource"]["Contact"]
 
         for item in self.conf:
             if "Format" in self.conf[item]:
@@ -94,27 +96,28 @@ class Import:
                 ex.targets = self.conn.header
                 ex.save()
 
-                ds_name = self.conf["Experiment Code"] + " --- " + self.conf[item]["Name"]
+                ds_name = self.conf["Experiment"]["Code"] + " --- " + self.conf[item]["Name"]
                 try:
                     ds = DataSource.objects.get(name=ds_name)
                 except:
-                    Logger.Message("New DataSource: " + self.conf["Experiment Code"])
+                    Logger.Message("New DataSource: " + self.conf["Experiment"]["Code"])
                     ds = DataSource()
                 ds.name = ds_name
                 ds.typ = self.conf[item]["Format"]
                 ds.source = self.conf[item]["Name"]
-                ds.supplier = self.conf["Data Creator"]
-                ds.suplieddate = self.conf["Upload Date"]
+                ds.supplier = self.conf["DataSource"]["Creator"]
+                ds.suplieddate = datetime.datetime.now()
                 ds.save()
                 self.data_source = ds
                 Logger.Message("Loading: " + ds.source)
                 self.experiment = ex
-                if(clean_op and (self.conf["Mode"] == "Override" or self.conf["Mode"] == "Clean")):
+                mode = self.conf["DataSource"]["Mode"] 
+                if(clean_op and (mode == "Override" or mode == "Clean")):
                     self.Clean(clean_op)
                
-                if(load_op and self.conf["Mode"] != "Clean"):
+                if(load_op and mode != "Clean"):
                     self.Load(load_op, validate_op)
-                elif(load_op and self.conf["Mode"] == "Append"):
+                elif(load_op and mode == "Append"):
                     self.Load(load_op, validate_op)
                 self.Close()
         

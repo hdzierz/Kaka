@@ -42,6 +42,9 @@ class Key(mongoengine.Document):
         self.key = binascii.hexlify(os.urandom(24)).decode('utf-8')
         super(Key, self).save(*args, **kwargs)
 
+    def __unicode__(self):
+        return self.name + "/" + self.email + "/" + self.key
+
 
 class DataDir(mongoengine.Document):
     name = mongoengine.StringField(max_length=2048)
@@ -55,7 +58,7 @@ class DataDir(mongoengine.Document):
 
 
 """
-class Ontology(mongoengine.EmbeddedDocument):
+class Ontology(mongoengine.Document):
     ontology = 'unkown'
     name = mongoengine.StringField(max_length=2048)
     tablename = mongoengine.StringField(max_length=128)
@@ -244,7 +247,8 @@ class Feature(mongoengine.DynamicDocument):
     experiment_obj = mongoengine.ReferenceField(Experiment)
     experiment = mongoengine.StringField(max_length=255, default="unknown")
     description = mongoengine.StringField(default="")
-    ontology = mongoengine.EmbeddedDocumentField(Ontology)
+    ontology = mongoengine.StringField(max_length=255, default="unknown")
+    ontology_obj = mongoengine.ReferenceField(Ontology)
     xreflsid = mongoengine.StringField(max_length=255)
     createddate = mongoengine.DateTimeField(default=datetime.now())
     createdby = mongoengine.StringField(max_length=255)
@@ -261,9 +265,9 @@ class Feature(mongoengine.DynamicDocument):
         header.append("name")
         header.append("group")
         header.append("data_source")
-        header.append("ontology")
+        #header.append("ontology")
         header.append("experiment")
-        header.append("xreflsid")
+        #header.append("xreflsid")
         for t in self.experiment_obj.targets:
             header.append(t)
  
@@ -427,7 +431,7 @@ def convert(name):
 
 
 # SIGNALS
-@receiver(pre_save)
+#@receiver(pre_save)
 def set_ontology(sender, instance, **kwargs):
     class_name = instance.__class__.__name__
     try:

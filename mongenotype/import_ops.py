@@ -47,6 +47,10 @@ class ImportOp:
     @staticmethod
     def load_op(line, imp):
         #try:
+        print(line)
+        line.pop("experiment")
+        line.pop("data_source")
+        line.pop("group")
         pr = Genotype(
             name=line[imp.id_column],
             group=imp.group,
@@ -63,27 +67,16 @@ class ImportOp:
         # add to record of docs saved to db by this run through
         created_doc_ids.append((Genotype, pr.id))
 
-        #keys = []
-        #for key in line.keys():
-        #    key = re.sub('[^0-9a-zA-Z_]+', '_', key)
-        #    if(not key in imp.experiment.targets):
-        #        imp.experiment.targets.append(key)
-        
-        # imp.experiment.save()
-
-        #except:
-        #    Logger.Error("Line did not save")
         return imp
 
     @staticmethod
     def clean_op(imp):
-        Genotype.objects.filter(experiment=imp.experiment.name).delete()
-        Design.objects.filter(experiment=imp.experiment.name).delete()
+        Genotype.objects.filter(data_source=imp.data_source.name).delete()
 
 
 ImportOpValidationRegistry.register("genotype","design", ImportOp.validate_design_op)
 #ImportOpValidationRegistry.register("genotype","data", ImportOp.validate_design_op)
 ImportOpRegistry.register("genotype", "design", ImportOp.load_design_op)
-ImportOpRegistry.register("genotype", "data", ImportOp.load_op)
+ImportOpRegistry.register("genotype", "datasource", ImportOp.load_op)
 ImportOpRegistry.register("genotype", "clean", ImportOp.clean_op)
 ImportOpRegistry.register("genotype", "default", ImportOp.load_op)
