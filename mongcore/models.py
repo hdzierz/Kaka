@@ -78,6 +78,8 @@ You will usually get file names here.
 """
 class DataSource(mongoengine.Document):
     name = mongoengine.StringField(max_length=1024)
+    experiment = mongoengine.StringField(max_length=1024)
+    experiment_obj = mongoengine.ReferenceField(Experiment)
     typ = mongoengine.StringField(null=True, max_length=256, default="None")
     group = mongoengine.StringField(null=True, max_length=256, default="None")
     source = mongoengine.StringField()
@@ -92,6 +94,7 @@ class DataSource(mongoengine.Document):
     def GetHeader(self):
         return [
                 "name",
+                "experiment",
                 "typ",
                 "group",
                 "source",

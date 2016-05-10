@@ -60,11 +60,43 @@ class Import:
         if ex.key != key:
             raise Exception("Sorry you don't have write access to that experiment") 
 
-    def Run(self, data_source):
+    def run_clean(self, mode="Clean"):
         self.test_conf(self.conf)
         realm = self.conf["Experiment"]["Realm"]
+        experiment = self.conf["Experiment"]["Code"]
+        data_source = self.conf["DataSource"]["Name"]
+        clean_op = ImportOpRegistry.get(realm,"clean")
+      
+        try:
+            self.data_source = DataSource.objects.get(name=data_source)
+        except:
+            Logger.Message("DataSource not Found: " + data_source)
+            raise Exception("DataSource not Found: " + data_source)
+
+        try:
+            self.experiment = Experiment.objects.get(name=experiment)
+        except:
+            Logger.Message("Experiment not found: " + experiment)
+            raise Exception("Experiment not found: " + experiment)
+
+        if(clean_op):
+            self.Clean(clean_op)
+       
+        if(mode=="Destroy"): 
+            self.experiment.delete()
+            self.data_source.clean()
+
+        self.Close()
+
+    def Run(self, data_source):
+        if self.conf["DataSource"]["Mode"] == "Destroy" or self.conf["DataSource"]["Mode"] == "Clean":
+            self.run_clean(self.conf["DataSource"]["Mode"])
+            return True
+        self.test_conf(self.conf)
+        realm = self.conf["Experiment"]["Realm"]
+
         self.ontology = Ontology.objects.filter(name=realm)
-        print(self.conf)       
+               
         Logger.Message("Run started for : " + realm)
         try:
             ex = Experiment.objects.get(name=self.conf["Experiment"]["Code"])
@@ -103,6 +135,8 @@ class Import:
                     Logger.Message("New DataSource: " + self.conf["Experiment"]["Code"])
                     ds = DataSource()
                 ds.name = ds_name
+                ds.experiment = ex.name
+                ds.experiment_obj = ex
                 ds.typ = self.conf[item]["Format"]
                 ds.source = self.conf[item]["Name"]
                 ds.supplier = self.conf["DataSource"]["Creator"]
@@ -112,12 +146,14 @@ class Import:
                 Logger.Message("Loading: " + ds.source)
                 self.experiment = ex
                 mode = self.conf["DataSource"]["Mode"] 
-                if(clean_op and (mode == "Override" or mode == "Clean")):
+       
+                if(clean_op and (mode=="Destroy" or mode == "Override" or mode == "Clean")):
                     self.Clean(clean_op)
-               
-                if(load_op and mode != "Clean"):
-                    self.Load(load_op, validate_op)
-                elif(load_op and mode == "Append"):
+                if(mode=="Destroy"):
+                    ds.delete()
+                    ex.delete()
+
+                if(load_op and (mode=="Override" or mode == "Append")):
                     self.Load(load_op, validate_op)
                 self.Close()
         
