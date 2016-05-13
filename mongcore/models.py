@@ -71,12 +71,51 @@ class Ontology(mongoengine.Document):
     def __unicode__(self):
         return self.name
 
+class Experiment(mongoengine.DynamicDocument):
+
+    field_names = [
+        'Realm', 'Name', 'Primary Investigator', 'Date Created', 'Description'
+    ]
+
+    name = mongoengine.StringField(max_length=2048, default="Unknown")
+    code = mongoengine.StringField(max_length=2048, default="Unknown") 
+    realm =  mongoengine.StringField(max_length=2048, default="Unknown")
+    pi = mongoengine.StringField(max_length=2048, default="Unknown")
+    date = mongoengine.DateTimeField(default=datetime.now())
+    createdby = mongoengine.StringField(max_length=255)
+    description = mongoengine.StringField(default="")
+    targets = mongoengine.ListField()
+    password = mongoengine.StringField(max_length=2048, default="Unknown")
+    contact = mongoengine.StringField(max_length=255, default="Unkown")
+    species = mongoengine.StringField(max_length=255, default="Unkown")
+
+    def GetHeader(self):
+        lst = self._fields_ordered
+        lst.remove('password')
+        return lst
+        #return [
+        #        "id",
+        #        "name",
+        #        "species",
+        #        "code",
+        #        "realm",
+        #        "pi",
+        #        "date",
+        #        "createdby",
+        #        "contact",
+        #        "description",
+        #        "targets",
+        #    ]
+
+    def __unicode__(self):
+        return self.name
+
 
 """ Class for referencing meta data around the source of the data. 
 You will usually get file names here.
 
 """
-class DataSource(mongoengine.Document):
+class DataSource(mongoengine.DynamicDocument):
     name = mongoengine.StringField(max_length=1024)
     experiment = mongoengine.StringField(max_length=1024)
     experiment_obj = mongoengine.ReferenceField(Experiment)
@@ -144,39 +183,6 @@ class Term(mongoengine.Document):
     group = mongoengine.StringField(max_length=255, null=True, default='None')
     datasource = mongoengine.ReferenceField(DataSource)
     values = mongoengine.DictField()
-
-    def __unicode__(self):
-        return self.name
-
-
-class Experiment(mongoengine.Document):
-
-    field_names = [
-        'Realm', 'Name', 'Primary Investigator', 'Date Created', 'Description'
-    ]
-
-    name = mongoengine.StringField(max_length=2048, default="Unknown")
-    realm =  mongoengine.StringField(max_length=2048, default="Unknown") 
-    pi = mongoengine.StringField(max_length=2048, default="Unknown")
-    createddate = mongoengine.DateTimeField(default=datetime.now())
-    createdby = mongoengine.StringField(max_length=255)
-    description = mongoengine.StringField(default="")
-    targets = mongoengine.ListField()
-    key = mongoengine.StringField(max_length=2048, default="Unknown")
-    createdcontact = mongoengine.StringField(max_length=255, default="Unkown")
-
-    def GetHeader(self):
-        return [
-                "id",
-                "name",
-                "realm",
-                "pi",
-                "createddate",
-                "createdby",
-                "createdcontact",
-                "description",
-                "targets",
-            ]
 
     def __unicode__(self):
         return self.name
