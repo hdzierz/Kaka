@@ -223,10 +223,10 @@ class Query:
             else:
                 qry = eval(qry)
         except Exception as inst:
-            Logger.Error(type(inst))    # the exception instance
-            Logger.Error(inst.args)     # arguments stored in .args
-            Logger.Error(inst) 
-            return HttpLogger.Error("Syntax Error in " + qry), False 
+            Logger.Error(str(type(inst)))    # the exception instance
+            Logger.Error(str(inst.args))     # arguments stored in .args
+            Logger.Error(str(inst)) 
+            return HttpLogger.Error("Syntax Error in " + str(qry)), False 
 
         return qry, True
 
@@ -245,10 +245,11 @@ class JsonQry(Endpoint):
         if(not qry):
             qry = "name==regex('.*')"
             limited = True
-        try:
-            qry, succ = Query.result(request, infmt, qry)
-        except:
-            return HttpLogger.Error("Query unsuccessful: " + qry + ". Check spelling.")
+        #itry:
+        qry, succ = Query.result(request, infmt, qry)
+        #except Exception as ex:
+            
+        #    return HttpLogger.Error("Query unsuccessful: " + qry + ". Check spelling.")
 
         try:
             cls = eval(to_camelcase(realm))
@@ -313,6 +314,21 @@ def page_send(request):
         exc_type, exc_value, exc_traceback = sys.exc_info()
         return HttpLogger.Error(str(e) + str(traceback.format_exc()))
 
+@csrf_exempt
+def page_get_config(request):
+    if request.method=="GET":
+        experiment = request.GET.get('experiment')
+        data_source = request.GET.get('data_source')
+        try:
+            ex = Experiment.objects.get(name=experiment)
+            ds = DataSource.objects.get(name=data_source)
+            config = {}
+            config['Experiment'] = ex.GetConfig()
+            config['DataSource'] = ds.GetConfig()
+        except Exception as ex:
+            return HttpResponse(str(ex) + experiment)
+
+        return JsonResponse(config)
 
 
 def page_main(request):

@@ -56,8 +56,8 @@ class Import:
             raise Exception("Sorry you need a password.")
 
     def test_access(self, ex):
-        key = hashlib.sha224(self.conf["Experiment"]["Password"].encode('utf-8')).hexdigest()
-        if ex.key != key:
+        password = hashlib.sha224(self.conf["Experiment"]["Password"].encode('utf-8')).hexdigest()
+        if ex.password != password:
             raise Exception("Sorry you don't have write access to that experiment") 
 
     def run_clean(self, mode="Clean"):
@@ -92,33 +92,27 @@ class Import:
         if self.conf["DataSource"]["Mode"] == "Destroy" or self.conf["DataSource"]["Mode"] == "Clean":
             self.run_clean(self.conf["DataSource"]["Mode"])
             return True
+
         self.test_conf(self.conf)
         realm = self.conf["Experiment"]["Realm"]
-
-        self.ontology = Ontology.objects.filter(name=realm)
                
         Logger.Message("Run started for : " + realm)
         try:
-            ex = Experiment.objects.get(name=self.conf["Experiment"]["Code"])
+            ex = Experiment.objects.get(name=self.conf["Experiment"]["Name"])
         except:
-            Logger.Message("New Experiment: " + self.conf["Experiment"]["Code"])
+            Logger.Message("New Experiment: " + self.conf["Experiment"]["Name"])
             ex = Experiment()
-            ex.key = hashlib.sha224(self.conf["Experiment"]["Password"].encode('utf-8')).hexdigest()
-        ex.realm = realm
-        ex.name = self.conf["Experiment"]["Code"]
-        ex.createddate = datetime.datetime.now()
-        ex.pi = self.conf["Experiment"]["PI"]
-        ex.description = self.conf["Experiment"]["Description"] 
+            ex.Init(self.conf["Experiment"])
+            ex.password = hashlib.sha224(self.conf["Experiment"]["Password"].encode('utf-8')).hexdigest()
+
+        ex.save()
 
         self.test_access(ex)
-
-        ex.createdby = self.conf["DataSource"]["Creator"]
-        ex.createdcontact = self.conf["DataSource"]["Contact"]
 
         for item in self.conf:
             if "Format" in self.conf[item]:
                 Logger.Message("Loading Data Format: " + self.conf[item]["Format"])
-                self.id_column = self.conf[item]["ID Column"]
+                self.id_column = self.conf[item]["ID_Column"]
                 if "Group" in self.conf[item]:
                     self.group = self.conf[item]["Group"]
                 load_op = ImportOpRegistry.get(realm,item)
@@ -128,22 +122,19 @@ class Import:
                 ex.targets = self.conn.header
                 ex.save()
 
-                ds_name = self.conf["Experiment"]["Code"] + " --- " + self.conf[item]["Name"]
+                ds_name = self.conf[item]["Name"]
                 try:
                     ds = DataSource.objects.get(name=ds_name)
                 except:
                     Logger.Message("New DataSource: " + self.conf["Experiment"]["Code"])
                     ds = DataSource()
+                    ds.Init(self.conf["DataSource"])
                 ds.name = ds_name
                 ds.experiment = ex.name
                 ds.experiment_obj = ex
-                ds.typ = self.conf[item]["Format"]
-                ds.source = self.conf[item]["Name"]
-                ds.supplier = self.conf["DataSource"]["Creator"]
                 ds.suplieddate = datetime.datetime.now()
                 ds.save()
                 self.data_source = ds
-                Logger.Message("Loading: " + ds.source)
                 self.experiment = ex
                 mode = self.conf["DataSource"]["Mode"] 
        

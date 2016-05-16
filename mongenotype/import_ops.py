@@ -47,10 +47,12 @@ class ImportOp:
     @staticmethod
     def load_op(line, imp):
         #try:
-        print(line)
-        line.pop("experiment")
-        line.pop("data_source")
-        line.pop("group")
+        if("experiment" in line):
+            line.pop("experiment")
+        if("data_source" in line):
+            line.pop("data_source")
+        if("group" in line):
+            line.pop("group")
         pr = Genotype(
             name=line[imp.id_column],
             group=imp.group,
@@ -58,8 +60,6 @@ class ImportOp:
             experiment=imp.experiment.name,
             data_source_obj=imp.data_source,
             data_source=imp.data_source.name,
-            createddate=imp.experiment.createddate,
-            description=imp.experiment.description,
         )
         SaveKVs(pr, line)
         pr.switch_db(db_alias)

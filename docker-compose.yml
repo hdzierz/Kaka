@@ -68,12 +68,9 @@ pyrat:
   build: .
   dockerfile: Dockerfile_pyrat
   volumes:
-    - /Users/cfphxd/PyKaka:/tmp/PyKaka
-    - /Users/cfphxd/rkaka:/tmp/rkaka
-#  volumes:
 #    - /input:/input
-#    - /output:/output
-#    - /workspace:/workspace
+    - /output:/output
+    - /Users/cfphxd/workspace:/workspace
   ports:
     - "8888:8888"
   links:

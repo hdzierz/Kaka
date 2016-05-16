@@ -89,8 +89,22 @@ class Experiment(mongoengine.DynamicDocument):
     contact = mongoengine.StringField(max_length=255, default="Unkown")
     species = mongoengine.StringField(max_length=255, default="Unkown")
 
+    def Init(self, dct):
+        for d in dct:
+            if d != 'id':
+                setattr(self, d.lower(), dct[d]);
+
+    def GetConfig(self):
+        lst = list(self._fields_ordered)
+        config = {}
+        for item in lst:
+            config[item] = str(getattr(self, item))
+        config.pop('password')
+        config.pop('targets')
+        return config
+
     def GetHeader(self):
-        lst = self._fields_ordered
+        lst = list(self._fields_ordered)
         lst.remove('password')
         return lst
         #return [
@@ -119,28 +133,36 @@ class DataSource(mongoengine.DynamicDocument):
     name = mongoengine.StringField(max_length=1024)
     experiment = mongoengine.StringField(max_length=1024)
     experiment_obj = mongoengine.ReferenceField(Experiment)
-    typ = mongoengine.StringField(null=True, max_length=256, default="None")
+    type = mongoengine.StringField(null=True, max_length=256, default="None")
     group = mongoengine.StringField(null=True, max_length=256, default="None")
     source = mongoengine.StringField()
-    supplier = mongoengine.StringField(null=True, max_length=2048, default="None")
-    supplieddate = mongoengine.DateTimeField(default=datetime.now())
+    creator = mongoengine.StringField(null=True, max_length=2048, default="None")
+    contact = mongoengine.StringField(null=True, max_length=2048, default="None")
+    id_column = mongoengine.StringField(null=True, max_length=2048, default="None")
+    date = mongoengine.DateTimeField(default=datetime.now())
+    format = mongoengine.StringField(null=True, max_length=256, default="None")
     comment = mongoengine.StringField(null=True, default="none")
-    is_active = mongoengine.BooleanField(default=False)
-    values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
-    search_index = VectorField()
+
+    def Init(self, dct):
+        for d in dct:
+            if d != 'experiment' and d != 'id':
+                setattr(self, d.lower(), dct[d]);
+
+    def GetConfig(self):
+        lst = list(self._fields_ordered)
+        config = {}
+        for item in lst:
+            val = getattr(self, item)
+            config[item] = str(val)
+
+        config.pop('experiment_obj')
+        config.pop('id')
+        return config
 
 
     def GetHeader(self):
-        return [
-                "name",
-                "experiment",
-                "typ",
-                "group",
-                "source",
-                "supplier",
-                "supplieddate",
-                "comment",
-            ]
+        lst = self._fields_ordered
+        return lst
 
     def GetName(self):
         return self.name
