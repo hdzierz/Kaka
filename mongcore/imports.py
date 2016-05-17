@@ -109,7 +109,7 @@ class Import:
         for item in self.conf:
             if "Format" in self.conf[item]:
                 Logger.Message("Loading Data Format: " + self.conf[item]["Format"])
-                self.id_column = self.conf[item]["ID_Column"]
+                self.id_column = self.conf[item]["IdColumn"]
                 if "Group" in self.conf[item]:
                     self.group = self.conf[item]["Group"]
                 load_op = ImportOpRegistry.get(realm,item)
