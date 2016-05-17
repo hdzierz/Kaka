@@ -63,7 +63,7 @@ class Import:
     def run_clean(self, mode="Clean"):
         self.test_conf(self.conf)
         realm = self.conf["Experiment"]["Realm"]
-        experiment = self.conf["Experiment"]["Code"]
+        experiment = self.conf["Experiment"]["Name"]
         data_source = self.conf["DataSource"]["Name"]
         clean_op = ImportOpRegistry.get(realm,"clean")
       
@@ -83,10 +83,7 @@ class Import:
             self.Clean(clean_op)
        
         if(mode=="Destroy"): 
-            self.experiment.delete()
             self.data_source.clean()
-
-        self.Close()
 
     def Run(self, data_source):
         if self.conf["DataSource"]["Mode"] == "Destroy" or self.conf["DataSource"]["Mode"] == "Clean":

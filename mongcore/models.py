@@ -22,6 +22,17 @@ import mongoengine
 from datetime import datetime
 import binascii
 
+def to_underline(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
+def to_camelcase(s):
+    buff = re.sub(r'(?!^)_([a-zA-Z])', lambda m: m.group(1).upper(), s)
+    return buff[0].upper() + buff[1:]
+
+
+
 # Create your models here.
 
 """DataError
@@ -92,15 +103,17 @@ class Experiment(mongoengine.DynamicDocument):
     def Init(self, dct):
         for d in dct:
             if d != 'id':
-                setattr(self, d.lower(), dct[d]);
+                e = to_underline(d)
+                setattr(self, e, dct[d]);
 
     def GetConfig(self):
+        ignore = ["password", "targets"]
         lst = list(self._fields_ordered)
         config = {}
         for item in lst:
-            config[item] = str(getattr(self, item))
-        config.pop('password')
-        config.pop('targets')
+            if(item not in ignore):
+                it = to_camelcase(item)
+                config[it] = str(getattr(self, item))
         return config
 
     def GetHeader(self):
@@ -146,19 +159,18 @@ class DataSource(mongoengine.DynamicDocument):
     def Init(self, dct):
         for d in dct:
             if d != 'experiment' and d != 'id':
-                setattr(self, d.lower(), dct[d]);
+                e = to_underline(d)
+                setattr(self, e, dct[d]);
 
     def GetConfig(self):
+        ignore = ["experiment_obj", "id"]
         lst = list(self._fields_ordered)
         config = {}
         for item in lst:
-            val = getattr(self, item)
-            config[item] = str(val)
-
-        config.pop('experiment_obj')
-        config.pop('id')
+            if(item not in ignore):
+                it = to_camelcase(item)
+                config[it] = str(getattr(self, item))
         return config
-
 
     def GetHeader(self):
         lst = self._fields_ordered
@@ -166,6 +178,9 @@ class DataSource(mongoengine.DynamicDocument):
 
     def GetName(self):
         return self.name
+
+    def SetPasswd(self, passwd):
+        self.password = hashlib.sha224(passwd.encode('utf-8')).hexdigest()
 
     def __unicode__(self):
         return self.name

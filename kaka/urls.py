@@ -19,6 +19,7 @@ urlpatterns = [
     #url(r'^inplaceeditform/', include('inplaceeditform.urls')),
     url(r'^send$', 'web.views.page_send'),
     url(r'^config$', 'web.views.page_get_config'),
+    url(r'^destroy$', 'web.views.page_clean_experiment'),
     url(r'^qry/(?P<realm>[0-9a-zA-Z_]*)/$',JsonQry.as_view()),
     url(r'^api/genotype/$', 'web.views.genotype_report', name='genotype_report'),
     url(r'^api/(?P<report>[0-9a-zA-Z_]*)/$', 'web.views.page_report' ),
