@@ -315,6 +315,36 @@ def page_send(request):
         return HttpLogger.Error(str(e) + str(traceback.format_exc()))
 
 @csrf_exempt
+def page_clean_experiment(request):
+    try:
+        if request.method=="GET":
+            password = request.GET.get('password')
+            experiment = request.GET.get('experiment')
+            mode = request.GET.get('mode')
+            realm = request.GET.get('realm')
+
+            ex = Experiment.objects.get(name=experiment, realm=realm)
+
+            if(mode=="Resetpwd"):
+                ex.SetPasswd(password)
+            elif(mode=="Clean" or mode=="Destroy"):
+                cfg = {}
+                cfg['Experiment'] = ex.GetConfig()
+                cfg['Experiment']['Password'] = password
+
+                for ds in DataSource.objects(experiment=experiment):
+                    cfg['DataSource'] = ds.GetConfig()
+                    imp = Import(cfg)
+                    imp.run_clean(mode)
+                if(mode.lower()=="destroy"):
+                    ex.delete()
+            return HttpLogger.Message("SUCCESS")
+    except Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        return HttpLogger.Error(str(e) + str(traceback.format_exc()))
+
+
+@csrf_exempt
 def page_get_config(request):
     if request.method=="GET":
         experiment = request.GET.get('experiment')
