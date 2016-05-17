@@ -416,7 +416,7 @@ def GetData(ob, header=False):
             res.append(getattr(ob, h))
         except:
             res.append("NA")
-            Logger.Warning("Header " + h  + " does not exist in: " + self.name)
+            Logger.Warning("Header " + h  + " does not exist in: " + ob.name)
 
     return res
 

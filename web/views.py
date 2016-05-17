@@ -286,8 +286,8 @@ class JsonQry(Endpoint):
             else:
                 try:
                     writer.writerow(GetData(o, header))
-                except:
-                    return HttpResponse("Query on " + realm  + " not (yet) possible.")
+                except Exception as e:
+                    return HttpResponse("Query on " + realm  + " not (yet) possible. " + str(e))
         return response
 
 from django.views.decorators.csrf import csrf_exempt
