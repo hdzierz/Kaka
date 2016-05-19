@@ -10,6 +10,7 @@ import datetime
 import hashlib
 #from .connectors import *
 import os
+import pandas
 
 def load_conn(fn, cfg, typ, sheet=None):
     Logger.Message("Attempting to load conn for :" + typ)
@@ -23,7 +24,9 @@ def load_conn(fn, cfg, typ, sheet=None):
                 sheet = cfg[typ]["Sheet"]
             conn = ExcelConnector(fn, sheet)
         elif fmt == "python_dict":
-            conn = DictListConnector(fn) 
+            conn = DictListConnector(fn)
+        elif fmt=="r_dataframe" or fmt=="python_pandas":
+            conn = PandasConnector(fn) 
         return conn
     else:
         raise Exception("ERROR: Configuration failed when loading data: " + str(cfg))
@@ -116,7 +119,8 @@ class Import:
                 clean_op = ImportOpRegistry.get(realm,"clean")
                 validate_op = ImportOpValidationRegistry.get(realm,item)  
                 self.conn = load_conn(data_source, self.conf, item)
-                ex.targets = self.conn.header
+                Logger.Message(str(self.conn.header))
+                ex.targets = list(self.conn.header)
                 ex.save()
 
                 ds_name = self.conf[item]["Name"]

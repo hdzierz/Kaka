@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^accounts/login/$', 'django.contrib.auth.views.login'),
     #url(r'^inplaceeditform/', include('inplaceeditform.urls')),
     url(r'^send$', 'web.views.page_send'),
+    url(r'^test$', 'web.views.page_test'),
     url(r'^config$', 'web.views.page_get_config'),
     url(r'^destroy$', 'web.views.page_clean_experiment'),
     url(r'^qry/(?P<realm>[0-9a-zA-Z_]*)/$',JsonQry.as_view()),

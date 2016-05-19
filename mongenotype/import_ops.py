@@ -53,6 +53,11 @@ class ImportOp:
             line.pop("data_source")
         if("group" in line):
             line.pop("group")
+        if("ontology" in line):
+            line.pop("ontology")
+        if("ontology_obj" in line):
+            line.pop("ontology_obj")
+        Logger.Message(str(line))
         pr = Genotype(
             name=line[imp.id_column],
             group=imp.group,
