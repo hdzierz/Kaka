@@ -307,15 +307,13 @@ class Feature(mongoengine.DynamicDocument):
 
 
     def GetHeader(self):
+        ignore = ['data_source_obj', 'experiment_obj', 'obkeywords', 'statuscode', 'obs', 'ebrida_id', 'kea_id']
         header = []
-        header.append("name")
-        header.append("group")
-        header.append("data_source")
-        #header.append("ontology")
-        header.append("experiment")
-        #header.append("xreflsid")
-        for t in self.experiment_obj.targets:
-            header.append(t)
+        lst = list(self._fields_ordered)
+
+        for t in lst:
+            if not t in ignore:
+                header.append(t)
  
         return header 
 
