@@ -53,25 +53,31 @@ class Logger:
 
 class HttpLogger:
     @staticmethod
-    def send(typ, msg):
+    def send(typ, msg, content_type='text/csv'):
+        Logger.Error(content_type)
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="error.csv"'
-        writer = csv.writer(response)
-        writer.writerow(['"' + typ  + '"'])
-        writer.writerow(['"'+ msg + '"'])
+        if(content_type=='text/csv'):
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="error.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['"' + typ  + '"'])
+            writer.writerow(['"'+ msg + '"'])
+        else:
+            msg = "<table><tr><td>" + typ + ":" + msg + "</td></tr></table>"
+            response = HttpResponse(msg)
         return response
    
     @staticmethod
-    def Error(msg):
-        return HttpLogger.send("Error", msg)
+    def Error(msg, content_type='text/csv'):
+        return HttpLogger.send("Error", msg, content_type)
 
     @staticmethod
-    def Message(msg):
-        return HttpLogger.send("Message", msg)
+    def Message(msg, content_type='text/csv'):
+        return HttpLogger.send("Message", msg, content_type)
 
     @staticmethod
-    def Warning(msg):
-        return HttpLogger.send("Warning", msg)
+    def Warning(msg, content_type='text/csv'):
+        return HttpLogger.send("Warning", msg, content_type)
 
 
 Logger.Init()

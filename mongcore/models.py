@@ -22,6 +22,17 @@ import mongoengine
 from datetime import datetime
 import binascii
 
+def to_underline(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
+def to_camelcase(s):
+    buff = re.sub(r'(?!^)_([a-zA-Z])', lambda m: m.group(1).upper(), s)
+    return buff[0].upper() + buff[1:]
+
+
+
 # Create your models here.
 
 """DataError
@@ -42,6 +53,9 @@ class Key(mongoengine.Document):
         self.key = binascii.hexlify(os.urandom(24)).decode('utf-8')
         super(Key, self).save(*args, **kwargs)
 
+    def __unicode__(self):
+        return self.name + "/" + self.email + "/" + self.key
+
 
 class DataDir(mongoengine.Document):
     name = mongoengine.StringField(max_length=2048)
@@ -55,7 +69,7 @@ class DataDir(mongoengine.Document):
 
 
 """
-class Ontology(mongoengine.EmbeddedDocument):
+class Ontology(mongoengine.Document):
     ontology = 'unkown'
     name = mongoengine.StringField(max_length=2048)
     tablename = mongoengine.StringField(max_length=128)
@@ -68,37 +82,105 @@ class Ontology(mongoengine.EmbeddedDocument):
     def __unicode__(self):
         return self.name
 
+class Experiment(mongoengine.DynamicDocument):
+
+    field_names = [
+        'Realm', 'Name', 'Primary Investigator', 'Date Created', 'Description'
+    ]
+
+    name = mongoengine.StringField(max_length=2048, default="Unknown")
+    code = mongoengine.StringField(max_length=2048, default="Unknown") 
+    realm =  mongoengine.StringField(max_length=2048, default="Unknown")
+    pi = mongoengine.StringField(max_length=2048, default="Unknown")
+    date = mongoengine.DateTimeField(default=datetime.now())
+    createdby = mongoengine.StringField(max_length=255)
+    description = mongoengine.StringField(default="")
+    targets = mongoengine.ListField()
+    password = mongoengine.StringField(max_length=2048, default="Unknown")
+    contact = mongoengine.StringField(max_length=255, default="Unkown")
+    species = mongoengine.StringField(max_length=255, default="Unkown")
+
+    def Init(self, dct):
+        for d in dct:
+            if d != 'id':
+                e = to_underline(d)
+                setattr(self, e, dct[d]);
+
+    def GetConfig(self):
+        ignore = ["password", "targets"]
+        lst = list(self._fields_ordered)
+        config = {}
+        for item in lst:
+            if(item not in ignore):
+                it = to_camelcase(item)
+                config[it] = str(getattr(self, item))
+        return config
+
+    def GetHeader(self):
+        lst = list(self._fields_ordered)
+        lst.remove('password')
+        return lst
+        #return [
+        #        "id",
+        #        "name",
+        #        "species",
+        #        "code",
+        #        "realm",
+        #        "pi",
+        #        "date",
+        #        "createdby",
+        #        "contact",
+        #        "description",
+        #        "targets",
+        #    ]
+
+    def __unicode__(self):
+        return self.name
+
 
 """ Class for referencing meta data around the source of the data. 
 You will usually get file names here.
 
 """
-class DataSource(mongoengine.Document):
+class DataSource(mongoengine.DynamicDocument):
     name = mongoengine.StringField(max_length=1024)
-    typ = mongoengine.StringField(null=True, max_length=256, default="None")
+    experiment = mongoengine.StringField(max_length=1024)
+    experiment_obj = mongoengine.ReferenceField(Experiment)
+    type = mongoengine.StringField(null=True, max_length=256, default="None")
     group = mongoengine.StringField(null=True, max_length=256, default="None")
     source = mongoengine.StringField()
-    supplier = mongoengine.StringField(null=True, max_length=2048, default="None")
-    supplieddate = mongoengine.DateTimeField(default=datetime.now())
+    creator = mongoengine.StringField(null=True, max_length=2048, default="None")
+    contact = mongoengine.StringField(null=True, max_length=2048, default="None")
+    id_column = mongoengine.StringField(null=True, max_length=2048, default="None")
+    date = mongoengine.DateTimeField(default=datetime.now())
+    format = mongoengine.StringField(null=True, max_length=256, default="None")
     comment = mongoengine.StringField(null=True, default="none")
-    is_active = mongoengine.BooleanField(default=False)
-    values = JSONField(load_kwargs={'object_pairs_hook': collections.OrderedDict})
-    search_index = VectorField()
 
+    def Init(self, dct):
+        for d in dct:
+            if d != 'experiment' and d != 'id':
+                e = to_underline(d)
+                setattr(self, e, dct[d]);
+
+    def GetConfig(self):
+        ignore = ["experiment_obj", "id"]
+        lst = list(self._fields_ordered)
+        config = {}
+        for item in lst:
+            if(item not in ignore):
+                it = to_camelcase(item)
+                config[it] = str(getattr(self, item))
+        return config
 
     def GetHeader(self):
-        return [
-                "name",
-                "typ",
-                "group",
-                "source",
-                "supplier",
-                "supplieddate",
-                "comment",
-            ]
+        lst = self._fields_ordered
+        return lst
 
     def GetName(self):
         return self.name
+
+    def SetPasswd(self, passwd):
+        self.password = hashlib.sha224(passwd.encode('utf-8')).hexdigest()
 
     def __unicode__(self):
         return self.name
@@ -138,39 +220,6 @@ class Term(mongoengine.Document):
     group = mongoengine.StringField(max_length=255, null=True, default='None')
     datasource = mongoengine.ReferenceField(DataSource)
     values = mongoengine.DictField()
-
-    def __unicode__(self):
-        return self.name
-
-
-class Experiment(mongoengine.Document):
-
-    field_names = [
-        'Realm', 'Name', 'Primary Investigator', 'Date Created', 'Description'
-    ]
-
-    name = mongoengine.StringField(max_length=2048, default="Unknown")
-    realm =  mongoengine.StringField(max_length=2048, default="Unknown") 
-    pi = mongoengine.StringField(max_length=2048, default="Unknown")
-    createddate = mongoengine.DateTimeField(default=datetime.now())
-    createdby = mongoengine.StringField(max_length=255)
-    description = mongoengine.StringField(default="")
-    targets = mongoengine.ListField()
-    key = mongoengine.StringField(max_length=2048, default="Unknown")
-    createdcontact = mongoengine.StringField(max_length=255, default="Unkown")
-
-    def GetHeader(self):
-        return [
-                "id",
-                "name",
-                "realm",
-                "pi",
-                "createddate",
-                "createdby",
-                "createdcontact",
-                "description",
-                "targets",
-            ]
 
     def __unicode__(self):
         return self.name
@@ -244,7 +293,8 @@ class Feature(mongoengine.DynamicDocument):
     experiment_obj = mongoengine.ReferenceField(Experiment)
     experiment = mongoengine.StringField(max_length=255, default="unknown")
     description = mongoengine.StringField(default="")
-    ontology = mongoengine.EmbeddedDocumentField(Ontology)
+    ontology = mongoengine.StringField(max_length=255, default="unknown")
+    ontology_obj = mongoengine.ReferenceField(Ontology)
     xreflsid = mongoengine.StringField(max_length=255)
     createddate = mongoengine.DateTimeField(default=datetime.now())
     createdby = mongoengine.StringField(max_length=255)
@@ -253,19 +303,18 @@ class Feature(mongoengine.DynamicDocument):
     obkeywords = mongoengine.StringField()
     statuscode = mongoengine.IntField(default=1)
     search_index = VectorField()
+    targets = mongoengine.ListField()
     obs = mongoengine.DictField()
 
 
     def GetHeader(self):
+        ignore = ['data_source_obj', 'experiment_obj', 'obkeywords', 'statuscode', 'obs', 'ebrida_id', 'kea_id']
         header = []
-        header.append("name")
-        header.append("group")
-        header.append("data_source")
-        header.append("ontology")
-        header.append("experiment")
-        header.append("xreflsid")
-        for t in self.experiment_obj.targets:
-            header.append(t)
+        lst = list(self._fields_ordered)
+
+        for t in lst:
+            if not t in ignore:
+                header.append(t)
  
         return header 
 
@@ -381,7 +430,7 @@ def GetData(ob, header=False):
             res.append(getattr(ob, h))
         except:
             res.append("NA")
-            Logger.Warning("Header " + h  + " does not exist in: " + self.name)
+            Logger.Warning("Header " + h  + " does not exist in: " + ob.name)
 
     return res
 
@@ -427,7 +476,7 @@ def convert(name):
 
 
 # SIGNALS
-@receiver(pre_save)
+#@receiver(pre_save)
 def set_ontology(sender, instance, **kwargs):
     class_name = instance.__class__.__name__
     try:

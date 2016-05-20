@@ -47,6 +47,17 @@ class ImportOp:
     @staticmethod
     def load_op(line, imp):
         #try:
+        if("experiment" in line):
+            line.pop("experiment")
+        if("data_source" in line):
+            line.pop("data_source")
+        if("group" in line):
+            line.pop("group")
+        if("ontology" in line):
+            line.pop("ontology")
+        if("ontology_obj" in line):
+            line.pop("ontology_obj")
+        Logger.Message(str(line))
         pr = Genotype(
             name=line[imp.id_column],
             group=imp.group,
@@ -54,8 +65,7 @@ class ImportOp:
             experiment=imp.experiment.name,
             data_source_obj=imp.data_source,
             data_source=imp.data_source.name,
-            createddate=imp.experiment.createddate,
-            description=imp.experiment.description,
+            targets=imp.conn.header
         )
         SaveKVs(pr, line)
         pr.switch_db(db_alias)
@@ -63,27 +73,16 @@ class ImportOp:
         # add to record of docs saved to db by this run through
         created_doc_ids.append((Genotype, pr.id))
 
-        #keys = []
-        #for key in line.keys():
-        #    key = re.sub('[^0-9a-zA-Z_]+', '_', key)
-        #    if(not key in imp.experiment.targets):
-        #        imp.experiment.targets.append(key)
-        
-        # imp.experiment.save()
-
-        #except:
-        #    Logger.Error("Line did not save")
         return imp
 
     @staticmethod
     def clean_op(imp):
-        Genotype.objects.filter(experiment=imp.experiment.name).delete()
-        Design.objects.filter(experiment=imp.experiment.name).delete()
+        Genotype.objects.filter(data_source=imp.data_source.name).delete()
 
 
 ImportOpValidationRegistry.register("genotype","design", ImportOp.validate_design_op)
 #ImportOpValidationRegistry.register("genotype","data", ImportOp.validate_design_op)
 ImportOpRegistry.register("genotype", "design", ImportOp.load_design_op)
-ImportOpRegistry.register("genotype", "data", ImportOp.load_op)
+ImportOpRegistry.register("genotype", "datasource", ImportOp.load_op)
 ImportOpRegistry.register("genotype", "clean", ImportOp.clean_op)
 ImportOpRegistry.register("genotype", "default", ImportOp.load_op)

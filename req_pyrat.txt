@@ -2,3 +2,4 @@ pandas==0.16.2
 pql==0.4.3
 pymongo==3.2.1
 PyYAML==3.11
+PyVCF

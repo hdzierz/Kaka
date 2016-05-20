@@ -223,10 +223,10 @@ class Query:
             else:
                 qry = eval(qry)
         except Exception as inst:
-            Logger.Error(type(inst))    # the exception instance
-            Logger.Error(inst.args)     # arguments stored in .args
-            Logger.Error(inst) 
-            return HttpLogger.Error("Syntax Error in " + qry), False 
+            Logger.Error(str(type(inst)))    # the exception instance
+            Logger.Error(str(inst.args))     # arguments stored in .args
+            Logger.Error(str(inst)) 
+            return HttpLogger.Error("Syntax Error in " + str(qry)), False 
 
         return qry, True
 
@@ -245,10 +245,11 @@ class JsonQry(Endpoint):
         if(not qry):
             qry = "name==regex('.*')"
             limited = True
-        try:
-            qry, succ = Query.result(request, infmt, qry)
-        except:
-            return HttpLogger.Error("Query unsuccessful: " + qry + ". Check spelling.")
+        #itry:
+        qry, succ = Query.result(request, infmt, qry)
+        #except Exception as ex:
+            
+        #    return HttpLogger.Error("Query unsuccessful: " + qry + ". Check spelling.")
 
         try:
             cls = eval(to_camelcase(realm))
@@ -285,8 +286,8 @@ class JsonQry(Endpoint):
             else:
                 try:
                     writer.writerow(GetData(o, header))
-                except:
-                    return HttpResponse("Query on " + realm  + " not (yet) possible.")
+                except Exception as e:
+                    return HttpResponse("Query on " + realm  + " not (yet) possible. " + str(e))
         return response
 
 from django.views.decorators.csrf import csrf_exempt
@@ -299,21 +300,72 @@ def page_send(request):
             config = request.POST.get('config')
             key = request.POST.get('config')
             data = request.POST.get('dat')
-            #f = open("/tmp/tt.csv", "w")
-            #f.write(data)
             data = json.loads(data)
             config = json.loads(config)
 
             imp = Import(config)
             imp.Run(data)
     
-        return HttpLogger.Message("SUCCESS")
+        return HttpLogger.Message("SUCCESS", content_type="html")
 
+    except Exception as e:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        return HttpLogger.Error(str(e) + str(traceback.format_exc()), content_type="html")
+
+@csrf_exempt
+def page_clean_experiment(request):
+    try:
+        if request.method=="GET":
+            password = request.GET.get('password')
+            experiment = request.GET.get('experiment')
+            mode = request.GET.get('mode')
+            realm = request.GET.get('realm')
+
+            ex = Experiment.objects.get(name=experiment, realm=realm)
+
+            if(mode=="Resetpwd"):
+                ex.SetPasswd(password)
+            elif(mode=="Clean" or mode=="Destroy"):
+                cfg = {}
+                cfg['Experiment'] = ex.GetConfig()
+                cfg['Experiment']['Password'] = password
+
+                for ds in DataSource.objects(experiment=experiment):
+                    cfg['DataSource'] = ds.GetConfig()
+                    imp = Import(cfg)
+                    imp.run_clean(mode)
+                if(mode.lower()=="destroy"):
+                    ex.delete()
+            return HttpLogger.Message("SUCCESS")
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         return HttpLogger.Error(str(e) + str(traceback.format_exc()))
 
 
+@csrf_exempt
+def page_get_config(request):
+    if request.method=="GET":
+        experiment = request.GET.get('experiment')
+        data_source = request.GET.get('data_source')
+        try:
+            ex = Experiment.objects.get(name=experiment)
+            ds = DataSource.objects.get(name=data_source)
+            config = {}
+            config['Experiment'] = ex.GetConfig()
+            config['DataSource'] = ds.GetConfig()
+        except Exception as ex:
+            return HttpResponse(str(ex) + experiment)
+
+        return JsonResponse(config)
+
+@csrf_exempt
+def page_test(request):
+    if request.method=="POST":
+        config = request.POST.get('config')
+        config = json.loads(config)
+        Logger.Message(str(config))
+        return JsonResponse(config)
+    return HttpResponse("bla")
 
 def page_main(request):
     return redirect("/experimentsearch")

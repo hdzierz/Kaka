@@ -26,7 +26,7 @@ mongo:
   build: .
   dockerfile: Dockerfile_mongo
   volumes:
-    - /Users/cfphxd/output:/output
+    - /output:/output
   ports:
     - "27018:27017"
   environment:
@@ -42,7 +42,7 @@ web:
   volumes:
     - .:/code
     #- /input:/input
-    - /Users/cfphxd/output:/output
+    - /output:/output
     #- /workspace:/workspace
   ports:
     - "8001:80"
@@ -68,12 +68,9 @@ pyrat:
   build: .
   dockerfile: Dockerfile_pyrat
   volumes:
-    - /Users/cfphxd/PyKaka:/tmp/PyKaka
-    - /Users/cfphxd/rkaka:/tmp/rkaka
-#  volumes:
 #    - /input:/input
-#    - /output:/output
-#    - /workspace:/workspace
+    - /output:/output
+    - /workspace:/workspace
   ports:
     - "8888:8888"
   links:
