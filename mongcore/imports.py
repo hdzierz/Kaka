@@ -119,10 +119,9 @@ class Import:
                 clean_op = ImportOpRegistry.get(realm,"clean")
                 validate_op = ImportOpValidationRegistry.get(realm,item)  
                 self.conn = load_conn(data_source, self.conf, item)
-                Logger.Message(str(self.conn.header))
                 ex.targets = list(self.conn.header)
                 ex.save()
-
+                
                 ds_name = self.conf[item]["Name"]
                 try:
                     ds = DataSource.objects.get(name=ds_name)

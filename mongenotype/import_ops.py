@@ -65,6 +65,7 @@ class ImportOp:
             experiment=imp.experiment.name,
             data_source_obj=imp.data_source,
             data_source=imp.data_source.name,
+            targets=imp.conn.header
         )
         SaveKVs(pr, line)
         pr.switch_db(db_alias)

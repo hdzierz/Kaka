@@ -303,6 +303,7 @@ class Feature(mongoengine.DynamicDocument):
     obkeywords = mongoengine.StringField()
     statuscode = mongoengine.IntField(default=1)
     search_index = VectorField()
+    targets = mongoengine.ListField()
     obs = mongoengine.DictField()
 
 
