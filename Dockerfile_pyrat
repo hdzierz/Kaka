@@ -7,9 +7,16 @@ ENV https_proxy http://proxy.pfr.co.nz:8080
 ENV no_proxy web,mongo,localhost,127.0.0.1,*.pfr.co.nz,::1
 
 ADD req_pyrat.txt req_pyrat.txt
+ADD key.rsa key.rsa
 
-RUN mkdir /tmp/PyKaka; \
-    mkdir /tmp/rkaka;
+RUN mkdir ~/.ssh;\
+    touch ~/.ssh/known_hosts;\
+    touch ~/.ssh/id_rsa;\
+    chmod go-rwx ~/.ssh;\
+    cat key.rsa >> ~/.ssh/id_rsa;\
+    ssh-keyscan github.com >> ~/.ssh/known_hosts;\
+    rm key.rsa;
+    
 
 RUN Rscript -e 'devtools::install_github("hdzierz/rkaka", ref="lod_lib")';
 
@@ -18,8 +25,8 @@ RUN pip2.7 install --upgrade pip;\
     pip3 install --upgrade pip;\
     pip2.7 install -r req_pyrat.txt;\
     pip3 install -r req_pyrat.txt;\
-    pip2.7 install git+https://github.com/hdzierz/PyKaka.git;\
-    pip3 install git+https://github.com/hdzierz/PyKaka.git;\
+    pip2.7 install git+git@github.com:PlantandFoodResearch/PyKaka.git;\
+    pip3 install git+git@github.com:PlantandFoodResearch/PyKaka.git;\
 
     
 
