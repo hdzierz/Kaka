@@ -25,8 +25,8 @@ RUN pip2.7 install --upgrade pip;\
     pip3 install --upgrade pip;\
     pip2.7 install -r req_pyrat.txt;\
     pip3 install -r req_pyrat.txt;\
-    pip2.7 install git+git@github.com:PlantandFoodResearch/PyKaka.git;\
-    pip3 install git+git@github.com:PlantandFoodResearch/PyKaka.git;\
+    pip2.7 install git+https://github.com/PlantandFoodResearch/PyKaka.git;\
+    pip3 install git+https://github.com/PlantandFoodResearch/PyKaka.git;\
 
     
 
