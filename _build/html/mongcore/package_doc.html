@@ -28,10 +28,28 @@
     <link rel="prev" title="Tutorial" href="../tutorial.html" />
    
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
 
   </head>
-  <body role="document">  
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../mongenotype/package_doc.html" title="mongenotype"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../tutorial.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Kaka 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -43,243 +61,20 @@
 <div class="section" id="module-mongcore.csv_to_doc">
 <span id="csv-to-doc"></span><h2>csv_to_doc<a class="headerlink" href="#module-mongcore.csv_to_doc" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-mongcore.csv_to_doc_strategy">
-<span id="csv-to-doc-strategy"></span><h2>csv_to_doc_strategy<a class="headerlink" href="#module-mongcore.csv_to_doc_strategy" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="mongcore.csv_to_doc_strategy.AbstractCsvToDocStrategy">
-<em class="property">class </em><code class="descclassname">mongcore.csv_to_doc_strategy.</code><code class="descname">AbstractCsvToDocStrategy</code><a class="headerlink" href="#mongcore.csv_to_doc_strategy.AbstractCsvToDocStrategy" title="Permalink to this definition">¶</a></dt>
-<dd><p>query_strategy for CsvToDocConverter. All instances must have a file_name class
-field and an implemented create_document method</p>
-<p>Essentially tells the CsvToDocConverter which file to save the query to and which
-model to build from the rows in the query file</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="mongcore.csv_to_doc_strategy.string_to_datetime">
-<code class="descclassname">mongcore.csv_to_doc_strategy.</code><code class="descname">string_to_datetime</code><span class="sig-paren">(</span><em>date_string</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.csv_to_doc_strategy.string_to_datetime" title="Permalink to this definition">¶</a></dt>
-<dd><p>createddate field values in the database have a colon in the UTC info,
-preventing a simple call of just strptime(). Removes colon in UTC info
-so can create a datetime from strptime
-:param date_string: Date string from createddate field
-:return: datetime from processed date string</p>
-</dd></dl>
-
+<div class="section" id="csv-to-doc-strategy">
+<h2>csv_to_doc_strategy<a class="headerlink" href="#csv-to-doc-strategy" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-mongcore.models">
-<span id="models"></span><h2>models<a class="headerlink" href="#module-mongcore.models" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="mongcore.models.ExperimentForTable">
-<em class="property">class </em><code class="descclassname">mongcore.models.</code><code class="descname">ExperimentForTable</code><span class="sig-paren">(</span><em>id</em>, <em>name</em>, <em>primary_investigator</em>, <em>date_created</em>, <em>data_source</em>, <em>download_link</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.models.ExperimentForTable" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="mongcore.models.DataSourceForTable">
-<em class="property">class </em><code class="descclassname">mongcore.models.</code><code class="descname">DataSourceForTable</code><span class="sig-paren">(</span><em>id</em>, <em>name</em>, <em>is_active</em>, <em>source</em>, <em>supplier</em>, <em>supply_date</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.models.DataSourceForTable" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="section" id="models">
+<h2>models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-mongcore.query_from_request">
-<span id="query-from-request"></span><h2>query_from_request<a class="headerlink" href="#module-mongcore.query_from_request" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="mongcore.query_from_request.QueryRequestHandler">
-<em class="property">class </em><code class="descclassname">mongcore.query_from_request.</code><code class="descname">QueryRequestHandler</code><span class="sig-paren">(</span><em>request</em>, <em>testing=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class used by either the views.index() method of experimentsearch to build the context used to
-render the page based on the request, or by the views.genotype_report() method of web to obtain
-a queryset of Experiments to query the Genotype collection with. Assumes the request has GET data</p>
-<dl class="method">
-<dt id="mongcore.query_from_request.QueryRequestHandler.build_context">
-<code class="descname">build_context</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler.build_context" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a django table from self.search_list if it is a QuerySet that contains
-anything.
-:return A dict of all the QueryRequestHandler&#8217;s instance variables (except the request)</p>
-<blockquote>
-<div>plus the table, for use as a render context for views.index()</div></blockquote>
-</dd></dl>
-
-<dl class="method">
-<dt id="mongcore.query_from_request.QueryRequestHandler.get_is_advanced_search">
-<code class="descname">get_is_advanced_search</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler.get_is_advanced_search" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to determine whether to use the GET dict for an advanced query. Returns true
-if the GET dict has more than one field to query the Experiment collection by
-(counting &#8216;from&#8217; and &#8216;to&#8217; date combined as one field: createddate)
-:return:</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="mongcore.query_from_request.QueryRequestHandler.make_search">
-<code class="descname">make_search</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler.make_search" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets self.search_list to a QuerySet of models.Experiment obtained
-with a filter constructed from the request&#8217;s get data</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="mongcore.query_from_request.QueryRequestHandler.query_for_api">
-<code class="descname">query_for_api</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler.query_for_api" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used by web.views.genotype_report(). Builds a query from the request&#8217;s
-GET data, queries models.Ezperiments with it, then returns the query set
-obtained</p>
-<p>Query parsed from GET data following these rules:</p>
-<p>search_name=[string] : Queries experiments by name
-search_pi=[string] : Queries experiments by primary investigator
-from_date_day=[int]&amp;from_date_month=[int]&amp;from_date_year=[int] : Queries experiments by createddate &gt; from_date
-to_date_day=[int]&amp;to_date_month=[int]&amp;to_date_year=[int] : Queries experiments by createddate &lt; to_date
-:return:</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="mongcore.query_from_request.QueryRequestHandler.query_regex">
-<em class="property">static </em><code class="descname">query_regex</code><span class="sig-paren">(</span><em>term</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler.query_regex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Makes a regex pattern from the given term. Flanks the term with pattern for
-word boundaries (including underscores) or, if wildcard symbols are at the start
-or end of term, with the pattern for matching any length of any character.
-Pattern ignores case</p>
-<dl class="docutils">
-<dt>Example: term = &#8216;kiwi&#8217; will match &#8216;Kiwi Fruit&#8217; and &#8216;Kiwi_Fruit&#8217; but not &#8216;Kiwifruit&#8217;</dt>
-<dd>term = &#8216;kiwi%&#8217; will match &#8216;Kiwi Fruit&#8217;, &#8216;Kiwi_Fruit&#8217; and &#8216;Kiwifruit&#8217;</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>term</strong> &#8211; Term to build regex pattern from</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Regex pattern built from given term to use for querying</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="mongcore.query_from_request.QueryRequestHandler.raw_query_dict">
-<em class="property">static </em><code class="descname">raw_query_dict</code><span class="sig-paren">(</span><em>field</em>, <em>search_term</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler.raw_query_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parses the search_term (entered into a form&#8217;s text field) into a raw PyMongo
-query dictionary.</p>
-<p>The operators are:
--       Whitespace for OR
--       + for AND
--       % for wildcard (At start or end of word, or alone. Matches any length)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>field</strong> &#8211; The document field the query is to use to filter</li>
-<li><strong>search_term</strong> &#8211; the string entered into the search form&#8217;s text field</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">PyMongo query dictionary</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="mongcore.query_from_request.QueryRequestHandler.search_advanced">
-<code class="descname">search_advanced</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler.search_advanced" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs a raw PyMongo query dictionary from the get data, joining the filters
-for each feild together with an $and operator. Sets self.search_list to the
-models.Experiments queried by this dictionary
-:return:</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="mongcore.query_from_request.QueryRequestHandler.select_search_type">
-<code class="descname">select_search_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_from_request.QueryRequestHandler.select_search_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks the request&#8217;s GET data for which search parameter was chosen
-via the &#8216;Search by&#8217; dropdown, and selects the search form and
-updates the dropdown accordingly</p>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="query-from-request">
+<h2>query_from_request<a class="headerlink" href="#query-from-request" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-mongcore.query_set_helpers">
-<span id="query-set-helpers"></span><h2>query_set_helpers<a class="headerlink" href="#module-mongcore.query_set_helpers" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="mongcore.query_set_helpers.build_dict">
-<code class="descclassname">mongcore.query_set_helpers.</code><code class="descname">build_dict</code><span class="sig-paren">(</span><em>document</em>, <em>testing=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_set_helpers.build_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dictionary built from a document&#8217;s fields. Does not include keys
-which start with &#8216;_&#8217; as they are metadata fields. For document values in
-reference fields just uses the value&#8217;s name
-:param document: Document to build dictionary from
-:param testing: If method called in unit test (to determine which db to get</p>
-<blockquote>
-<div>reference values from)</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Dictionary representation of document</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="mongcore.query_set_helpers.fetch_or_save">
-<code class="descclassname">mongcore.query_set_helpers.</code><code class="descname">fetch_or_save</code><span class="sig-paren">(</span><em>Document</em>, <em>db_alias='default'</em>, <em>search_dict=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_set_helpers.fetch_or_save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Searches through the collection of the given document class for a document
-who&#8217;s field values match the values in the search_dict (or the kwargs if
-no search_dict was given).
-If one is found, returns the found document along with a boolean False to
-indicate that no new documents were created
-If one is not found, creates and saves a new document of the given document
-class from the kwargs. Returns the new document with a boolean True to
-indicate that a new document was created</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>Document</strong> &#8211; Class of document to fetch or save</li>
-<li><strong>db_alias</strong> &#8211; Alias of database to search through</li>
-<li><strong>search_dict</strong> &#8211; Dictionary of values to query document collection with</li>
-<li><strong>kwargs</strong> &#8211; Values to create document with if no document found. Also
-values to query document collection with if search_dict=None</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Document found or created and boolean that is True if document created</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="mongcore.query_set_helpers.query_to_csv_rows_list">
-<code class="descclassname">mongcore.query_set_helpers.</code><code class="descname">query_to_csv_rows_list</code><span class="sig-paren">(</span><em>query</em>, <em>testing=False</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.query_set_helpers.query_to_csv_rows_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds a list of string representations of rows of a csv file that represents
-the given query set
-:param query: Query set to build list from
-:param testing: If method called in unit test (to determine which db to get</p>
-<blockquote>
-<div>reference values from)</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of string rows of csv file representing query</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
+<div class="section" id="query-set-helpers">
+<h2>query_set_helpers<a class="headerlink" href="#query-set-helpers" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-mongcore.view_helpers">
-<span id="view-helpers"></span><h2>view_helpers<a class="headerlink" href="#module-mongcore.view_helpers" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="mongcore.view_helpers.write_stream_response">
-<code class="descclassname">mongcore.view_helpers.</code><code class="descname">write_stream_response</code><span class="sig-paren">(</span><em>rows</em>, <em>experi_name</em><span class="sig-paren">)</span><a class="headerlink" href="#mongcore.view_helpers.write_stream_response" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds a csv file from the given list of string representations of csv rows and
-returns a StreamingHttpResponse with the csv file as an attachment
-:param rows: list of string representations of csv rows
-:param experi_name: Used to name the csv file
-:return: StreamingHttpResponse with csv file as attachment</p>
-</dd></dl>
-
+<div class="section" id="view-helpers">
+<h2>view_helpers<a class="headerlink" href="#view-helpers" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -293,23 +88,21 @@ returns a StreamingHttpResponse with the csv file as an attachment
   <ul>
 <li><a class="reference internal" href="#">mongcore</a><ul>
 <li><a class="reference internal" href="#module-mongcore.csv_to_doc">csv_to_doc</a></li>
-<li><a class="reference internal" href="#module-mongcore.csv_to_doc_strategy">csv_to_doc_strategy</a></li>
-<li><a class="reference internal" href="#module-mongcore.models">models</a></li>
-<li><a class="reference internal" href="#module-mongcore.query_from_request">query_from_request</a></li>
-<li><a class="reference internal" href="#module-mongcore.query_set_helpers">query_set_helpers</a></li>
-<li><a class="reference internal" href="#module-mongcore.view_helpers">view_helpers</a></li>
+<li><a class="reference internal" href="#csv-to-doc-strategy">csv_to_doc_strategy</a></li>
+<li><a class="reference internal" href="#models">models</a></li>
+<li><a class="reference internal" href="#query-from-request">query_from_request</a></li>
+<li><a class="reference internal" href="#query-set-helpers">query_set_helpers</a></li>
+<li><a class="reference internal" href="#view-helpers">view_helpers</a></li>
 </ul>
 </li>
 </ul>
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="../tutorial.html" title="previous chapter">Tutorial</a></li>
-      <li>Next: <a href="../mongenotype/package_doc.html" title="next chapter">mongenotype</a></li>
-  </ul></li>
-</ul>
-</div>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../tutorial.html"
+                        title="previous chapter">Tutorial</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../mongenotype/package_doc.html"
+                        title="next chapter">mongenotype</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -338,12 +131,12 @@ returns a StreamingHttpResponse with the csv file as an attachment
       &copy;2016, Badi James, Helge Dzierzon.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.3</a>
       
       |
       <a href="../_sources/mongcore/package_doc.txt"
-          rel="nofollow">Page source</a>
+          rel="nofollow">Page source</a></li>
     </div>
 
     

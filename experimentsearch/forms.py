@@ -10,14 +10,14 @@ class SearchTypeSelect(forms.Form):
     Drop down box for selecting what field the user wants to query the database by
     """
     parameters = (
-        (ExperimentForTable.field_names[0], ExperimentForTable.field_names[0]),
-        (ExperimentForTable.field_names[1], ExperimentForTable.field_names[1]),
-        (ExperimentForTable.field_names[2], ExperimentForTable.field_names[2]),
-        ("Advanced Search", "Advanced Search")
+        ("Experiment", "Experiment"),
+        ("Data Source", "DataSource"),
+        ("Term","Term"),
+        ("Genotype","Genotype")
     )
     search_by = forms.ChoiceField(
-        parameters, label='Search by', required=False,
-        widget=forms.Select(attrs={"onChange": 'this.form.submit()'})
+        parameters, label='Search by', required=False
+        #widget=forms.Select(attrs={"onChange": 'this.form.submit()'})
     )
 
 
