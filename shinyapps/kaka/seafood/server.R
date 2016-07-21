@@ -13,10 +13,10 @@ lappend <- function (lst, ...){
 
 
 sanitise_header <-function(lst){
-	lst <- gsub(" ",".", lst)
-    lst <- gsub("/",".", lst)
-	lst <- gsub("\\(",".", lst)
-	lst <- gsub("\\)",".", lst)
+	lst <- gsub(" ","_", lst)
+    lst <- gsub("/","_", lst)
+	lst <- gsub("\\(","_", lst)
+	lst <- gsub("\\)","_", lst)
 	lst
 }
 
@@ -160,6 +160,7 @@ shinyServer(function(input, output, session) {
     output$seafoodview <- renderDataTable({
 		selected <- unlist(get_selected(input$tree))
 		selected <- get_seafood_headers(selected)
+        #stop(selected)
         ds <- datasetInput()
 		ds.names = names(ds)
         if(length(selected)>0){
