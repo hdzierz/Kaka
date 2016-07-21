@@ -25,7 +25,11 @@ shinyUI(fluidPage(
 			conditionalPanel(
                 'input.reports === "Seafood Demo Reports"',
                 selectInput("group", "Group by:", choices=c("None", "Species","Gear", "Area", "Treatment", "Vessel"), selected="Area", width='100px')
-			)
+			),
+            conditionalPanel(
+                'input.reports === "Seafood Terms"',
+                downloadButton('downloadTerms', 'Download')
+            )
         ),
         # Show the caption, a summary of the dataset and an HTML
         # table with the requested number of observations

@@ -196,6 +196,16 @@ shinyServer(function(input, output, session) {
             write.csv(ds[,sel], file)
         }
     )
+
+    output$downloadTerms <- downloadHandler(
+        filename = function() {
+            paste('terms.csv', sep='')
+        },
+        content = function(file) {
+            res <- kaka.qry("tree", "")  
+            write.csv(res, file)
+        }
+    )
 })
 
 
