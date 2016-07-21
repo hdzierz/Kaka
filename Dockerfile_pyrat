@@ -18,8 +18,8 @@ RUN pip2.7 install --upgrade pip;\
     pip3 install --upgrade pip;\
     pip2.7 install -r req_pyrat.txt;\
     pip3 install -r req_pyrat.txt;\
-    pip2.7 install git+https://github.com/hdzierz/PyKaka.git;\
-    pip3 install git+https://github.com/hdzierz/PyKaka.git;\
+    pip2.7 install git+https://github.com/hdzierz/PyKaka.git@cleanup;\
+    pip3 install git+https://github.com/hdzierz/PyKaka.git@cleanup;\
 
     
 
