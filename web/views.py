@@ -300,19 +300,17 @@ def page_send(request):
             config = request.POST.get('config')
             key = request.POST.get('config')
             data = request.POST.get('dat')
-            #f = open("/tmp/tt.csv", "w")
-            #f.write(data)
             data = json.loads(data)
             config = json.loads(config)
 
             imp = Import(config)
             imp.Run(data)
     
-        return HttpLogger.Message("SUCCESS")
+        return HttpLogger.Message("SUCCESS", content_type="html")
 
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        return HttpLogger.Error(str(e) + str(traceback.format_exc()))
+        return HttpLogger.Error(str(e) + str(traceback.format_exc()), content_type="html")
 
 @csrf_exempt
 def page_clean_experiment(request):
@@ -360,6 +358,14 @@ def page_get_config(request):
 
         return JsonResponse(config)
 
+@csrf_exempt
+def page_test(request):
+    if request.method=="POST":
+        config = request.POST.get('config')
+        config = json.loads(config)
+        Logger.Message(str(config))
+        return JsonResponse(config)
+    return HttpResponse("bla")
 
 def page_main(request):
     return redirect("/experimentsearch")

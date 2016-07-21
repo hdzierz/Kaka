@@ -53,6 +53,11 @@ class ImportOp:
             line.pop("data_source")
         if("group" in line):
             line.pop("group")
+        if("ontology" in line):
+            line.pop("ontology")
+        if("ontology_obj" in line):
+            line.pop("ontology_obj")
+        Logger.Message(str(line))
         pr = Genotype(
             name=line[imp.id_column],
             group=imp.group,
@@ -60,6 +65,7 @@ class ImportOp:
             experiment=imp.experiment.name,
             data_source_obj=imp.data_source,
             data_source=imp.data_source.name,
+            targets=imp.conn.header
         )
         SaveKVs(pr, line)
         pr.switch_db(db_alias)
