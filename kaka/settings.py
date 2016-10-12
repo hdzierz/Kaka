@@ -103,13 +103,13 @@ WSGI_APPLICATION = 'kaka.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-   'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-         'NAME': 'postgres',
-         'USER': 'postgres',
-         'PORT': '5432',
-         'HOST': 'db',
-    },
+#   'default': {
+#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'postgres',
+#         'USER': 'postgres',
+#         'PORT': '5432',
+#         'HOST': 'db',
+#    },
 #    'default2': {
 #        'ENGINE': 'django.db.backends.postgresql_psycopg2',
 #        'NAME': 'pionf',
@@ -118,10 +118,10 @@ DATABASES = {
 #        'PASSWORD': 'inkl67z',
 #        'HOST': '10.1.8.154',
 #    },
-#    'test': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#    }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
 
 SESSION_ENGINE = 'mongoengine.django.sessions'

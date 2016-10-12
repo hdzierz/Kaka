@@ -26,9 +26,8 @@ urlpatterns = [
     url(r'^api/(?P<report>[0-9a-zA-Z_]*)/$', 'web.views.page_report' ),
     url(r'^api/(?P<report>[0-9a-zA-Z_]*)/(?P<fmt>[a-z]*)/$', 'web.views.page_report'),
     url(r'^api/(?P<report>[0-9a-zA-Z_]*)/(?P<fmt>[a-z]*)/(?P<conf>.*)$', 'web.views.page_report'),
-    url(r'^experimentsearch/', include('experimentsearch.urls', namespace='experimentsearch')),
+    url(r'^$', include('experimentsearch.urls', namespace='experimentsearch')),
     url(r'seafood/$', 'mongseafood.views.page_seafood'), 
-    url(r'^$', 'web.views.page_main'),
 ]
 
 if settings.DEBUG and False:
