@@ -18,8 +18,8 @@ shinyUI(fluidPage(
             	'input.reports === "Seafood Base Reports"',
                 downloadButton('downloadData', 'Download'),
 				br(),br(),
-				shinyTree("datasource", checkbox = TRUE, search=TRUE),
-				br(), br(),
+				#shinyTree("datasource", checkbox = TRUE, search=TRUE),
+				#br(), br(),
 				shinyTree("tree", checkbox = TRUE, search=TRUE)
             ),
 			conditionalPanel(

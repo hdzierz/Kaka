@@ -98,17 +98,16 @@ class ImportFish(ImportOp):
     def LoadFishDataOp(line, succ):
         sp, created = Species.objects.get_or_create(name=line['Species'])
 
-        city, created = City.objects.get_or_create(name=line['Townr'])
+        city, created = City.objects.get_or_create(name=str(line['Townr']))
 
-        trip = Trip.objects.get(name='Trip_' + line['Trip'])
-
+        trip, created = Trip.objects.get_or_create(name='Trip_' + str(line['Trip']))
         bs, created = BioSubject.objects.get_or_create(
             species=sp,
-            name=line['Sample Number']
+            name=str(line['Sample Number'])
         )
 
         fob = Fish()
-        fob.name = ImportFish.ob_ct
+        fob.name = str(ImportFish.ob_ct)
         fob.recordeddate = datetime.datetime.now()
         fob.biosubject = bs
         fob.trip = trip
@@ -129,7 +128,7 @@ class ImportFish(ImportOp):
         vessel, created = Vessel.objects.get_or_create(name=line['Vessel Name'])
 
         trip, created = Trip.objects.get_or_create(
-            name = 'Trip_' + line['Trip Number']
+            name = 'Trip_' + str(line['Trip Number'])
             )
         if created:
             dd = convert_date_time(line['Date/Time'])
@@ -163,21 +162,21 @@ class ImportFish(ImportOp):
 
 
 def load_PQA(fn):
-    conn = CsvConnector(fn='data/PQAdata.csv', delimiter='|')
+    conn = ExcelConnector(fn, sheet_name='PQAdata')
     im = GenericImport(conn, ImportFish.study, ImportFish.ds_fish)
     im.load_op = ImportFish.LoadFishDataOp
     im.clean_op = ImportFish.CleanOp
-    im.Clean()
+    #im.Clean()
     im.Load()
     header = conn.header 
 
 
 def load_trip(fn):
-    conn = CsvConnector(fn, delimiter='|')
+    conn = ExcelConnector(fn)
     im = GenericImport(conn, ImportFish.study, ImportFish.ds_trip)
     im.load_op = ImportFish.LoadTripDataOp
     im.clean_op = ImportFish.CleanOp
-    im.Clean()
+    #im.Clean()
     im.Load()
 
 
@@ -228,7 +227,7 @@ def init():
 def run():
     init()
     #load_crew('data/crew.csv')
-    #load_trip('data/TripData.csv')
-    load_pqa_hdr('data/PQAHdr.csv')
-    load_PQA('data/PQAdata.csv')
+    #load_trip('/output/kaka/seafood/tablet/TripData.xlsx')
+    #load_pqa_hdr('/output/kaka/seafood/tablet/PQAHdr.csv')
+    load_PQA('/output/kaka/seafood/tablet/PQAdata.xlsx')
 
