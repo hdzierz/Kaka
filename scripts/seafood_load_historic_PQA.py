@@ -41,16 +41,17 @@ def convert_int(val):
 
 class ImportFish(ImportOp):
     ob_ct = 0
+    start = True
 
     @staticmethod
     def LoadFishDataOp(line, succ):
         sp, created = Species.objects.get_or_create(datasource=ImportFish.ds, name=line['Species'])
 
         trip_name = 'Trip_%d' % line['Trip']
-        trip, created = Trip.objects.get_or_create(datasource=ImportFish.ds,name=trip_name)
+        trip, created = Trip.objects.get_or_create(datasource=ImportFish.ds.name,name=trip_name, data_source_obj=ImportFish.ds, createdby='Helge', lastupdatedby='Helge')
         
         tow_name = 'Tow_%d' % convert_int(line['Tow Number'])
-        tow, created = Tow.objects.get_or_create(name=tow_name, trip=trip, datasource=ImportFish.ds)
+        tow, created = Tow.objects.get_or_create(name=tow_name, trip=trip, datasource=ImportFish.ds.name, data_source_obj=ImportFish.ds, createdby='Helge', lastupdatedby='Helge')
 
         fish_name = 'Fish_%d' % line['Fish Number']
 
@@ -59,10 +60,21 @@ class ImportFish(ImportOp):
         fob.recordeddate = datetime.datetime.now()
         fob.trip = trip
         fob.tow = tow
-        fob.datasource = ImportFish.ds
+        fob.datasource = ImportFish.ds.name
+        fob.data_source_obj=ImportFish.ds
+        fob.createdby='Helge'
+        fob.lastupdatedby='Helge'
+        fob.species=sp
         fob.study = ImportFish.study
-        SaveKVs(fob, line)
+        SaveKVs(fob, line, save_keyw=True)
         fob.save()
+
+        if(ImportFish.start):
+            SaveCols(fob)
+            SaveCols(tow)
+            SaveCols(trip)
+            SaveCols(sp)
+            ImportFish.start = False 
 
         return True
     
@@ -76,22 +88,31 @@ def load_PQA(fn, sheet):
     im = GenericImport(conn, ImportFish.study, ImportFish.ds)
     im.load_op = ImportFish.LoadFishDataOp
     im.clean_op = ImportFish.CleanOp    
-    im.Clean()
+    #im.Clean()
     im.Load()
 
 
 def init(fn, sheet):
     dt = datetime.datetime.now()
     path = os.path.dirname(fn)
-    ds, created = DataSource.objects.get_or_create(
-        name='Historical Fish Data',
-        typ='XLSX',
-        source=path,
-        supplier='Seafood',
-    )
 
     st, created = Experiment.objects.get_or_create(
-        name='Tow Gear',
+           name='Tow Gear',
+          )
+
+    ds, created = DataSource.objects.get_or_create(
+        name='Historical Fish Data',
+        type='XLSX',
+        source=path,
+        experiment=st.name,
+        experiment_obj=st,
+        contact='Helge',
+        format='xlsx',
+        supplier='Seafood',
+        id_column='tt',
+        group='Fish',
+        comment='',
+        is_active=True,
     )
 
     ImportFish.study = st

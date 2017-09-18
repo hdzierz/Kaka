@@ -48,15 +48,16 @@ def for_each(lst, op):
     return lst
 
 
-def accumulate(lst, op, tgt, ret=True):
+def acc_validate(lst, op, tgt, op_val=None, ret=True):
     for item in lst:
+        if(op_val):
+            op_val(item, tgt)
         tgt = op(item, tgt)
     return tgt
 
 
-def acc_validate(lst, op, op_val, tgt, ret=True):
+def accumulate(lst, op, tgt, ret=True):
     for item in lst:
-        op_val(item, tgt)
         tgt = op(item, tgt)
     return tgt
 

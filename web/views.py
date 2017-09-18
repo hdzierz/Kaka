@@ -25,6 +25,7 @@ from mongseafood.models import *
 from django.core.urlresolvers import reverse_lazy
 
 from querystring_parser import parser
+import sys
 
 testing = False
 
@@ -241,6 +242,7 @@ class JsonQry(Endpoint):
             infmt = "json"
 
         qry = request.params.get('qry')
+
         limited = False
         if(not qry):
             qry = "name==regex('.*')"
@@ -250,6 +252,7 @@ class JsonQry(Endpoint):
         #except Exception as ex:
             
         #    return HttpLogger.Error("Query unsuccessful: " + qry + ". Check spelling.")
+
 
         try:
             cls = eval(to_camelcase(realm))
@@ -294,19 +297,51 @@ from django.views.decorators.csrf import csrf_exempt
 import traceback
 
 @csrf_exempt
-def page_send(request):
+def page_send(request, realm=None):
     try:
-        if request.method=="POST":
+        if(request.method=="POST"):
             config = request.POST.get('config')
-            key = request.POST.get('config')
-            data = request.POST.get('dat')
-            data = json.loads(data)
             config = json.loads(config)
+            meth = config['method']
+            try:
+                meth = meth[0]
+            except:
+                pass
 
-            imp = Import(config)
-            imp.Run(data)
-    
-        return HttpLogger.Message("SUCCESS", content_type="html")
+            if meth == "import":
+                data = request.POST.get('dat')
+                data = json.loads(data)
+
+                imp = Import(config)
+                imp.Run(data)
+
+                return HttpLogger.Message("SUCCESS POST", content_type="html")
+            elif meth=="update":
+                if config:
+                    imp = LoadAPI(config)
+                    data = json.loads(request.POST.get('dat'))
+                    msg = imp.Update(data)
+                else:
+                    return HttpLogger.Error("Please add config structure.")
+                return HttpLogger.Message(msg, content_type="html")
+            elif meth=="insert":
+                if config:
+                    imp = LoadAPI(config)
+                    data = json.loads(request.POST.get('dat'))
+                    msg = imp.Insert(data)
+                else:
+                    return HttpLogger.Error("Please add config structure.") 
+            elif meth=="delete":
+                if config:
+                    imp = LoadAPI(config)
+                    data = json.loads(request.POST.get('dat'))
+                    msg = imp.Delete(data)
+                else:
+                    return HttpLogger.Error("Please add config structure.")
+
+                return HttpLogger.Message("SUCCESS DELETE" + msg, content_type="html")
+            else:
+                return HttpLogger.Message("ERROR: Method not known. Should be update, delete, insert", content_type="html")
 
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()

@@ -1,0 +1,20 @@
+<head>
+  <!-- Include jQuery and jQuery UI -->
+  <script src="//code.jquery.com/jquery-1.12.1.min.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+  <!-- Include Fancytree skin and library -->
+  <link href="/static/fancytree/skin-win8/ui.fancytree.min.css" rel="stylesheet">
+  <script src="/static/fancytree/jquery.fancytree-all.min.js"></script>
+  <!-- Initialize the tree when page is loaded -->
+  <script type="text/javascript">
+    $(function(){
+      // Create the tree inside the <div id="tree"> element.
+      $("#tree").fancytree({  });
+    });
+  </script>
+</head>
+<body>
+  <!-- Define where the tree should appear -->
+  <div id="tree">...</div>
+</body>
+</html>

@@ -14,11 +14,17 @@ from .algorithms import *
 import datetime
 from django.utils import timezone
 import re
+import json
 
 import collections 
 from jsonfield import JSONField
 from djgeojson.fields import PointField
-import mongoengine
+#import mongoengine
+
+from django_mongoengine import Document, DynamicDocument, EmbeddedDocument, fields
+
+from treebeard.mp_tree import MP_Node
+
 from datetime import datetime
 import binascii
 
@@ -44,10 +50,10 @@ It is also been used in the signals section
 class DataError(Exception):
     pass
 
-class Key(mongoengine.Document):
-    key = mongoengine.StringField(max_length=2048)
-    name = mongoengine.StringField(max_length=2048)
-    email = mongoengine.StringField(max_length=2048)
+class Key(Document):
+    key = fields.StringField(max_length=2048)
+    name = fields.StringField(max_length=2048)
+    email = fields.StringField(max_length=2048)
 
     def save(self, *args, **kwargs):
         self.key = binascii.hexlify(os.urandom(24)).decode('utf-8')
@@ -57,48 +63,117 @@ class Key(mongoengine.Document):
         return self.name + "/" + self.email + "/" + self.key
 
 
-class DataDir(mongoengine.Document):
-    name = mongoengine.StringField(max_length=2048)
-    path = mongoengine.StringField(max_length=2048)
-    realm = mongoengine.StringField(max_length=2048)
+class DataDir(Document):
+    name = fields.StringField(max_length=2048)
+    path = fields.StringField(max_length=2048)
+    realm = fields.StringField(max_length=2048)
 
     def __unicode__(self):
         return self.name + "/" + self.realm + "/" + self.path
+
+
+class Column(Document):
+    name = fields.StringField(max_length=2048)
+    fields = fields.ListField()
+
+
+def SaveCols(ob):
+    model = ob.__class__.__name__
+
+    try:
+        col = Column.objects.get(name=model)
+    except:
+        col = Column()
+        col.name = model
+
+    col.fields = list(ob._fields)
+
+    col.fields = list(set().union(col.fields, list(ob._dynamic_fields)))
+    col.save()
+    return col
+
+
+exclude = ["obkeywords", "id", "statuscode", "dtt", "_cls", "data_source_obj", ]
+
+def GetCols(ob, exclude=exclude, subsel=None):
+    try:
+        model = ob.__name__
+    except:
+        model = ob.__class__.__name__
+
+    ofields = list()
+    if hasattr(ob, "ordered_fields") and ob.ordered_fields:
+        ofields = ob.ordered_fields
+
+    #try:
+    col = Column.objects.get(name=model)
+    fields = list(set(col.fields) - set(ofields))
+   
+    #except:
+    #    col = Column(name=model, fields=list(ob._fields))
+    #    col.save()
+            #raise Exception("ERROR in GetCols(ob). No columns for " + model)
+
+    if subsel:
+        fields = list(set(fields).intersection(set(subsel)))
+
+    fields = ofields + fields
+
+    for f in exclude:
+        if f in fields:
+            fields.remove(f)
+
+    if hasattr(ob, "exclude"):
+        for f in ob.exclude:
+            if f in fields:
+                fields.remove(f)
+
+    return fields
+
 
 """ Class for Ontology terms
 
 
 """
-class Ontology(mongoengine.Document):
+class Ontology(Document):
     ontology = 'unkown'
-    name = mongoengine.StringField(max_length=2048)
-    tablename = mongoengine.StringField(max_length=128)
-    owner = mongoengine.StringField(max_length=128, null=True, default='core')
-    description = mongoengine.StringField(max_length=2048, null=True, default='')
-    classname = mongoengine.StringField(max_length=128, null=True)
-    is_entity = mongoengine.BooleanField(default=True)
-    group = mongoengine.StringField(max_length=255, null=True, default='None')
+    name = fields.StringField(max_length=2048)
+    tablename = fields.StringField(max_length=128)
+    owner = fields.StringField(max_length=128, null=True, default='core')
+    description = fields.StringField(max_length=2048, null=True, default='')
+    classname = fields.StringField(max_length=128, null=True)
+    is_entity = fields.BooleanField(default=True)
+    group = fields.StringField(max_length=255, null=True, default='None')
 
     def __unicode__(self):
         return self.name
 
-class Experiment(mongoengine.DynamicDocument):
+class Experiment(DynamicDocument):
 
     field_names = [
         'Realm', 'Name', 'Primary Investigator', 'Date Created', 'Description'
     ]
 
-    name = mongoengine.StringField(max_length=2048, default="Unknown")
-    code = mongoengine.StringField(max_length=2048, default="Unknown") 
-    realm =  mongoengine.StringField(max_length=2048, default="Unknown")
-    pi = mongoengine.StringField(max_length=2048, default="Unknown")
-    date = mongoengine.DateTimeField(default=datetime.now())
-    createdby = mongoengine.StringField(max_length=255)
-    description = mongoengine.StringField(default="")
-    targets = mongoengine.ListField()
-    password = mongoengine.StringField(max_length=2048, default="Unknown")
-    contact = mongoengine.StringField(max_length=255, default="Unkown")
-    species = mongoengine.StringField(max_length=255, default="Unkown")
+    req_fields = ["name", "code", "realm", "pi", "date", "createdby", "description", "contact"]
+
+    name = fields.StringField(max_length=2048, default="Unknown")
+    code = fields.StringField(max_length=2048, default="Unknown") 
+    realm =  fields.StringField(max_length=2048, default="Unknown")
+    pi = fields.StringField(max_length=2048, default="Unknown")
+    date = fields.DateTimeField(default=datetime.now())
+    description = fields.StringField(default="")
+    password = fields.StringField(max_length=2048, default="Unknown")
+    contact = fields.StringField(max_length=255, default="Unkown")
+
+    def Validate(self, data):
+        req_fields = self.req_fields
+        fields = data.keys()
+        diff = set(req_fields).difference(fields)
+        if len(diff) == 0:
+            return True, "SUCCESS"
+        else:
+            msg = "Experiment The following mandatory fields are missing: " + str(diff)
+            raise Exception(msg)
 
     def Init(self, dct):
         for d in dct:
@@ -142,19 +217,31 @@ class Experiment(mongoengine.DynamicDocument):
 You will usually get file names here.
 
 """
-class DataSource(mongoengine.DynamicDocument):
-    name = mongoengine.StringField(max_length=1024)
-    experiment = mongoengine.StringField(max_length=1024)
-    experiment_obj = mongoengine.ReferenceField(Experiment)
-    type = mongoengine.StringField(null=True, max_length=256, default="None")
-    group = mongoengine.StringField(null=True, max_length=256, default="None")
-    source = mongoengine.StringField()
-    creator = mongoengine.StringField(null=True, max_length=2048, default="None")
-    contact = mongoengine.StringField(null=True, max_length=2048, default="None")
-    id_column = mongoengine.StringField(null=True, max_length=2048, default="None")
-    date = mongoengine.DateTimeField(default=datetime.now())
-    format = mongoengine.StringField(null=True, max_length=256, default="None")
-    comment = mongoengine.StringField(null=True, default="none")
+class DataSource(DynamicDocument):
+    req_fields = ["name",  "source", "contact", "format"]
+    name = fields.StringField(max_length=1024)
+    experiment = fields.StringField(null=True, blank=True, max_length=1024)
+    experiment_obj = fields.ReferenceField(Experiment, null=True, blank=True)
+    type = fields.StringField(null=True, blank=True, max_length=256, default="None")
+    group = fields.StringField(null=True, blank=True, max_length=256, default="None")
+    source = fields.StringField()
+    contact = fields.StringField(null=True, blank=True, max_length=2048, default="None")
+    id_column = fields.StringField(null=True, blank=True, empty=True, max_length=2048, default="None")
+    date = fields.DateTimeField(default=datetime.now())
+    format = fields.StringField(null=True, blank=True, max_length=256, default="None")
+    comment = fields.StringField(null=True, blank=True, default="none", required=False)
+    is_active = fields.BooleanField(null=True, blank=True, default=False)
+
+    def Validate(self, data):
+        req_fields = self.req_fields
+        fields = data.keys()
+        diff = set(req_fields).difference(fields)
+        if len(diff) == 0:
+            return True, "SUCCESS"
+        else:
+            msg = "Experiment The following mandatory fields are missing: " + str(diff)
+            raise Exception(msg)
+ 
 
     def Init(self, dct):
         for d in dct:
@@ -178,6 +265,7 @@ class DataSource(mongoengine.DynamicDocument):
 
     def GetName(self):
         return self.name
+
 
     def SetPasswd(self, passwd):
         self.password = hashlib.sha224(passwd.encode('utf-8')).hexdigest()
@@ -209,17 +297,124 @@ class DataSourceForTable(models.Model):
 def make_table_datasource(datasource):
     return DataSourceForTable(
         name=datasource.name, is_active=str(datasource.is_active),
-        source=datasource.source, supplier=datasource.supplier,
+        source=datasource.source, 
         supply_date=datasource.supplieddate.date()
     )
 
+from io import TextIOWrapper
 
-class Term(mongoengine.Document):
-    name = mongoengine.StringField(max_length=2048)
-    definition = mongoengine.StringField(max_length=2048, null=True, default='')
-    group = mongoengine.StringField(max_length=255, null=True, default='None')
-    datasource = mongoengine.ReferenceField(DataSource)
-    values = mongoengine.DictField()
+
+def write_line(html, s):
+    if(isinstance(html, str)):
+        html += s
+    elif(isinstance(html, TextIOWrapper)):
+        html.write(s) 
+    return html
+
+
+def get_list(node, html, ul_attr={}, li_attr={}):
+    us = ""
+    for a in ul_attr:
+        us += a + '="' + ul_attr[a] + '" '
+
+    ls = ""
+    for a in li_attr:
+        ls += a + '="' + li_attr[a] + '" '
+
+    ul = "<ul " + us + ">\n"
+    li = '<li id="' + str(node.pk) + '" ' + ls + ">" 
+    li_folder = '<li id="' + str(node.pk) + '" class="folder" ' + ls + ">"
+
+    if(node.get_children_count() > 0): 
+        html = write_line(html,li_folder + node.name + "\n")
+        html = write_line(html,ul)
+        for c in node.get_children():
+            html = get_list(c, html, ul_attr, li_attr)
+        html = write_line(html,"</ul>\n")
+    else:
+        html = write_line(html,li + node.name + "\n")
+
+    return html
+
+
+def accumulate2(node, acc, op):
+    acc = op(node, acc)
+
+    if(node.get_children_count() > 0):
+        for n in node.get_children():
+            acc = accumulate2(n, acc)
+
+    return acc
+
+
+def propagate(node, parent, acc):
+    acc = op(node, parent, acc)
+
+    if(node.get_children_count() > 0):
+        for n in node.get_children():
+            acc = propagate(n, node, acc)
+
+
+def for_each(node, op):
+    op(node)
+
+    if(node.get_children_count() > 0):
+        for n in node.get_children():
+            op(n, acc)
+
+
+def collect_ft(node, parent, acc):
+    if(node.get_children_count() > 0):
+        n = {'title': node.name, 'key': node.pk, 'children': [] }
+    else:
+        n = {'title': node.name, 'key': node.pk }
+
+
+class Category(MP_Node):
+    name = models.CharField(max_length=255)
+
+    node_order_by = ['name']
+
+    def to_html(self, ul_attr={}, li_attr={}):
+        html = "" #open("tt.html", "w+")
+        html = write_line(html,'<div id="tree"> <ul id="treeData" style="display: none;">\n')
+        html = get_list(self, html, ul_attr, li_attr)
+        html = write_line(html,"</ul></div>\n")
+        #html.close()
+        return html
+
+    def to_json(self, fn = None):
+        buff = Category.dump_bulk()
+        if(fn):
+            try:
+                f = open(fn, "w+")
+                json.dump(buff, f)
+            except e:
+                raise(e)
+        else:
+            return json.dumps(buff)
+
+
+    def to_fancytree(self):
+        res = []
+        root = {'title': self.name, 'key': self.pk, 'children': []}
+
+        res = accumulate2(self, res, collect_ft)
+
+
+    def __unicode__(self):
+        return self.name
+
+
+
+class Term(Document):
+    name = fields.StringField(max_length=2048)
+    definition = fields.StringField(max_length=2048, null=True, default='')
+    group = fields.StringField(max_length=255, null=True, default='None')
+    datasource = fields.ReferenceField(DataSource)
+
+    def Validate(self, data):
+        pass
 
     def __unicode__(self):
         return self.name
@@ -262,13 +457,13 @@ def make_table_experiment(experiment):
     )
 
 
-class Design(mongoengine.DynamicDocument):
-    study = mongoengine.ReferenceField(Experiment)
-    experiment = mongoengine.StringField(max_length=255, default="unknown")
-    phenotype = mongoengine.StringField(max_length=255, default="unknown")
-    condition = mongoengine.StringField(max_length=255, default="unknown")
-    typ = mongoengine.StringField(max_length=255, default="unknown")
-    notes = mongoengine.StringField(max_length=255, default="unknown")
+class Design(DynamicDocument):
+    study = fields.ReferenceField(Experiment)
+    experiment = fields.StringField(max_length=255, default="unknown")
+    phenotype = fields.StringField(max_length=255, default="unknown")
+    condition = fields.StringField(max_length=255, default="unknown")
+    typ = fields.StringField(max_length=255, default="unknown")
+    notes = fields.StringField(max_length=255, default="unknown")
 
     def GetHeader(self):
         return [
@@ -282,30 +477,24 @@ class Design(mongoengine.DynamicDocument):
 
 """ Class that holds features with observations attached
 """
-class Feature(mongoengine.DynamicDocument):
-    group = mongoengine.StringField(max_length=255, default="unknown")
-    name = mongoengine.StringField(max_length=255, default="unknown")
-    dtt = mongoengine.DateTimeField(default=timezone.now)
+class Feature(DynamicDocument):
+    group = fields.StringField(max_length=255, default="unknown")
+    name = fields.StringField(max_length=255, default="unknown")
+    dtt = fields.DateTimeField(default=timezone.now)
     geom = PointField(default={'type': 'Point', 'coordinates': [0, 0]})    
-    alias = mongoengine.StringField(max_length=255, default="unknown")
-    data_source_obj = mongoengine.ReferenceField(DataSource)
-    data_source = mongoengine.StringField(max_length=255, default="unknown")
-    experiment_obj = mongoengine.ReferenceField(Experiment)
-    experiment = mongoengine.StringField(max_length=255, default="unknown")
-    description = mongoengine.StringField(default="")
-    ontology = mongoengine.StringField(max_length=255, default="unknown")
-    ontology_obj = mongoengine.ReferenceField(Ontology)
-    xreflsid = mongoengine.StringField(max_length=255)
-    createddate = mongoengine.DateTimeField(default=datetime.now())
-    createdby = mongoengine.StringField(max_length=255)
-    lastupdateddate = mongoengine.DateTimeField(default=datetime.now())
-    lastupdatedby = mongoengine.StringField(max_length=50)
-    obkeywords = mongoengine.StringField()
-    statuscode = mongoengine.IntField(default=1)
+    data_source_obj = fields.ReferenceField(DataSource)
+    data_source = fields.StringField(max_length=255, default="unknown")
+    description = fields.StringField(default="")
+    createddate = fields.DateTimeField(default=datetime.now())
+    createdby = fields.StringField(max_length=255)
+    lastupdateddate = fields.DateTimeField(default=datetime.now())
+    lastupdatedby = fields.StringField(max_length=50)
+    obkeywords = fields.StringField(default = "")
+    statuscode = fields.IntField(default=1)
     search_index = VectorField()
-    targets = mongoengine.ListField()
-    obs = mongoengine.DictField()
 
+    def Validate(self, data):
+        pass
 
     def GetHeader(self):
         ignore = ['data_source_obj', 'experiment_obj', 'obkeywords', 'statuscode', 'obs', 'ebrida_id', 'kea_id']
@@ -383,8 +572,9 @@ def InitOntology(obj):
     )
 
 
-class Species(Feature):
-    common_name = mongoengine.StringField(max_length=255)
+class Species(DynamicDocument):
+    common_name = fields.StringField(max_length=255, default='')
+    name = fields.StringField(max_length=255)
 
     def __unicode__(self):
         return self.name
@@ -407,16 +597,26 @@ import re
 def SaveKV(ob, key, value, save=False):
     if key:
         key = re.sub('[^0-9a-zA-Z_]+', '_', key)
+        #ob.validate(key, value)
         setattr(ob, key, value)
 
     if save:
         ob.save()
 
-def SaveKVs(ob, lst, save=False):
+def SaveKVs(ob, lst, save=False, save_keyw=False):
+    succ = True
+    msg = ""
+
     for key, value in list(lst.items()):
         SaveKV(ob, key, value)
+
+    if save_keyw and hasattr(ob, "obkeywords"):
+        ob.obkeywords = ";".join([str(i) for i in list(lst.values())])
+
     if save:
         ob.save()
+
+    return succ, msg
 
 
 def GetData(ob, header=False):
@@ -451,20 +651,75 @@ def GetKV(ob, key):
     return None
 
 
+def collect_default(line, met):
+    ob = met['cls']()
+    ob.species_obj = met['species']
+    ob.species = met['species'].name
+    ob.createdby = met['createdby']
+    ob.data_source_obj = met['ds']
+    ob.data_source = met['ds'].name
+    ob.lastupdatedby = met['lastupdatedby']
+    SaveKVs(ob, line, save=True, save_keyw=True)
+    return met
+
+
+def validate_default():
+    pass
+
+
+def SaveData(cls, 
+            conn,
+            species,
+            alg_coll=collect_default,
+            alg_val=validate_default,
+            user="cfphxd",
+            key="awiohca"):
+
+    createdby = user
+    last_updated_by = user
+    try:
+        ds = DataSource.objects.get(name=conn.fn)
+    except:
+        ds = DataSource()
+        ds.name = conn.fn
+        ds.source = conn.fn
+        ds.contact = user
+        ds.format = conn.format
+        ds.save()
+
+    CleanData(cls, ds)
+
+    species, created = Species.objects.get_or_create(name=species)
+
+    met = {
+        'cls': cls,
+        'ds' : ds,
+        'createdby': user,
+        'lastupdatedby': user,
+        'species' : species
+    }
+
+    accumulate(conn, alg_coll, met)
+
+
+def CleanData(cls, ds):
+    cls.objects.filter(data_source_obj=ds).delete()
+
+
 class BioSubject(Feature):
-    species = mongoengine.ReferenceField(Species)
-    subjectname = mongoengine.StringField(max_length=255)
-    subjectspeciesname = mongoengine.StringField(max_length=1024)
-    subjecttaxon = mongoengine.IntField(default=None, null=True)
-    strain = mongoengine.StringField(max_length=1024, default=None, null=True)
-    subjectdescription = mongoengine.StringField(default="")
-    dob = mongoengine.DateTimeField(default=None, null=True)
-    sex = mongoengine.StringField(max_length=1, default=None, null=True)
-    cohort = mongoengine.StringField(max_length=10, default=None, null=True)
-    changed = mongoengine.BooleanField(default=False)
-    comment = mongoengine.StringField(max_length=1024, default=None, null=True)
-    do_ignore = mongoengine.BooleanField(default=False)
-    centre = mongoengine.StringField(max_length=255, default=None, null=True)
+    species = fields.ReferenceField(Species)
+    subjectname = fields.StringField(max_length=255)
+    subjectspeciesname = fields.StringField(max_length=1024)
+    subjecttaxon = fields.IntField(default=None, null=True)
+    strain = fields.StringField(max_length=1024, default=None, null=True)
+    subjectdescription = fields.StringField(default="")
+    dob = fields.DateTimeField(default=None, null=True)
+    sex = fields.StringField(max_length=1, default=None, null=True)
+    cohort = fields.StringField(max_length=10, default=None, null=True)
+    changed = fields.BooleanField(default=False)
+    comment = fields.StringField(max_length=1024, default=None, null=True)
+    do_ignore = fields.BooleanField(default=False)
+    centre = fields.StringField(max_length=255, default=None, null=True)
 
     def GetName(self):
         return self.subjectname

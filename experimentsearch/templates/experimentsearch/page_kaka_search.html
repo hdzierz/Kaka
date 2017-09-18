@@ -1,0 +1,37 @@
+{% extends "experimentsearch/menu.html" %}
+{% load static %}
+{% load staticfiles %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/menu.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "css/screen.css" %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/searchstyle.css" %}">
+    {% block head %}{% endblock %}
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css" />
+</head>
+
+<script src="https://code.jquery.com/jquery-1.12.3.js"></script>
+<script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
+
+{% block content  %}
+    <h1>Kaka Search</h1>
+
+    {% if not ajax  %}
+    <form method="GET" class="post-form">{# csrf_token #}
+        {{ kaka_search_form }}
+        <input type="submit" name="submit" value="search" />
+        <input type="submit" name="submit" value="download" />
+        <a href="http://localhost:8000/">clear</a>
+    </form>
+<hr />
+    {% endif  %}
+<br />
+<br />
+    {% if ajax  %}
+        {% include "experimentsearch/table_ajax.html" %}
+    {% else  %}
+        {% include "experimentsearch/table.html" %}
+    {% endif  %}
+{% endblock %}

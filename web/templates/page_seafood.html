@@ -1,0 +1,35 @@
+
+
+<div id="jstree_demo_div">
+<ul>
+
+{% for key,value in tree.items %}
+
+<li><a href="/">{{ key }}:</a></li>
+    <ul>
+    {% for key2, value2 in value.items %}
+        <li><a href="/">{{ key2 }}:</a></li>
+        <ul>
+        {% for key3, value3 in value2.items %}
+            <li><a href="/">{{ key3 }}:</a></li>
+            <ul>
+            {% for key4, value4 in value3.items %}
+                <li><a href="/">{{ key4 }}:</a></li>
+                <ul>
+                {% for key5, value5 in value4.items %}
+                    <li><a href="/">{{ key5 }}:</a></li>
+                {% endfor %}
+                </ul>
+            {% endfor %} 
+            </ul>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+    </ul>
+{% endfor %} 
+</ul>
+</div>
+
+<script>
+    $(function () { $('#jstree_demo_div').jstree(); });
+</script>

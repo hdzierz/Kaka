@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from mongoengine import connect, register_connection, ConnectionError
+from mongoengine import connect, register_connection
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -24,12 +24,12 @@ connected = False
 # connect(PRIMARY_DB_NAME, host='mongodb://mongo')
 # MONGODB_HOST = os.environ.get('mongo_PORT_27017_TCP_ADDR', '127.0.0.1')
 # connect(host=MONGODB_HOST)
-while not connected:
-    try:
-        connect(PRIMARY_DB_NAME, host='mongodb://mongo:27017')
-        connected = True
-    except ConnectionError:
-        pass
+#while not connected:
+#    try:
+#        connect(PRIMARY_DB_NAME, host='mongodb://mongo:27017')
+#        connected = True
+#    except ConnectionError:
+#        pass
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -40,9 +40,8 @@ SECRET_KEY = 'd1$!$=ed))z5#11!wz01c)*bpvh$1%a&(t2q0_13g8i4k!ru!v'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-TEMPLATE_DEBUG = True
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
-INTERNAL_IPS = '10.1.8.120, 127.0.0.1'
+INTERNAL_IPS = '10.1.8.122, 127.0.0.1'
 
 
 
@@ -60,18 +59,23 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     #'debug_toolbar',
     #'django.contrib.sites',
+    'django_pdb',
     'django_extensions',
     'django_tables2',
     'django_tables2_reports',
+    'treebeard',
     'rest_framework',
     'crispy_forms',
     'djorm_pgfulltext',
     'djgeojson',
     #'compressor',
+    'raven.contrib.django.raven_compat',
+    'django_mongoengine',
     'async',
     'mongcore',
     'mongseafood',
     'mongenotype',
+    'mongomarker',
     'gene_expression',
     'restless',
     'web',
@@ -80,6 +84,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'django_pdb.middleware.PdbMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -89,6 +94,18 @@ MIDDLEWARE_CLASSES = (
     'django_tables2_reports.middleware.TableReportMiddleware',
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
+
+
+import os
+import raven
+
+#RAVEN_CONFIG = {
+#    'dsn': 'https://1eccdc5df20c47f6a21ff87975ae7e1a:e3b0ea9be64744d9a2724763fb96a6d5@sentry.io/105726',
+    # If you are using git, you can also automatically configure the
+    # release based on the git info.
+#    'release': raven.fetch_git_sha(os.path.dirname(__file__)),
+#}
+
 
 EXCEL_SUPPORT = 'xlwt'
 
@@ -103,13 +120,13 @@ WSGI_APPLICATION = 'kaka.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-   'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-         'NAME': 'postgres',
-         'USER': 'postgres',
-         'PORT': '5432',
-         'HOST': 'db',
-    },
+#   'default': {
+#        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'postgres',
+#         'USER': 'postgres',
+#         'PORT': '5432',
+#         'HOST': 'db',
+#    },
 #    'default2': {
 #        'ENGINE': 'django.db.backends.postgresql_psycopg2',
 #        'NAME': 'pionf',
@@ -118,17 +135,15 @@ DATABASES = {
 #        'PASSWORD': 'inkl67z',
 #        'HOST': '10.1.8.154',
 #    },
-#    'test': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#    }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
 
-SESSION_ENGINE = 'mongoengine.django.sessions'
 
-AUTHENTICATION_BACKENDS = (
-    'mongoengine.django.auth.MongoEngineBackend',
-)
+SESSION_ENGINE = 'django_mongoengine.sessions'
+SESSION_SERIALIZER = 'django_mongoengine.sessions.BSONSerializer'
 
 # TEST_RUNNER = 'experimentsearch.tests.MyTestRunner'
 
@@ -141,16 +156,35 @@ AUTHENTICATION_BACKENDS = (
 #DATABASE_ROUTERS = ['django_mongodb_engine.router.MongoDBRouter',]
 
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.contrib.auth.context_processors.auth",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.media",
-    "django.core.context_processors.static",
-    "django.core.context_processors.tz",
-    "django.contrib.messages.context_processors.messages",
-    'django.core.context_processors.request',
-)
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ]
+        },
+    },
+]
+
+
+MONGODB_DATABASES = {
+    "default": {
+        "name": 'primary',
+        "host": 'mongo',
+        "password": '',
+        "username": '',
+        "tz_aware": True, # if you using timezones in django (USE_TZ = True)
+    },
+}
+
+
 
 
 # Internationalization

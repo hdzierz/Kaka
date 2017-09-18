@@ -7,7 +7,6 @@ ENV https_proxy http://proxy.pfr.co.nz:8080
 ENV no_proxy localhost,127.0.0.1,*.pfr.co.nz,::1,web
 
 ADD install.R install.R
-ADD ./shinyapps/kaka/seafood /srv/shiny-server/seafood
 
 RUN apt-get update -y; \
 	apt-get upgrade -y;

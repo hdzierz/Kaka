@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Run something
+
 master=$1
 PRIMARY_HOST=$2
 PRIMARY_PORT=$3

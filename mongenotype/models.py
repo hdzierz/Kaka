@@ -1,80 +1,51 @@
-import mongoengine
+from django_mongoengine import Document, EmbeddedDocument, fields
+
 from django.db import models
-from mongcore.models import Feature
+from mongcore.models import Feature, Species
 
 from django.core.urlresolvers import reverse
 
 
-class Chromosome(Feature):
-    no = mongoengine.StringField(max_length=10)
+class FastQ(Feature):
+    pass
 
-    def __unicode__(self):
-        return self.GetName()
+class Helge(Feature):
+    pass
 
-    def GetName(self):
-        return self.no
 
 class Genotype(Feature):
-    ebrida_id = mongoengine.StringField(max_length=255)
-    kea_id = mongoengine.StringField(max_length=255)
+    pass
+
+
+class Primer(Feature):
+    ordered_fields = ["species", "name","createdby", "data_source", ]
+
+    species_obj = fields.ReferenceField(Species)
+    species = fields.StringField(max_length=255, default='species_unkown')
+
 
     def __unicode__(self):
-        return self.GetName()
+        return self.name
 
     def GetName(self):
-        name = self.name
-        if self.kea_id is not None and self.ebrida_id is not None:
-            name = name + '/' + self.kea_id + '/' + self.ebrida_id
-        name = name + '/' + self.data_source
-        return name
+        return self.name
 
 
 class Marker(Feature):
-    ebrida_id = mongoengine.StringField(max_length=255)
-    kea_id = mongoengine.StringField(max_length=255)
-    sex = mongoengine.StringField(max_length=5)
+    ebrida_id = fields.StringField(max_length=255)
+    kea_id = fields.StringField(max_length=255)
+    species_obj = fields.ReferenceField(Species)
+    species = fields.StringField(max_length=255, default='species_unkown')
+    primer_obj = fields.ReferenceField(Primer)
+    primer = fields.StringField(max_length=255, default='pr_unkown') 
+
+    ordered_fields = ["id", "name","createdby", "species", "createddate", "primer", "Primer_sequence"]
 
     def __unicode__(self):
         return self.GetName()
     
     def GetName(self):
-        return self.kea_id + '/' + self.ebrida_id
-
-    def get_absolute_url(self):
-        return reverse('marker-detail', kwargs={'pk': self.pk})
-
-
-class Primer(Feature):
-    def __unicode__(self):
-        return self.name
-
-    def GetName(self):
         return self.name
 
 
-class PrimerType(Feature):
-    def __unicode__(self):
-        return self.name
 
-    def GetName(self):
-        return self.name
-
-
-class PrimerOb(Feature):
-    primer = mongoengine.ReferenceField(Primer)
-    primer_type = mongoengine.ReferenceField(PrimerType)
-    def __unicode__(self):
-        return self.name
-
-    def GetName(self):
-        return self.name
-
-
-#primerob
-#    genotype | primertype
-#    genotype | markerob
-#    genotype | primer
-#    genotype | primertail
-
-
-# Create your models here.

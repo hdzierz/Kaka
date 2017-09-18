@@ -33,6 +33,59 @@ def load_conn(fn, cfg, typ, sheet=None):
 
 
 
+class LoadAPI:
+    conf = None
+    
+    def __init__(self, conf):
+        self.conf = conf
+
+    def Save(self, data, insert=False):
+        cls = self.conf['cls']
+        if(isinstance(cls, list)):
+            cls = cls[0]
+
+        cls_obj = eval(cls)
+
+        Logger.Message("Run started for : " + cls)
+
+        msg = "\n"
+
+        for d in data:
+            if(insert):
+                o = cls_obj()
+                succ, m = SaveKVs(o, d)
+                o.save()
+            else:
+                if("id" in d):
+                    pk = d["id"]
+                    o = cls_obj.objects.get(pk=pk)
+                    succ, m = SaveKVs(o, d)
+                    o.save()
+                    if(not succ):
+                        msg += m + "\n"
+                else:
+                    Logger.Error("ERROR in LoadAPI: No pk for " + cls)
+        return msg
+
+    def Update(self, data):
+        return self.Save(data, insert=False)
+
+    def Insert(self, data):
+        return self.Save(data, insert=True)
+
+    def Delete(self, data):
+        cls = self.conf['cls']
+        if(isinstance(cls, list)):
+            cls = cls[0]
+        cls_obj = eval(cls)
+        for d in data:
+            if("id" in d):
+                pk = d["id"]
+                o = cls_obj.objects.get(pk=pk)
+                o.delete()
+        return True
+
+
 class Config:
     data = list()
 
@@ -87,6 +140,9 @@ class Import:
        
         if(mode=="Destroy"): 
             self.data_source.clean()
+
+    #def Run(self, data_source
+
 
     def Run(self, data_source):
         if self.conf["DataSource"]["Mode"] == "Destroy" or self.conf["DataSource"]["Mode"] == "Clean":

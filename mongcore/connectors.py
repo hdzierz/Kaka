@@ -8,9 +8,11 @@ import gzip
 import csv
 import xlrd
 import pandas as pd
+import vcf
+
 # Project imports
 from .logger import *
-
+from .algorithms import *
 
 ############################
 ## Data connectors are building on teh algoirthms defined in algorithms.py.
@@ -26,7 +28,8 @@ from .logger import *
 ############################
 
 class DataConnector:
-    name = 'None'
+    fn = 'None'
+    format = "unknown"
     header = None
     head_mapper = None
     current = None
@@ -55,6 +58,7 @@ class ExcelConnector(DataConnector):
     curr_row = 0
     max_row = 0
     header = None
+    format = "xls"
 
     def __init__(self, fn, sheet_name=None):
         self. fn = fn
@@ -100,6 +104,8 @@ class ExcelConnector(DataConnector):
 
 
 class SqlConnector(DataConnector):
+    fn = "DB"
+    format = "SQL"
     cursor = None
     db = None
     header = None
@@ -150,12 +156,14 @@ class SqlConnector(DataConnector):
 
 
 class PgsqlConnector(SqlConnector):
-    pass
+    format = "PSQL"
 
 
 class CsvConnector(DataConnector):
     reader = None
     f = None
+    format = "CSV"
+    fn = ""
     gzipped = False
     delimiter = ','
     header = None
@@ -163,6 +171,7 @@ class CsvConnector(DataConnector):
     def __init__(self, fn, delimiter=',', gzipped=False, header=None):
         Logger.Message("CsvConnector: Loading " + fn)
         self.origin_name = fn
+        self.fn = fn
         self.gzipped = gzipped
         self.delimiter = delimiter
         self.header=header
@@ -197,9 +206,55 @@ class CsvConnector(DataConnector):
         self.f.close()
 
 
+class FastqConnector(DataConnector):
+    reader = None
+    format = "FASTQ"
+    fn = ""
+    gzipped = False
+    header = None
+
+    def __init__(self, fn, gzipped=False):
+        Logger.Message("FastqConnector: Loading " + fn)
+        self.fn = fn
+        self.gzipped = gzipped
+        self.header=("QUAL","")
+        self.load()
+
+    def __iter__(self):
+        return self
+
+    def load(self):
+        if(self.gzipped):
+            self.f = gzip.open(self.origin_name, 'rt')
+        else:
+            self.f = open(self.origin_name, 'rt')
+
+        self.reader = csv.DictReader(self.f, delimiter=self.delimiter, fieldnames=self.header)
+        self.header = self.reader.fieldnames
+
+    def __next__(self):
+        self.current = next(self.reader)
+        if(self.current):
+            return self.current
+        else:
+            raise StopIteration
+
+    def all(self):
+        d = []
+        for row in self:
+            d.append(row)
+        return d
+
+    def close(self):
+        self.f.close()
+
+
+
 class DictListConnector(DataConnector):
     header = None
     lst = None
+    fn = "dictlist"
+    format="Python Dict"
 
     def __init__(self, lst, expand_obs=False):
         self.lst = lst
@@ -298,6 +353,8 @@ class PandasConnector(DataConnector):
     header = None
     df = None
     current = None
+    fn = "Pandas"
+    format = "Pandas"
 
     def __init__(self, df):
         Logger.Message(str(df))
@@ -392,4 +449,48 @@ class DjangoQuerySetConnector(DictListConnector):
 
         self.lst, self.header = self.convert_obs_json()
         self.current = iter(self.lst)
+
+
+def collect_samples(sample, r):
+    dat = sample.data._asdict()
+    for d in dat:
+        ind = sample.sample + '__' + d
+        r[ind] = str(dat[d])
+    return r
+
+
+def collect(record):
+    r = {}
+    r['CHROM'] = record.CHROM
+    r['POS'] = record.POS
+    r['REF'] = record.REF
+    r['ALT'] = str(record.ALT)
+    r['FORMAT'] = record.FORMAT
+
+    #samp = accumulate(record.samples, collect_samples, r)
+    return r
+
+
+class VcfConnector(DataConnector):
+    format="VCF"
+    reader = None
+    current = None
+
+    def __init__(self, fn):
+        self.fn = fn
+        self.reader = vcf.Reader(open(fn,'r'))
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.current = next(self.reader)
+        if(self.current):
+            return self.ToDict(self.current)
+        else:
+            raise StopIteration
+
+    def ToDict(self, line):
+        return collect(line)
+
 

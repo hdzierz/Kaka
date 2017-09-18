@@ -2,210 +2,176 @@ from django.http import Http404
 from django.shortcuts import render, redirect
 from django_tables2 import RequestConfig
 from mongoengine.context_managers import switch_db
+from django.http import HttpResponse, StreamingHttpResponse, JsonResponse
 
 from kaka.settings import TEST_DB_ALIAS
 from mongcore.query_from_request import QueryRequestHandler
 from mongcore.models import Experiment, DataSource, make_table_datasource
 from mongcore.query_set_helpers import query_to_csv_rows_list
 from mongcore.view_helpers import write_stream_response
-from mongenotype.models import Genotype
+from mongcore.serializer import *
+from mongenotype.serializer import *
+from mongenotype.models import *
 from web.views import genotype_report
-from . import forms as my_forms
-from .tables import DataSourceTable
+from mongseafood.models import *
 
-testing = False
-csv_response = None
+from mongcore.logger import *
 
-
-def index(request):
-    """
-    Renders the search page according to the index.html template, with a
-    form.SearchForm as the search form.
-
-    If the search form has any GET data, builds the appropriate context dict
-    for the render from the request using an QueryRequestHandler
-
-    :param request:
-    :return:
-    """
-    template = 'experimentsearch/index.html'
-    if request.method == 'GET':
-        index_helper = QueryRequestHandler(request, testing=testing)
-        context = index_helper.handle_request()
-        #  if request was from a redirect from a download preparation page
-        download = csv_response is not None
-        context.update({'download': download})
-        return render(request, template, context)
-    else:
-        return render(
-            request, template,
-            {'search_form': my_forms.NameSearchForm(),
-             'search_select': my_forms.SearchTypeSelect()}
-        )
+from .forms import KakaSearchForm
+from .query import *
+from .tables import *
 
 
-def datasource(request, experi_name):
-    """
-    Renders a data source table page according to the datasource.html template
+class DataTable:
+    @staticmethod
+    def render_column(ob, col):
+        return str(getattr(ob,col))
 
-    Populates a table with models.DataSource from a data_source table query
-    using the name field in the GET data.
+    @staticmethod
+    def render_column_geo(ob, col):
+        import gmplot
+        geo = getattr(ob,col)
+        gmap = gmplot.GoogleMapPlotter(-36.13, 174.77, 16) 
+        gmap.plot(geo["lat"], geo["lon"], 'cornflowerblue', edge_width=10)
+        gmap.draw("experimentsearch/mymap.html")  
+        res = "<a href='/mapview'>geo</a>"
+        return res
 
-    Provides a link for the 'back to search' buttons from the from field in the
-    GET data if there is one
+    @staticmethod
+    def render(request, cls, cols=None, filt_cols=["obkeywords"], query_method='icontains', spec_order={}, search_init="none"):
+        if(request.method == "GET"):
+            draw = request.GET.get('draw')
+            start = int(request.GET.get('start'))
+            length = int(request.GET.get('length'))
+            search = request.GET.get('search[value]')
+            regex = request.GET.get('search[regex]')
+            order_col = request.GET.get('order[0][column]')
+            order_dir = request.GET.get('order[0][dir]')
 
-    :param request:
-    :return:
-    """
-    ds_name = experi_name
-    # TODO: Query by related experiments, whatever that means...
-    if testing:
-        with switch_db(DataSource, TEST_DB_ALIAS) as test_db:
-            ds_list = test_db.objects(name__contains=ds_name)
-    else:
-        ds_list = DataSource.objects(name__contains=ds_name)
+            qs = cls.objects.all()[:100]
+            if(not cols):
+                cols = GetCols(cls)
 
-    if len(ds_list) == 0:
-        table = None
-    else:
-        table_list = []
-        for doc in ds_list:
-            table_list.append(make_table_datasource(doc))
-        table = DataSourceTable(table_list)
-        RequestConfig(request, paginate={"per_page": 25}).configure(table)
-    if request.method == 'GET':
-        from_dic = request.GET.copy()
-        if 'page' in from_dic:
-            del from_dic['page']
-        from_dic = from_dic.urlencode()
-    else:
-        from_dic = None
-    return render(
-        request, 'experimentsearch/datasource.html',
-        {'table': table, 'ds_name': ds_name, 'from_dic': from_dic}
-    )
+            o_col = cols[int(order_col)]
 
+            if(search_init != "none"):
+                search = search_init
 
-def download_message(request, experi_id):
-    """
-    Renders the template with the download preparation message and the loading gif that,
-    once loaded, tries to redirect to the url that calls the stream_experiment_csv() view
-    with the given experiment name
+            try:
+                o_col = spec_order[o_col]
+            except:
+                pass
 
-    :param request:
-    :param experi_id:
-    :return:
-    """
-    if request.method == 'GET':
-        from_page = request.GET.urlencode()
-        return render(
-            request, 'experimentsearch/download_message.html', {'from': from_page, 'experi_id': experi_id}
-        )
-    else:
-        return render(request, 'experimentsearch/download_message.html', {'experi_id': experi_id})
+            if(order_dir == "desc"):
+                o_col = '-' + o_col.lower()
 
+            o_col = o_col.lower()
 
-def big_download(request):
-    """
-    Method called when "download all results" link clicked. Renders the template with the download
-    preparation message and the loading gif that, once loaded, tries to redirect to the url that
-    calls stream_result_data(), passing on the GET data
+            if(regex != 'false'):
+                query_method="iregex"
 
-    :param request:
-    :return:
-    """
-    if request.method == 'GET':
-        if len(request.GET) == 0:
-            raise Http404("No experiments queried")
-        from_page = request.GET.urlencode()
-        return render(
-            request, 'experimentsearch/download_message.html', {'from': from_page, 'big': True}
-        )
-    else:
-        raise Http404("No experiments queried")
+            kwargs = {}
+            for f in filt_cols:
+                st = '{0}__{1}'.format(f, query_method)
+                kwargs[st] = search
 
+            if(search):
+                if "pql:" in search:
+                    search = search.replace("pql:","")
+                    search, succ = Query.result(request, "python", search)
+                    routes = cls.objects(__raw__=search)[start:(start+length)]
+                    ct_filtered = routes.count()
+                else:
+                    routes = qs.filter(**kwargs).order_by(o_col)[start:(start+length)]
+                    ct_filtered = routes.count()
+            else:
+                routes = qs.order_by(o_col)[start:(start+length)]
+                ct_filtered = routes.count()
 
-def stream_result_data(request):
-    """
-    Used when "download all results" link clicked
-    Creates and stores an attachment that is data of Genotype documents who's study matches the
-    query built from the request's get data. Redirects to the index (which should then download
-    the attachment), passing on the GET data to display the search results that got us here in
-    the first place
+            data = []
+            for r in routes:
+                d = []
+                for c in cols:
+                    try:
+                        if hasattr(DataTable, "render_column_" + c):
+                            method = getattr(DataTable, "render_column_" + c)
+                        else:
+                            method = getattr(DataTable, "render_column")
+                        col = method(r, c)
+                        d.append(col)
+                    except:
+                        d.append(None)
+                data.append(d)
 
-    :param request:
-    :return:
-    """
-    global csv_response
-    csv_response = genotype_report(request)
-    return redirect(get_redirect_address(request))
+            res = {}
+            res['draw'] = draw
+            res['data'] = data
+            res['recordsTotal'] = int(cls.objects.all().count())
+            res['recordsFiltered'] = ct_filtered
+            res['qry'] = search
 
-
-def stream_experiment_csv(request, experi_id):
-    """
-    Queries the genotype collection with the experiment that matches experi_id
-    as a filter on 'study'. Creates a csv representation of the query set.
-
-    Writes a http response which downloads the csv file for the client. This response
-    is stored by this module to be downloaded by the download_experiment() view, which
-    gets called by the index.html template once there is a redirect to the index() view,
-    which this view returns
-
-    :param request:
-    :param experi_id: name of experiment to query for associations
-    :return: Redirect to index
-    """
-    global csv_response
-    redirect_address = get_redirect_address(request)
-    genotype, experi = query_genotype_by_experiment(experi_id)
-
-    if len(genotype) == 0:
-        # No data found so go to the no_download page
-        return render(
-            request, "experimentsearch/no_download.html", {"from_url": redirect_address}
-        )
-
-    rows = query_to_csv_rows_list(genotype, testing=testing)
-
-    csv_response = write_stream_response(rows, experi.name)
-    return redirect(redirect_address)
-
-
-def query_genotype_by_experiment(experi_id):
-    db_alias = TEST_DB_ALIAS if testing else 'default'
-    # Make query
-    try:
-        with switch_db(Experiment, db_alias) as Exper:
-            ex = Exper.objects.get(id=experi_id)
-    except Experiment.DoesNotExist:
-        raise Http404("Experiment does not exist")
-    with switch_db(Genotype, db_alias) as Gen:
-        genotype = Gen.objects(study=ex)
-    return genotype, ex
-
-
-def get_redirect_address(request):
-    if request.method == 'GET':
-        return '/experimentsearch/?' + request.GET.urlencode()
-    else:
-        return '/experimentsearch/'
-
-
-def download_experiment(request):
-    """
-    Returns the stored response with the experiment csv attachment, then removes it
-    from storage
-
-    :param request:
-    :return:
-    """
-    global csv_response
-    if not csv_response:
-        if request.method == 'GET' and 'from' in request.GET:
-            from_url = request.GET['from']
-            return redirect(from_url)
+            return JsonResponse(res)
         else:
-            return redirect('experimentsearch:index')
-    download = csv_response
-    csv_response = None
-    return download
+            return JsonResponse("Need GET request in page_kaka_search")
+
+
+# Gets Ajax data for tables
+
+def page_get_ajax(request, realm, cols, search_init="none"):
+    realm = eval(realm)
+    limit = None
+
+    cols = json.loads(cols)
+
+    return DataTable.render(request=request, cls=realm, search_init=search_init, cols=cols)
+
+
+def api_get_seafood_tree(request, tgt="Seafood"):
+    if(request.method == "POST"):
+        root = Category.objects.get(name=tgt)
+
+        return JsonResponse()
+
+
+import json
+
+def page_kaka_search_ajax(request, realm, cols=None, search_init=None):
+    cls = eval(realm) 
+
+    if(cols):
+        cols = json.loads(cols)
+        cols = [ c.replace(" ","_") for c in cols ]
+        cols = list(GetCols(cls, subsel=cols))
+    else:
+        cols = list(GetCols(cls))
+
+    tree = None
+    if(realm == "Fish"):
+        try:
+            tree = Category.objects.get(name='Seafood')
+            tree = tree.to_html()
+        except:
+            tree = None
+
+    return render(
+        request,
+        'experimentsearch/page_kaka_search.html',
+        {
+            'kaka_search_form': False,
+            'data' : False,
+            'cols' : cols,
+            'cols_json': json.dumps(cols),
+            'ajax' : True,
+            'model' : realm,
+            'tree': tree,
+            'search_init': search_init,
+        }
+     )
+     
+from django.shortcuts import render_to_response
+
+def page_view_map(request, htm=None):
+    
+
+    return render_to_response('experimentsearch/mymap.html')
+
