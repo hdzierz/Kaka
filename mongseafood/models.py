@@ -2,14 +2,17 @@ from django.db import models
 #from django.db.models.signals import pre_save
 #from django.dispatch import receiver
 #from django.core.exceptions import ObjectDoesNotExist
-from djangotoolbox.fields import DictField, EmbeddedModelField
+#from djangotoolbox.fields import DictField, EmbeddedModelField
 from django_countries.fields import CountryField
 from django.db.models.base import *
 from jsonfield import JSONField
 
-import mongoengine
+
+from django_mongoengine import Document, EmbeddedDocument, fields
+
+#import mongoengine
 from mongcore.logger import *
-from mongcore.django_ext import *
+#from mongcore.django_ext import *
 from mongcore.models import *
 
 # TODO: Mongo-ize
@@ -19,7 +22,7 @@ class Tissue(Feature):
 
 
 class Treatment(Feature):
-    no = mongoengine.IntField(default=0)
+    no = fields.IntField(default=0)
 
 
 class SampleMethod(Feature):
@@ -63,27 +66,33 @@ class Tree(Feature):
 
 
 class Trip(Feature):
+    ordered_fields = ["name", "geo", ]
+    exclude = ["obs", "lastupdateddate", "createddate", "experiment", "lastupdatedby", "createdby", "alias", "group", ]
+
     def __unicode__(self):
         return self.name
 
 
 class Staff(Feature):
-    status = mongoengine.StringField(max_length=255)
-    initials = mongoengine.StringField(max_length=20)
+    status = fields.StringField(max_length=255)
+    initials = fields.StringField(max_length=20)
 
     def __unicode__(self):
         return self.name
 
 
 class Tow(Feature):
-    trip = mongoengine.ReferenceField(Trip)
+    trip = fields.ReferenceField(Trip)
 
 
 class Fish(Feature):
-    form_completed = mongoengine.BooleanField(default=False)
-    trip = mongoengine.ReferenceField(Trip)
-    tow = mongoengine.ReferenceField(Tow)
-    species = mongoengine.ReferenceField(Species)
+    form_completed = fields.BooleanField(default=False)
+    trip = fields.ReferenceField(Trip)
+    tow = fields.ReferenceField(Tow)
+    species = fields.ReferenceField(Species)
+
+    ordered_fields = ["id", "name", "species", "createdby", "createddate", "datasource", "Vessel_name", "Trip", "Tow_Number", "Location", ]
+    
 
     def __unicode__(self):
         return str(self.GetName())

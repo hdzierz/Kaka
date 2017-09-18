@@ -1,5 +1,5 @@
 import pql
-
+from mongcore.logger import *
 
 class Query:
     @staticmethod

@@ -9,13 +9,28 @@ ENV no_proxy localhost,127.0.0.1,*.pfr.co.nz,::1
 
 RUN apt-get update -y; \
 	apt-get upgrade -y; \
-	apt-get install  -y wget vim postgresql-client-9.4  ;
+	apt-get install  -y wget vim postgresql-client-9.4 r-base;
 
 RUN mkdir /code
 WORKDIR /code
-ADD requirements_pinf.txt /code/requirements.txt
+ADD tt.txt /code/requirements.txt
 
 RUN pip install --upgrade pip;\
-    pip install -r requirements.txt
+    pip install numpy; \
+    pip install Cython; \
+    pip install auxlib
+
+RUN pip install -r requirements.txt 
+
+RUN pip install mongoengine
+RUN pip install raven django_pdb django_tables2_reports django_tables2
+RUN pip install treebeard django_crispy_forms 
+RUN pip install djorm_ext_pgfulltext 
+RUN pip install git+https://github.com/MongoEngine/django-mongoengine
+RUN pip install async restless
+RUN pip install django_inplaceedit jsonfield  django_treebeard django_countries
+RUN pip install djangorestframework querystring_parser django-leaflet DjangoRestless
+RUN pip install django_rest_framework_mongoengine
+
 ADD ./ ./ 
 

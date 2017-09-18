@@ -1,35 +1,37 @@
-{% block search  %}
+{% extends "experimentsearch/menu.html" %}
+{% load static %}
+{% load staticfiles %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/menu.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "css/screen.css" %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static "experimentsearch/css/searchstyle.css" %}">
+    {% block head %}{% endblock %}
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css" />
+</head>
+
+<script src="https://code.jquery.com/jquery-1.12.3.js"></script>
+<script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
+
+{% block content  %}
     <h1>Kaka Search</h1>
-    <form>
+
+    {% if not ajax  %}
+    <form method="GET" class="post-form">{# csrf_token #}
         {{ kaka_search_form }}
         <input type="submit" name="submit" value="search" />
+        <input type="submit" name="submit" value="download" />
+        <a href="http://localhost:8000/">clear</a>
     </form>
-
-{% endblock  %}
-{% block results %}
-    {% if search_list %}
-        <!-- Creates a table to display the info on
-        each experiment -->
-        <table style="width:100%">
-            <!-- sets out the header row (Note: does rely
-            on the list of field names being in the order
-            of name, pi, date, ds) -->
-            <tr>
-                {% for name in field_names %}
-                    <th>{{name}}</th>
-                {% endfor %}
-            </tr>
-            <!-- creates a row for each experiment -->
-            {% for experiment in search_list %}
-            <tr>
-                <td>{{ experiment.name }}</td>
-                <td>{{ experiment.primary_investigator }}</td>
-                <td>{{ experiment.date_created }}</td>
-                <td>{{ experiment.data_source }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% else %}
-        <p>Search came up with no results</p>
-    {% endif %}
+<hr />
+    {% endif  %}
+<br />
+<br />
+    {% if ajax  %}
+        {% include "experimentsearch/table_ajax.html" %}
+    {% else  %}
+        {% include "experimentsearch/table.html" %}
+    {% endif  %}
 {% endblock %}

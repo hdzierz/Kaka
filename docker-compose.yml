@@ -25,8 +25,6 @@ db:
 mongo:
   build: .
   dockerfile: Dockerfile_mongo
-  volumes:
-    - /output:/output
   ports:
     - "27018:27017"
   environment:
@@ -42,7 +40,7 @@ web:
   volumes:
     - .:/code
     #- /input:/input
-    - /output:/output
+    - /Users/cfphxd/output:/output
     #- /workspace:/workspace
   ports:
     - "8001:80"
@@ -54,48 +52,5 @@ web:
      - http_proxy:http://proxy.pfr.co.nz:8080
      - https_proxy:http://proxy.pfr.co.nz:8080
      - no_proxy:localhost,127.0.0.1,*.pfr.co.nz,::1
-#kea:
-#  build: .
-#  dockerfile: Dockerfile_kea
-#  environment:
-#     - dummy:dummy
-#     - http_proxy:http://proxy.pfr.co.nz:8080
-#     - https_proxy:http://proxy.pfr.co.nz:8080
-#     - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
 
-pyrat:
-#  image: cfljam/pyrat
-  build: .
-  dockerfile: Dockerfile_pyrat
-  volumes:
-#    - /input:/input
-    - /output:/output
-    - /workspace:/workspace
-  ports:
-    - "8888:8888"
-  links:
-    - web
-    - mongo
-  environment:
-     - dummy:dummy
-     - http_proxy:http://proxy.pfr.co.nz:8080
-     - https_proxy:http://proxy.pfr.co.nz:8080
-     - no_proxy:web,mongo,localhost,127.0.0.1,*.pfr.co.nz,::1
-
-shinyr:
-  build: .
-  dockerfile: Dockerfile_shinyr
-  volumes:
-    - /Users/cfphxd/Kaka/shinyapps/kaka/seafood:/srv/shiny-server/seafood
-    - /Users/cfphxd/Kaka/shinyapps/kaka/genotype:/srv/shiny-server/genotype
-    - /srv/shinylog/:/var/log/
-  links:
-    - web
-  ports:
-    - "3839:3838"
-  environment:
-     - dummy:dummy
-     - http_proxy:http://proxy.pfr.co.nz:8080
-     - https_proxy:http://proxy.pfr.co.nz:8080
-     - no_proxy:web,localhost,127.0.0.1,*.pfr.co.nz,::1
 

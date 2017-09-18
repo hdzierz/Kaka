@@ -5,7 +5,7 @@ import datetime
 from mongcore.connectors import CsvConnector
 from mongcore.imports import GenericImport
 from mongcore.models import SaveKVs, DataSource, Experiment
-from mongenotype.models import Genotype, Primer
+from mongenotype.models import Primer
 from os import walk
 from mongcore.query_set_helpers import fetch_or_save
 
@@ -16,7 +16,7 @@ class Import:
 
     @staticmethod
     def LoadOp(line, succ):
-        pr = Genotype(
+        pr = Primer(
             name=line['rs#'], study=Import.study, datasource=Import.ds,
         )
         SaveKVs(pr, line)

@@ -1,27 +1,23 @@
 from .models import *
 from rest_framework import serializers
+from rest_framework_mongoengine.serializers import DynamicDocumentSerializer
 
-class MarkerSerializer(serializers.ModelSerializer):
+class MarkerSerializer(DynamicDocumentSerializer):
     """
     Serializing all the Authors
     """
-
-    def get_data():
-        data = self.data['obs']
-        data['obid'] = self.data['obid']
-        return data
 
     class Meta:
         model = Marker
-        fields = ('obid', 'obs')
+        fields = '__all__'
 
 
 
-class PrimerObSerializer(serializers.ModelSerializer):
+class PrimerSerializer(DynamicDocumentSerializer):
     """
     Serializing all the Authors
     """
     class Meta:
-        model = PrimerOb
-        fields = ('obid', 'obs')
+        model = Primer
+        fields = '__all__'
 

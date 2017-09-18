@@ -2,10 +2,10 @@
 
 
 import datetime
-from api.connectors import *
-from api.imports import *
-from api.models import *
-from genotype.models import *
+from mongcore.connectors import *
+from mongcore.imports import *
+from mongcore.models import *
+from mongenotype.models import *
 
 
 class ImportPrimers:
